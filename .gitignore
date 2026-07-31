@@ -1,0 +1,87 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+# 若你希望上傳 VS Code 設定，保持註釋即可
+#.vscode/
+
+# Flutter / Dart / Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android build artifacts
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Node.js dependencies
+node_modules/
+functions/node_modules/
+
+# Firebase local cache
+.firebase/
+
+# Firebase emulator data
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*-debug.log
+
+# Environment files and secrets
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Firebase Functions local secrets
+functions/.secret.local
+functions/.runtimeconfig.json
+
+# Service account private keys
+service-account.json
+service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+
+# Android signing secrets
+*.jks
+*.keystore
+key.properties
+/android/key.properties
+
+# iOS signing files
+*.p12
+*.mobileprovision
+
+# Local operating-system files
+Thumbs.db
+desktop.ini
