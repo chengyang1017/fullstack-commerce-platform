@@ -30,8 +30,6 @@ class _OrdersPageState extends State<OrdersPage> {
     _OrderFilter(title: '已取消', statuses: {OrderStatus.cancelled}),
   ];
 
-
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<OrderProvider>();
@@ -181,7 +179,7 @@ class _OrderCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      '訂單 ${order.id}',
+                      '訂單 ${order.displayNumber}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 13, color: Colors.grey),

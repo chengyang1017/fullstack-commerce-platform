@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/cart_item.dart';
+import '../models/checkout_request.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
+import '../providers/checkout_provider.dart';
+import '../repositories/address_repository.dart';
+import '../repositories/order_repository.dart';
 import '../widgets/cart_icon_button.dart';
 import 'cart_page.dart';
+import 'checkout_page.dart';
 
 class ProductDetails extends StatefulWidget {
   final Product product;
 
-  const ProductDetails({super.key, required this.product});
+  const ProductDetails({
+    super.key,
+    required this.product,
+  });
 
   @override
   State<ProductDetails> createState() {
@@ -33,7 +42,11 @@ class _ProductDetailsState extends State<ProductDetails> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      title: Text(product.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(
+        product.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       actions: [
         IconButton(
           onPressed: () {
@@ -42,7 +55,9 @@ class _ProductDetailsState extends State<ProductDetails> {
             });
           },
           icon: Icon(
-            _isFavorite ? Icons.favorite : Icons.favorite_border,
+            _isFavorite
+                ? Icons.favorite
+                : Icons.favorite_border,
             color: _isFavorite ? Colors.red : null,
           ),
         ),
@@ -62,7 +77,11 @@ class _ProductDetailsState extends State<ProductDetails> {
               product.image,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
+              errorBuilder: (
+                context,
+                error,
+                stackTrace,
+              ) {
                 return const ColoredBox(
                   color: Color(0xFFF2F2F2),
                   child: Center(
@@ -79,11 +98,11 @@ class _ProductDetailsState extends State<ProductDetails> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
-                  'RM '
-                  '${product.price.toStringAsFixed(2)}',
+                  'RM ${product.price.toStringAsFixed(2)}',
                   style: const TextStyle(
                     color: Colors.red,
                     fontSize: 26,
@@ -102,7 +121,9 @@ class _ProductDetailsState extends State<ProductDetails> {
                 const SizedBox(height: 12),
                 Text(
                   '已售 ${product.sold}',
-                  style: const TextStyle(color: Colors.grey),
+                  style: const TextStyle(
+                    color: Colors.grey,
+                  ),
                 ),
               ],
             ),
@@ -113,9 +134,11 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   Widget _buildBottomNavigationBar() {
-    final quantity = context.select((CartProvider cart) {
-      return cart.quantityOf(product.id);
-    });
+    final quantity = context.select(
+      (CartProvider cart) {
+        return cart.quantityOf(product.id);
+      },
+    );
 
     return SafeArea(
       child: Container(
@@ -135,7 +158,11 @@ class _ProductDetailsState extends State<ProductDetails> {
             Expanded(
               child: OutlinedButton(
                 onPressed: _addToCart,
-                child: Text(quantity == 0 ? '加入購物車' : '加入購物車 ($quantity)'),
+                child: Text(
+                  quantity == 0
+                      ? '加入購物車'
+                      : '加入購物車 ($quantity)',
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -153,51 +180,81 @@ class _ProductDetailsState extends State<ProductDetails> {
 
   Future<void> _addToCart() async {
     try {
-      await context.read<CartProvider>().addProduct(product);
+      await context
+          .read<CartProvider>()
+          .addProduct(product);
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${product.title} 已加入購物車'),
-          action: SnackBarAction(label: '查看', onPressed: _openCart),
+          action: SnackBarAction(
+            label: '查看',
+            onPressed: _openCart,
+          ),
         ),
       );
     } catch (_) {
       if (!mounted) return;
 
-      final message = context.read<CartProvider>().errorMessage ?? '加入購物車失敗';
+      final message =
+          context.read<CartProvider>().errorMessage ??
+          '加入購物車失敗';
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     }
   }
 
   Future<void> _buyNow() async {
-    try {
-      await context.read<CartProvider>().addProduct(product);
+    final addressRepository =
+        context.read<AddressRepository>();
 
-      if (!mounted) return;
+    final orderRepository =
+        context.read<OrderRepository>();
 
-      _openCart();
-    } catch (_) {
-      if (!mounted) return;
+    final request = CheckoutRequest.buyNow(
+      items: [
+        CartItem(
+          product: product,
+          quantity: 1,
+        ),
+      ],
+    );
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('無法立即購買')));
-    }
-  }
-
-  void _openCart() {
-    Navigator.push<void>(
+    await Navigator.push<void>(
       context,
       MaterialPageRoute(
         builder: (context) {
-          return const CartPage();
+          return ChangeNotifierProvider(
+            create: (context) {
+              return CheckoutProvider(
+                addressRepository: addressRepository,
+                orderRepository: orderRepository,
+              )..initialize();
+            },
+            child: CheckoutPage(request: request),
+          );
         },
       ),
     );
   }
+
+  void _openCart() {
+  if (!mounted) {
+    return;
+  }
+
+  Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) {
+        return const CartPage();
+      },
+    ),
+  );
+}
 }

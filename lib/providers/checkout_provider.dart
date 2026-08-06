@@ -3,16 +3,23 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 
 import '../models/address.dart';
+import '../models/checkout_request.dart';
 import '../models/order.dart';
 import '../providers/cart_provider.dart';
 import '../repositories/address_repository.dart';
 import '../repositories/order_repository.dart';
 
-enum CheckoutStatus { initial, loading, ready, submitting, success, error }
+enum CheckoutStatus {
+  initial,
+  loading,
+  ready,
+  submitting,
+  success,
+  error,
+}
 
 class CheckoutProvider extends ChangeNotifier {
   final AddressRepository _addressRepository;
-
   final OrderRepository _orderRepository;
 
   CheckoutProvider({
@@ -22,15 +29,15 @@ class CheckoutProvider extends ChangeNotifier {
        _orderRepository = orderRepository;
 
   List<Address> _addresses = const [];
-
   String? _selectedAddressId;
 
-  ShippingMethod _shippingMethod = ShippingMethod.standard;
+  ShippingMethod _shippingMethod =
+      ShippingMethod.standard;
 
-  PaymentMethod _paymentMethod = PaymentMethod.onlineBanking;
+  PaymentMethod _paymentMethod =
+      PaymentMethod.onlineBanking;
 
   CheckoutStatus _status = CheckoutStatus.initial;
-
   String? _errorMessage;
   Order? _createdOrder;
   bool _cartClearFailed = false;
@@ -81,8 +88,15 @@ class CheckoutProvider extends ChangeNotifier {
     return _shippingMethod.fee;
   }
 
-  double total(CartProvider cart) {
-    return cart.totalPrice + shippingFee;
+  double subtotal(CheckoutRequest request) {
+    return request.items.fold<double>(
+      0,
+      (total, item) => total + item.subtotal,
+    );
+  }
+
+  double total(CheckoutRequest request) {
+    return subtotal(request) + shippingFee;
   }
 
   Future<void> initialize() async {
@@ -91,10 +105,10 @@ class CheckoutProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _addresses = await _addressRepository.loadAddresses();
+      _addresses =
+          await _addressRepository.loadAddresses();
 
       _selectInitialAddress();
-
       _status = CheckoutStatus.ready;
     } catch (error) {
       _status = CheckoutStatus.error;
@@ -121,9 +135,13 @@ class CheckoutProvider extends ChangeNotifier {
 
     nextAddresses.add(nextAddress);
 
-    await _addressRepository.saveAddresses(nextAddresses);
+    await _addressRepository.saveAddresses(
+      nextAddresses,
+    );
 
-    _addresses = List.unmodifiable(nextAddresses);
+    _addresses = List<Address>.unmodifiable(
+      nextAddresses,
+    );
 
     _selectedAddressId = nextAddress.id;
 
@@ -146,17 +164,13 @@ class CheckoutProvider extends ChangeNotifier {
   }
 
   Future<Order?> placeOrder({
+    required CheckoutRequest request,
     required CartProvider cart,
-    required String userId,
   }) async {
     final address = selectedAddress;
 
-    if (userId.trim().isEmpty) {
-        _setError('登入資料異常，缺少 userId');
-        return null;
-      }
-    if (cart.isEmpty) {
-      _setError('購物車沒有商品');
+    if (request.items.isEmpty) {
+      _setError('沒有可以結算的商品');
       return null;
     }
 
@@ -167,56 +181,58 @@ class CheckoutProvider extends ChangeNotifier {
 
     _status = CheckoutStatus.submitting;
     _errorMessage = null;
+    _createdOrder = null;
     _cartClearFailed = false;
     notifyListeners();
 
     final now = DateTime.now();
+    final orderSubtotal = subtotal(request);
 
-    final orderItems = cart.items
-        .map(OrderItem.fromCartItem)
-        .toList(growable: false);
-
-    final order = Order(
-      id:
-          'order_'
-          '${now.microsecondsSinceEpoch}',
-      userId: userId,
+    final draftOrder = Order(
+      id: '',
       address: address,
-      items: orderItems,
+      items: request.items
+          .map(OrderItem.fromCartItem)
+          .toList(growable: false),
       shippingMethod: _shippingMethod,
       paymentMethod: _paymentMethod,
-      status: _paymentMethod == PaymentMethod.cashOnDelivery
+      status:
+          _paymentMethod == PaymentMethod.cashOnDelivery
           ? OrderStatus.processing
           : OrderStatus.pendingPayment,
-      subtotal: cart.totalPrice,
+      subtotal: orderSubtotal,
       shippingFee: shippingFee,
       discount: 0,
-      total: total(cart),
+      total: orderSubtotal + shippingFee,
       createdAt: now,
     );
 
     try {
-      await _orderRepository.createOrder(order);
+      final createdOrder =
+          await _orderRepository.createOrder(draftOrder);
 
-      _createdOrder = order;
+      _createdOrder = createdOrder;
 
-      try {
-        await cart.clearCart();
-      } catch (_) {
-        // 訂單已建立，不能因清空購物車失敗
-        // 再次提交訂單。
-        _cartClearFailed = true;
+      if (request.isFromCart) {
+        try {
+          await cart.removePurchasedItems(
+            request.items,
+          );
+        } catch (_) {
+          // 訂單已建立，不能因更新購物車失敗再次提交。
+          _cartClearFailed = true;
+        }
       }
 
       _status = CheckoutStatus.success;
       notifyListeners();
 
-      return order;
+      return createdOrder;
     } catch (error) {
       _status = CheckoutStatus.error;
       _errorMessage = '建立訂單失敗：$error';
-
       notifyListeners();
+
       return null;
     }
   }
@@ -227,7 +243,9 @@ class CheckoutProvider extends ChangeNotifier {
       return;
     }
 
-    final defaultAddresses = _addresses.where((address) => address.isDefault);
+    final defaultAddresses = _addresses.where(
+      (address) => address.isDefault,
+    );
 
     _selectedAddressId = defaultAddresses.isNotEmpty
         ? defaultAddresses.first.id

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/order.dart';
+import '../providers/order_provider.dart';
 import '../providers/payment_provider.dart';
 import '../repositories/payment_repository.dart';
 
@@ -36,7 +37,6 @@ class _PaymentPageState extends State<PaymentPage> {
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
-
     final payment = context.watch<PaymentProvider>();
 
     return Scaffold(
@@ -76,7 +76,7 @@ class _PaymentPageState extends State<PaymentPage> {
               ListTile(
                 leading: const Icon(Icons.receipt_long_outlined),
                 title: const Text('訂單編號'),
-                subtitle: Text(order.id),
+                subtitle: Text(order.displayNumber),
               ),
               const Divider(height: 1),
               ListTile(
@@ -97,7 +97,7 @@ class _PaymentPageState extends State<PaymentPage> {
           ),
         const SizedBox(height: 16),
         const Text(
-          '付款完成後，訂單狀態將由 Stripe Webhook 自動更新。',
+          '付款完成後會自動確認並更新訂單，不需要再次點擊付款。',
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.grey),
         ),
@@ -121,10 +121,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   height: 22,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(
-                  '確認付款 RM '
-                  '${order.total.toStringAsFixed(2)}',
-                ),
+              : Text('確認付款 RM ${order.total.toStringAsFixed(2)}'),
         ),
       ),
     );
@@ -147,9 +144,21 @@ class _PaymentPageState extends State<PaymentPage> {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('付款已提交，正在確認付款結果')));
+    final orderProvider = context.read<OrderProvider>();
+    await orderProvider.refresh();
+
+    if (!mounted) return;
+
+    final latestOrder = orderProvider.findById(order.id);
+    final isPaid = latestOrder?.status == OrderStatus.paid;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isPaid ? '付款成功，訂單已更新' : '付款已提交，系統會自動更新訂單狀態',
+        ),
+      ),
+    );
 
     Navigator.pop(context, true);
   }

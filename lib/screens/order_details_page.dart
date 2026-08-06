@@ -21,46 +21,153 @@ class OrderDetailsPage extends StatelessWidget {
       body: _buildBody(context, provider, order),
       bottomNavigationBar: order == null
           ? null
-          : _buildBottomBar(context, order),
+          : _buildBottomBar(
+              context,
+              provider,
+              order,
+            ),
     );
   }
 
-  Widget? _buildBottomBar(BuildContext context, Order order) {
+  Widget? _buildBottomBar(
+    BuildContext context,
+    OrderProvider provider,
+    Order order,
+  ) {
     if (order.status != OrderStatus.pendingPayment) {
       return null;
     }
 
+    final isCancelling = provider.isCancellingOrder(order.id);
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: FilledButton(
-          onPressed: () {
-            _openPayment(context, order);
-          },
-          child: Text(
-            '去付款 · RM '
-            '${order.total.toStringAsFixed(2)}',
-          ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: isCancelling
+                    ? null
+                    : () {
+                        _confirmCancellation(
+                          context,
+                          provider,
+                          order,
+                        );
+                      },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+                child: isCancelling
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text('取消訂單'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: FilledButton(
+                onPressed: isCancelling
+                    ? null
+                    : () {
+                        _openPayment(
+                          context,
+                          order,
+                        );
+                      },
+                child: Text(
+                  '去付款 · RM '
+                  '${order.total.toStringAsFixed(2)}',
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Future<void> _openPayment(
-  BuildContext context,
-  Order order,
-) async {
-  await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) {
-        return PaymentFlowPage(
-          order: order,
+  Future<void> _confirmCancellation(
+    BuildContext context,
+    OrderProvider provider,
+    Order order,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('取消訂單'),
+          content: const Text(
+            '取消後，這筆訂單占用的商品庫存會自動恢復。確定取消嗎？',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  false,
+                );
+              },
+              child: const Text('返回'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  true,
+                );
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('確定取消'),
+            ),
+          ],
         );
       },
-    ),
-  );
-}
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    final cancelled = await provider.cancelOrder(order.id);
+
+    if (!context.mounted) {
+      return;
+    }
+
+    final message = cancelled
+        ? '訂單已取消，商品庫存已恢復'
+        : provider.errorMessage ?? '取消訂單失敗';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
+
+  Future<void> _openPayment(
+    BuildContext context,
+    Order order,
+  ) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) {
+          return PaymentFlowPage(order: order);
+        },
+      ),
+    );
+  }
 
   Widget _buildBody(
     BuildContext context,
@@ -258,7 +365,10 @@ class OrderDetailsPage extends StatelessWidget {
       title: '訂單資訊',
       child: Column(
         children: [
-          _InformationRow(label: '訂單編號', value: order.id),
+          _InformationRow(
+            label: '訂單編號',
+            value: order.displayNumber,
+          ),
           const SizedBox(height: 12),
           _InformationRow(label: '建立時間', value: _formatDate(order.createdAt)),
         ],
@@ -309,6 +419,8 @@ class OrderDetailsPage extends StatelessWidget {
         return '這筆訂單已完成';
       case OrderStatus.cancelled:
         return '這筆訂單已取消';
+      case OrderStatus.refunded:
+        return '這筆訂單已退款';
     }
   }
 }

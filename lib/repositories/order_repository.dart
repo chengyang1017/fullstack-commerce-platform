@@ -6,11 +6,19 @@ class OrderRepository {
 
   const OrderRepository(this._service);
 
-  Stream<List<Order>> watchOrders(String userId) {
-    return _service.watchOrders(userId);
+  Future<List<Order>> loadOrders() {
+    return _service.loadOrders();
   }
 
-  Future<void> createOrder(Order order) {
+  Future<Order> createOrder(Order order) {
     return _service.createOrder(order);
+  }
+
+  Future<Order> cancelOrder(String orderId) {
+    return _service.cancelOrder(orderId);
+  }
+
+  void dispose() {
+    _service.dispose();
   }
 }

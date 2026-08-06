@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/customer_auth_provider.dart';
 import '../providers/order_provider.dart';
 import 'orders_page.dart';
 
@@ -9,6 +10,8 @@ class AccountPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final customer = context.watch<CustomerAuthProvider>().user;
+
     final orderCount = context.select((OrderProvider provider) {
       return provider.orders.length;
     });
@@ -17,7 +20,10 @@ class AccountPage extends StatelessWidget {
       appBar: AppBar(title: const Text('我的')),
       body: ListView(
         children: [
-          const _AccountHeader(),
+          _AccountHeader(
+            name: customer?.name ?? '未知用戶',
+            email: customer?.email ?? '',
+          ),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.receipt_long_outlined),
@@ -35,6 +41,14 @@ class AccountPage extends StatelessWidget {
               );
             },
           ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('退出登入'),
+            onTap: () async {
+              await context.read<CustomerAuthProvider>().logout();
+            },
+          ),
         ],
       ),
     );
@@ -42,26 +56,43 @@ class AccountPage extends StatelessWidget {
 }
 
 class _AccountHeader extends StatelessWidget {
-  const _AccountHeader();
+  final String name;
+  final String email;
+
+  const _AccountHeader({required this.name, required this.email});
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(20),
+    return Padding(
+      padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          CircleAvatar(radius: 34, child: Icon(Icons.person, size: 36)),
-          SizedBox(width: 16),
+          CircleAvatar(
+            radius: 34,
+            child: name.isEmpty
+                ? const Icon(Icons.person, size: 36)
+                : Text(
+                    name.characters.first.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '訪客用戶',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  name,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                SizedBox(height: 4),
-                Text('登入後可同步跨裝置訂單', style: TextStyle(color: Colors.grey)),
+                const SizedBox(height: 4),
+                Text(email, style: const TextStyle(color: Colors.grey)),
               ],
             ),
           ),

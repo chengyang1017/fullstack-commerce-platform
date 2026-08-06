@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/product.dart';
+import '../providers/product_provider.dart';
 import '../widgets/cart_icon_button.dart';
 import 'product_card.dart';
 import 'product_details.dart';
@@ -22,29 +24,55 @@ class ProductList extends StatefulWidget {
 }
 
 class _ProductListState extends State<ProductList> {
-  List<Product> get categoryProducts {
-    return products.where((product) {
-      return product.categoryId == widget.categoryId;
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final filteredProducts = categoryProducts;
+    final productProvider = context.watch<ProductProvider>();
+
+    if (productProvider.status == ProductStatus.initial) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (productProvider.status == ProductStatus.loading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.categoryTitle),
+          actions: const [CartIconButton()],
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (productProvider.status == ProductStatus.error) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.categoryTitle),
+          actions: const [CartIconButton()],
+        ),
+        body: _buildErrorView(productProvider),
+      );
+    }
+
+    final filteredProducts = productProvider.productsByCategory(
+      widget.categoryId,
+    );
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.categoryTitle),
         actions: const [CartIconButton()],
       ),
-      body: filteredProducts.isEmpty
-          ? _buildEmptyView()
-          : _buildProductGrid(filteredProducts),
+      body: RefreshIndicator(
+        onRefresh: productProvider.refreshProducts,
+        child: filteredProducts.isEmpty
+            ? _buildEmptyView()
+            : _buildProductGrid(filteredProducts),
+      ),
     );
   }
 
   Widget _buildProductGrid(List<Product> filteredProducts) {
     return GridView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(8),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -66,19 +94,52 @@ class _ProductListState extends State<ProductList> {
     );
   }
 
-  Widget _buildEmptyView() {
+  Widget _buildErrorView(ProductProvider productProvider) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.inventory_2_outlined, size: 72, color: Colors.grey),
-          const SizedBox(height: 12),
           Text(
-            '${widget.categoryTitle}暫時沒有商品',
-            style: const TextStyle(color: Colors.grey, fontSize: 17),
+            productProvider.errorMessage ?? '加载商品失败',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: () {
+              productProvider.refreshProducts();
+            },
+            child: const Text('重新加载'),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEmptyView() {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.6,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.inventory_2_outlined,
+                  size: 72,
+                  color: Colors.grey,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${widget.categoryTitle}暫時沒有商品',
+                  style: const TextStyle(color: Colors.grey, fontSize: 17),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

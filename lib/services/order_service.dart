@@ -1,182 +1,245 @@
-import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
-import '../models/address.dart';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
 import '../models/order.dart';
+import 'customer_auth_service.dart';
 
-abstract class OrderService {
-  Stream<List<Order>> watchOrders(String userId);
+class ApiOrderException implements Exception {
+  final String message;
+  final int? statusCode;
 
-  Future<void> createOrder(Order order);
+  const ApiOrderException(
+    this.message, {
+    this.statusCode,
+  });
+
+  @override
+  String toString() => message;
 }
 
-class FirestoreOrderService implements OrderService {
-  final FirebaseFirestore _firestore;
+abstract class OrderService {
+  Future<List<Order>> loadOrders();
 
-  FirestoreOrderService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  Future<Order> createOrder(Order order);
 
-  CollectionReference<Map<String, dynamic>> get _orders {
-    return _firestore.collection('orders');
-  }
+  Future<Order> cancelOrder(String orderId);
 
-  @override
-  Stream<List<Order>> watchOrders(String userId) {
-    return _orders
-        .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-          return snapshot.docs.map(_fromDocument).toList(growable: false);
-        });
-  }
+  void dispose();
+}
 
-  
+class ApiOrderService implements OrderService {
+  final CustomerAuthService _authService;
+  final http.Client _client;
+  final bool _ownsClient;
 
-  @override
-  Future<void> createOrder(Order order) async {
-    final userId = order.userId;
+  ApiOrderService({
+    required CustomerAuthService authService,
+    http.Client? client,
+  }) : _authService = authService,
+       _client = client ?? http.Client(),
+       _ownsClient = client == null;
 
-    if (userId == null || userId.isEmpty) {
-      throw StateError('建立訂單時缺少 userId');
-    }
-
-    await _orders.doc(order.id).set({
-      'userId': userId,
-
-      'status': order.status.name,
-      'paymentStatus': order.status == OrderStatus.pendingPayment
-          ? 'unpaid'
-          : 'cashOnDelivery',
-
-      'currency': 'myr',
-
-      // Flutter 頁面顯示使用。
-      'subtotal': order.subtotal,
-      'shippingFee': order.shippingFee,
-      'discount': order.discount,
-      'total': order.total,
-
-      // Stripe 後端使用，單位是 sen。
-      'subtotalMinor': _toMinor(order.subtotal),
-      'shippingFeeMinor': _toMinor(order.shippingFee),
-      'discountMinor': _toMinor(order.discount),
-      'totalMinor': _toMinor(order.total),
-
-      'shippingMethod': order.shippingMethod.name,
-
-      'paymentMethod': order.paymentMethod.name,
-
-      'address': order.address.toJson(),
-
-      'items': order.items.map((item) => item.toJson()).toList(growable: false),
-
-      'paymentIntentId': null,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-  }
-
-  Order _fromDocument(QueryDocumentSnapshot<Map<String, dynamic>> document) {
-    final data = document.data();
-
-    final rawItems = data['items'] as List<dynamic>? ?? const [];
-
-    final rawAddress = data['address'] as Map<dynamic, dynamic>? ?? const {};
-
-    return Order(
-      id: document.id,
-      userId: data['userId'] as String?,
-      address: Address.fromJson(Map<String, dynamic>.from(rawAddress)),
-      items: rawItems
-          .map((rawItem) {
-            return OrderItem.fromJson(
-              Map<String, dynamic>.from(rawItem as Map),
-            );
-          })
-          .toList(growable: false),
-      shippingMethod: _parseShippingMethod(data['shippingMethod']),
-      paymentMethod: _parsePaymentMethod(data['paymentMethod']),
-      status: data['paymentStatus'] == 'paid'
-    ? OrderStatus.processing
-    : _parseOrderStatus(
-        data['status'],
-      ),
-      subtotal: _readMoney(
-        data,
-        valueKey: 'subtotal',
-        minorKey: 'subtotalMinor',
-      ),
-      shippingFee: _readMoney(
-        data,
-        valueKey: 'shippingFee',
-        minorKey: 'shippingFeeMinor',
-      ),
-      discount: _readMoney(
-        data,
-        valueKey: 'discount',
-        minorKey: 'discountMinor',
-      ),
-      total: _readMoney(data, valueKey: 'total', minorKey: 'totalMinor'),
-      createdAt: _readDateTime(data['createdAt']),
+  Uri get _ordersUri {
+    return Uri.parse(
+      '${_authService.baseUrl}/api/customer/orders',
     );
   }
 
-  int _toMinor(double value) {
-    return (value * 100).round();
+  @override
+  Future<List<Order>> loadOrders() async {
+    final response = await _sendAuthorized(
+      method: 'GET',
+      uri: _ordersUri,
+    );
+
+    final decoded = _decodeResponse(response);
+
+    if (decoded is! List) {
+      throw const ApiOrderException('服务器返回的订单列表格式无效');
+    }
+
+    try {
+      return decoded
+          .map(
+            (item) => Order.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList(growable: false);
+    } catch (_) {
+      throw const ApiOrderException('服务器返回的订单资料格式无效');
+    }
   }
 
-  double _readMoney(
-    Map<String, dynamic> data, {
-    required String valueKey,
-    required String minorKey,
+  @override
+  Future<Order> createOrder(Order order) async {
+    final response = await _sendAuthorized(
+      method: 'POST',
+      uri: _ordersUri,
+      body: order.toCreateOrderJson(),
+    );
+
+    return _readOrderResponse(
+      response,
+      invalidMessage: '服务器返回的新订单资料格式无效',
+    );
+  }
+
+  @override
+  Future<Order> cancelOrder(String orderId) async {
+    final normalizedOrderId = orderId.trim();
+
+    if (normalizedOrderId.isEmpty) {
+      throw const ApiOrderException('订单 ID 不能为空');
+    }
+
+    final uri = Uri.parse(
+      '${_ordersUri.toString()}/'
+      '${Uri.encodeComponent(normalizedOrderId)}/cancel',
+    );
+
+    final response = await _sendAuthorized(
+      method: 'POST',
+      uri: uri,
+    );
+
+    return _readOrderResponse(
+      response,
+      invalidMessage: '服务器返回的取消订单资料格式无效',
+    );
+  }
+
+  Order _readOrderResponse(
+    http.Response response, {
+    required String invalidMessage,
   }) {
-    final value = data[valueKey];
+    final decoded = _decodeResponse(response);
 
-    if (value is num) {
-      return value.toDouble();
+    if (decoded is! Map) {
+      throw ApiOrderException(invalidMessage);
     }
 
-    final minor = data[minorKey];
-
-    if (minor is num) {
-      return minor.toDouble() / 100;
+    try {
+      return Order.fromJson(
+        Map<String, dynamic>.from(decoded),
+      );
+    } catch (_) {
+      throw ApiOrderException(invalidMessage);
     }
-
-    return 0;
   }
 
-  DateTime _readDateTime(Object? value) {
-    if (value is Timestamp) {
-      return value.toDate();
+  Future<http.Response> _sendAuthorized({
+    required String method,
+    required Uri uri,
+    Map<String, dynamic>? body,
+    bool allowRefresh = true,
+  }) async {
+    final accessToken = await _authService.requireAccessToken();
+
+    http.Response response;
+
+    try {
+      response = await _send(
+        method: method,
+        uri: uri,
+        accessToken: accessToken,
+        body: body,
+      );
+    } catch (_) {
+      throw const ApiOrderException('无法连接服务器，请检查网络和后端服务');
     }
 
-    if (value is String) {
-      return DateTime.tryParse(value) ?? DateTime.now();
+    if (response.statusCode == 401 && allowRefresh) {
+      final refreshedToken = await _authService.refreshAccessToken();
+
+      if (refreshedToken == null || refreshedToken.isEmpty) {
+        throw const ApiOrderException(
+          '登入已失效，請重新登入',
+          statusCode: 401,
+        );
+      }
+
+      return _sendAuthorized(
+        method: method,
+        uri: uri,
+        body: body,
+        allowRefresh: false,
+      );
     }
 
-    return DateTime.now();
-  }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final decoded = _decodeResponse(response);
 
-  OrderStatus _parseOrderStatus(Object? value) {
-    if (value == 'paid') {
-      return OrderStatus.processing;
+      final message = decoded is Map ? decoded['message'] : null;
+
+      throw ApiOrderException(
+        message is String && message.isNotEmpty
+            ? message
+            : '订单请求失败，请稍后重试',
+        statusCode: response.statusCode,
+      );
     }
 
-    return OrderStatus.values.firstWhere(
-      (status) => status.name == value,
-      orElse: () => OrderStatus.pendingPayment,
-    );
+    return response;
   }
 
-  ShippingMethod _parseShippingMethod(Object? value) {
-    return ShippingMethod.values.firstWhere(
-      (method) => method.name == value,
-      orElse: () => ShippingMethod.standard,
-    );
+  Future<http.Response> _send({
+    required String method,
+    required Uri uri,
+    required String accessToken,
+    Map<String, dynamic>? body,
+  }) {
+    final headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+      if (body != null) 'Content-Type': 'application/json; charset=utf-8',
+    };
+
+    switch (method) {
+      case 'GET':
+        return _client.get(
+          uri,
+          headers: headers,
+        );
+
+      case 'POST':
+        return _client.post(
+          uri,
+          headers: headers,
+          body: body == null ? null : jsonEncode(body),
+        );
+
+      default:
+        throw ArgumentError.value(
+          method,
+          'method',
+          '不支持的请求方法',
+        );
+    }
   }
 
-  PaymentMethod _parsePaymentMethod(Object? value) {
-    return PaymentMethod.values.firstWhere(
-      (method) => method.name == value,
-      orElse: () => PaymentMethod.onlineBanking,
-    );
+  Object? _decodeResponse(http.Response response) {
+    if (response.bodyBytes.isEmpty) {
+      return null;
+    }
+
+    try {
+      return jsonDecode(
+        utf8.decode(response.bodyBytes),
+      );
+    } catch (_) {
+      throw ApiOrderException(
+        '服务器返回格式无效',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_ownsClient) {
+      _client.close();
+    }
   }
 }

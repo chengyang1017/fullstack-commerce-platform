@@ -9,6 +9,16 @@ enum OrderStatus {
   delivered,
   completed,
   cancelled,
+  refunded,
+}
+
+enum OrderPaymentStatus {
+  unpaid,
+  processing,
+  paid,
+  failed,
+  refunded,
+  partiallyRefunded,
 }
 
 enum ShippingMethod { standard, express }
@@ -42,6 +52,15 @@ extension ShippingMethodDetails on ShippingMethod {
         return 15;
     }
   }
+
+  String get apiValue {
+    switch (this) {
+      case ShippingMethod.standard:
+        return 'STANDARD';
+      case ShippingMethod.express:
+        return 'EXPRESS';
+    }
+  }
 }
 
 extension PaymentMethodDetails on PaymentMethod {
@@ -53,6 +72,17 @@ extension PaymentMethodDetails on PaymentMethod {
         return '信用卡／簽帳卡';
       case PaymentMethod.cashOnDelivery:
         return '貨到付款';
+    }
+  }
+
+  String get apiValue {
+    switch (this) {
+      case PaymentMethod.onlineBanking:
+        return 'ONLINE_BANKING';
+      case PaymentMethod.card:
+        return 'CARD';
+      case PaymentMethod.cashOnDelivery:
+        return 'CASH_ON_DELIVERY';
     }
   }
 }
@@ -96,25 +126,38 @@ class OrderItem {
     };
   }
 
+  Map<String, dynamic> toCreateOrderJson() {
+    return {'productId': productId, 'quantity': quantity};
+  }
+
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
-      productId: json['productId'] as String,
-      productTitle: json['productTitle'] as String,
-      productImage: json['productImage'] as String,
-      unitPrice: (json['unitPrice'] as num).toDouble(),
-      quantity: (json['quantity'] as num).toInt(),
+      productId: _readRequiredString(json, 'productId'),
+      productTitle: _readRequiredString(json, 'productTitle'),
+      productImage:
+          _readOptionalString(json, 'productImage') ??
+          _readOptionalString(json, 'productImageUrl') ??
+          '',
+      unitPrice: _readMoney(
+        json,
+        valueKey: 'unitPrice',
+        minorKey: 'unitPriceMinor',
+      ),
+      quantity: _readRequiredInt(json, 'quantity'),
     );
   }
 }
 
 class Order {
   final String id;
+  final String orderNumber;
   final String? userId;
   final Address address;
   final List<OrderItem> items;
   final ShippingMethod shippingMethod;
   final PaymentMethod paymentMethod;
   final OrderStatus status;
+  final OrderPaymentStatus paymentStatus;
   final double subtotal;
   final double shippingFee;
   final double discount;
@@ -123,12 +166,14 @@ class Order {
 
   const Order({
     required this.id,
+    this.orderNumber = '',
     this.userId,
     required this.address,
     required this.items,
     required this.shippingMethod,
     required this.paymentMethod,
     required this.status,
+    this.paymentStatus = OrderPaymentStatus.unpaid,
     required this.subtotal,
     required this.shippingFee,
     required this.discount,
@@ -136,15 +181,21 @@ class Order {
     required this.createdAt,
   });
 
+  String get displayNumber {
+    return orderNumber.isEmpty ? id : orderNumber;
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'orderNumber': orderNumber,
       'userId': userId,
       'address': address.toJson(),
-      'items': items.map((item) => item.toJson()).toList(),
+      'items': items.map((item) => item.toJson()).toList(growable: false),
       'shippingMethod': shippingMethod.name,
       'paymentMethod': paymentMethod.name,
       'status': status.name,
+      'paymentStatus': paymentStatus.name,
       'subtotal': subtotal,
       'shippingFee': shippingFee,
       'discount': discount,
@@ -153,42 +204,93 @@ class Order {
     };
   }
 
+  Map<String, dynamic> toCreateOrderJson() {
+    return {
+      'items': items
+          .map((item) => item.toCreateOrderJson())
+          .toList(growable: false),
+      'shippingMethod': shippingMethod.apiValue,
+      'paymentMethod': paymentMethod.apiValue,
+      'recipientName': address.receiverName,
+      'recipientPhone': address.phone,
+      'addressLine1': address.addressLine,
+      'city': address.city,
+      'state': address.state,
+      'postalCode': address.postcode,
+      'countryCode': _toCountryCode(address.country),
+    };
+  }
+
   factory Order.fromJson(Map<String, dynamic> json) {
+    final id = _readRequiredString(json, 'id');
+
+    final rawItems = json['items'];
+
+    if (rawItems is! List) {
+      throw const FormatException('訂單商品資料格式無效');
+    }
+
+    final address = json['address'] is Map
+        ? Address.fromJson(Map<String, dynamic>.from(json['address'] as Map))
+        : Address(
+            id: 'order_address_$id',
+            receiverName: _readRequiredString(json, 'recipientName'),
+            phone: _readRequiredString(json, 'recipientPhone'),
+            addressLine: _joinAddressLines(
+              _readRequiredString(json, 'addressLine1'),
+              _readOptionalString(json, 'addressLine2'),
+            ),
+            city: _readRequiredString(json, 'city'),
+            state: _readRequiredString(json, 'state'),
+            postcode: _readRequiredString(json, 'postalCode'),
+            country: _readOptionalString(json, 'countryCode') ?? 'MY',
+          );
+
     return Order(
-      id: json['id'] as String,
-      userId: json['userId'] as String?,
-      address: Address.fromJson(
-        Map<String, dynamic>.from(json['address'] as Map),
-      ),
-      items: (json['items'] as List)
+      id: id,
+      orderNumber: _readOptionalString(json, 'orderNumber') ?? id,
+      userId: _readOptionalString(json, 'userId'),
+      address: address,
+      items: rawItems
           .map(
             (item) =>
                 OrderItem.fromJson(Map<String, dynamic>.from(item as Map)),
           )
-          .toList(),
-      shippingMethod: ShippingMethod.values.byName(
-        json['shippingMethod'] as String,
+          .toList(growable: false),
+      shippingMethod: _parseShippingMethod(json['shippingMethod']),
+      paymentMethod: _parsePaymentMethod(json['paymentMethod']),
+      status: _parseOrderStatus(json['status']),
+      paymentStatus: _parsePaymentStatus(json['paymentStatus']),
+      subtotal: _readMoney(
+        json,
+        valueKey: 'subtotal',
+        minorKey: 'subtotalMinor',
       ),
-      paymentMethod: PaymentMethod.values.byName(
-        json['paymentMethod'] as String,
+      shippingFee: _readMoney(
+        json,
+        valueKey: 'shippingFee',
+        minorKey: 'shippingMinor',
       ),
-      status: OrderStatus.values.byName(json['status'] as String),
-      subtotal: (json['subtotal'] as num).toDouble(),
-      shippingFee: (json['shippingFee'] as num).toDouble(),
-      discount: (json['discount'] as num).toDouble(),
-      total: (json['total'] as num).toDouble(),
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      discount: _readMoney(
+        json,
+        valueKey: 'discount',
+        minorKey: 'discountMinor',
+      ),
+      total: _readMoney(json, valueKey: 'total', minorKey: 'totalMinor'),
+      createdAt: _readDateTime(json['createdAt']),
     );
   }
 
   Order copyWith({
     String? id,
+    String? orderNumber,
     String? userId,
     Address? address,
     List<OrderItem>? items,
     ShippingMethod? shippingMethod,
     PaymentMethod? paymentMethod,
     OrderStatus? status,
+    OrderPaymentStatus? paymentStatus,
     double? subtotal,
     double? shippingFee,
     double? discount,
@@ -197,12 +299,14 @@ class Order {
   }) {
     return Order(
       id: id ?? this.id,
+      orderNumber: orderNumber ?? this.orderNumber,
       userId: userId ?? this.userId,
       address: address ?? this.address,
       items: items ?? this.items,
       shippingMethod: shippingMethod ?? this.shippingMethod,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       status: status ?? this.status,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
       subtotal: subtotal ?? this.subtotal,
       shippingFee: shippingFee ?? this.shippingFee,
       discount: discount ?? this.discount,
@@ -229,6 +333,188 @@ extension OrderStatusDetails on OrderStatus {
         return '已完成';
       case OrderStatus.cancelled:
         return '已取消';
+      case OrderStatus.refunded:
+        return '已退款';
     }
   }
+}
+
+String _readRequiredString(Map<String, dynamic> json, String key) {
+  final value = json[key];
+
+  if (value is String && value.isNotEmpty) {
+    return value;
+  }
+
+  throw FormatException('缺少訂單欄位：$key');
+}
+
+String? _readOptionalString(Map<String, dynamic> json, String key) {
+  final value = json[key];
+
+  if (value is String && value.isNotEmpty) {
+    return value;
+  }
+
+  return null;
+}
+
+int _readRequiredInt(Map<String, dynamic> json, String key) {
+  final value = json[key];
+
+  if (value is num) {
+    return value.toInt();
+  }
+
+  throw FormatException('缺少訂單數字欄位：$key');
+}
+
+double _readMoney(
+  Map<String, dynamic> json, {
+  required String valueKey,
+  required String minorKey,
+}) {
+  final value = json[valueKey];
+
+  if (value is num) {
+    return value.toDouble();
+  }
+
+  final minorValue = json[minorKey];
+
+  if (minorValue is num) {
+    return minorValue.toDouble() / 100;
+  }
+
+  return 0;
+}
+
+DateTime _readDateTime(Object? value) {
+  if (value is String) {
+    return DateTime.tryParse(value)?.toLocal() ?? DateTime.now();
+  }
+
+  return DateTime.now();
+}
+
+ShippingMethod _parseShippingMethod(Object? value) {
+  switch (value) {
+    case 'EXPRESS':
+    case 'express':
+      return ShippingMethod.express;
+
+    case 'STANDARD':
+    case 'standard':
+    default:
+      return ShippingMethod.standard;
+  }
+}
+
+PaymentMethod _parsePaymentMethod(Object? value) {
+  switch (value) {
+    case 'CARD':
+    case 'card':
+      return PaymentMethod.card;
+
+    case 'CASH_ON_DELIVERY':
+    case 'cashOnDelivery':
+      return PaymentMethod.cashOnDelivery;
+
+    case 'ONLINE_BANKING':
+    case 'onlineBanking':
+    default:
+      return PaymentMethod.onlineBanking;
+  }
+}
+
+OrderStatus _parseOrderStatus(Object? value) {
+  switch (value) {
+    case 'PAID':
+    case 'paid':
+      return OrderStatus.paid;
+
+    case 'PROCESSING':
+    case 'processing':
+      return OrderStatus.processing;
+
+    case 'SHIPPED':
+    case 'shipped':
+      return OrderStatus.shipped;
+
+    case 'DELIVERED':
+    case 'delivered':
+      return OrderStatus.delivered;
+
+    case 'COMPLETED':
+    case 'completed':
+      return OrderStatus.completed;
+
+    case 'CANCELLED':
+    case 'cancelled':
+      return OrderStatus.cancelled;
+
+    case 'REFUNDED':
+    case 'refunded':
+      return OrderStatus.refunded;
+
+    case 'PENDING_PAYMENT':
+    case 'pendingPayment':
+    default:
+      return OrderStatus.pendingPayment;
+  }
+}
+
+OrderPaymentStatus _parsePaymentStatus(Object? value) {
+  switch (value) {
+    case 'PROCESSING':
+    case 'processing':
+      return OrderPaymentStatus.processing;
+
+    case 'PAID':
+    case 'paid':
+      return OrderPaymentStatus.paid;
+
+    case 'FAILED':
+    case 'failed':
+      return OrderPaymentStatus.failed;
+
+    case 'REFUNDED':
+    case 'refunded':
+      return OrderPaymentStatus.refunded;
+
+    case 'PARTIALLY_REFUNDED':
+    case 'partiallyRefunded':
+      return OrderPaymentStatus.partiallyRefunded;
+
+    case 'UNPAID':
+    case 'unpaid':
+    default:
+      return OrderPaymentStatus.unpaid;
+  }
+}
+
+String _joinAddressLines(String addressLine1, String? addressLine2) {
+  final secondLine = addressLine2?.trim();
+
+  if (secondLine == null || secondLine.isEmpty) {
+    return addressLine1;
+  }
+
+  return '$addressLine1, $secondLine';
+}
+
+String _toCountryCode(String country) {
+  final normalized = country.trim().toUpperCase();
+
+  if (RegExp(r'^[A-Z]{2}$').hasMatch(normalized)) {
+    return normalized;
+  }
+
+  if (normalized == 'MALAYSIA' ||
+      country.trim() == '馬來西亞' ||
+      country.trim() == '马来西亚') {
+    return 'MY';
+  }
+
+  return 'MY';
 }

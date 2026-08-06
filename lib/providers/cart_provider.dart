@@ -12,10 +12,10 @@ enum CartStatus { initial, loading, ready, error }
 class CartProvider extends ChangeNotifier {
   final CartRepository _repository;
 
-  CartProvider({required CartRepository repository}) : _repository = repository;
+  CartProvider({required CartRepository repository})
+      : _repository = repository;
 
   List<CartItem> _items = const [];
-
   CartStatus _status = CartStatus.initial;
   String? _errorMessage;
 
@@ -41,11 +41,17 @@ class CartProvider extends ChangeNotifier {
   int get productTypeCount => _items.length;
 
   int get totalQuantity {
-    return _items.fold<int>(0, (total, item) => total + item.quantity);
+    return _items.fold<int>(
+      0,
+      (total, item) => total + item.quantity,
+    );
   }
 
   double get totalPrice {
-    return _items.fold<double>(0, (total, item) => total + item.subtotal);
+    return _items.fold<double>(
+      0,
+      (total, item) => total + item.subtotal,
+    );
   }
 
   int quantityOf(String productId) {
@@ -92,11 +98,15 @@ class CartProvider extends ChangeNotifier {
       await loadCart();
 
       final index = _findProductIndex(product.id);
-
       final nextItems = List<CartItem>.from(_items);
 
       if (index == -1) {
-        nextItems.add(CartItem(product: product, quantity: 1));
+        nextItems.add(
+          CartItem(
+            product: product,
+            quantity: 1,
+          ),
+        );
       } else {
         final currentItem = nextItems[index];
 
@@ -120,7 +130,6 @@ class CartProvider extends ChangeNotifier {
       }
 
       final nextItems = List<CartItem>.from(_items);
-
       final currentItem = nextItems[index];
 
       nextItems[index] = currentItem.copyWith(
@@ -142,7 +151,6 @@ class CartProvider extends ChangeNotifier {
       }
 
       final nextItems = List<CartItem>.from(_items);
-
       final currentItem = nextItems[index];
 
       if (currentItem.quantity <= 1) {
@@ -164,6 +172,49 @@ class CartProvider extends ChangeNotifier {
       final nextItems = _items
           .where((item) => item.product.id != productId)
           .toList(growable: false);
+
+      await _saveOptimistically(nextItems);
+    });
+  }
+
+  Future<void> removePurchasedItems(
+    Iterable<CartItem> purchasedItems,
+  ) {
+    return _enqueue(() async {
+      await loadCart();
+
+      final purchasedQuantities = <String, int>{};
+
+      for (final item in purchasedItems) {
+        purchasedQuantities.update(
+          item.product.id,
+          (quantity) => quantity + item.quantity,
+          ifAbsent: () => item.quantity,
+        );
+      }
+
+      final nextItems = <CartItem>[];
+
+      for (final currentItem in _items) {
+        final purchasedQuantity =
+            purchasedQuantities[currentItem.product.id] ?? 0;
+
+        if (purchasedQuantity <= 0) {
+          nextItems.add(currentItem);
+          continue;
+        }
+
+        final remainingQuantity =
+            currentItem.quantity - purchasedQuantity;
+
+        if (remainingQuantity > 0) {
+          nextItems.add(
+            currentItem.copyWith(
+              quantity: remainingQuantity,
+            ),
+          );
+        }
+      }
 
       await _saveOptimistically(nextItems);
     });
@@ -193,12 +244,13 @@ class CartProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> _saveOptimistically(List<CartItem> nextItems) async {
+  Future<void> _saveOptimistically(
+    List<CartItem> nextItems,
+  ) async {
     final previousItems = _items;
 
     // 先更新畫面，使用者不需要等待磁碟或網路。
     _items = List<CartItem>.unmodifiable(nextItems);
-
     _status = CartStatus.ready;
     _errorMessage = null;
     notifyListeners();
@@ -216,7 +268,9 @@ class CartProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _enqueue(Future<void> Function() operation) {
+  Future<void> _enqueue(
+    Future<void> Function() operation,
+  ) {
     final completer = Completer<void>();
 
     _operationQueue = _operationQueue.then((_) async {
@@ -232,6 +286,8 @@ class CartProvider extends ChangeNotifier {
   }
 
   int _findProductIndex(String productId) {
-    return _items.indexWhere((item) => item.product.id == productId);
+    return _items.indexWhere(
+      (item) => item.product.id == productId,
+    );
   }
 }

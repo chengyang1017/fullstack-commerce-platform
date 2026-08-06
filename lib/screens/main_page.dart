@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/account_page.dart';
 import 'package:flutter_application_1/screens/home_page.dart';
-import 'cart_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -12,7 +12,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [HomePage(), CartPage()];
+  final List<Widget> _pages = [HomePage(), AccountPage()];
 
   void _changePage(int index) {
     setState(() {
@@ -29,7 +29,7 @@ class _MainPageState extends State<MainPage> {
         onDestinationSelected: _changePage,
         destinations: [
           NavigationDestination(icon: Icon(Icons.home), label: '主頁'),
-          NavigationDestination(icon: Icon(Icons.shop), label: '購物車'),
+          NavigationDestination(icon: Icon(Icons.person), label: '我'),
         ],
       ),
     );

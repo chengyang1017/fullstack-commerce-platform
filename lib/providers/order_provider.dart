@@ -1,33 +1,35 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../models/order.dart';
 import '../repositories/order_repository.dart';
+import 'customer_auth_provider.dart';
 
 enum OrderLoadStatus { initial, loading, ready, error }
 
 class OrderProvider extends ChangeNotifier {
   final OrderRepository _repository;
-  final FirebaseAuth _auth;
+  final CustomerAuthProvider _authProvider;
 
-  OrderProvider(this._repository, {FirebaseAuth? auth})
-    : _auth = auth ?? FirebaseAuth.instance;
+  OrderProvider(
+    this._repository,
+    this._authProvider,
+  );
 
   List<Order> _orders = const [];
+
+  final Set<String> _cancellingOrderIds = <String>{};
 
   OrderLoadStatus _status = OrderLoadStatus.initial;
 
   String? _errorMessage;
 
-  StreamSubscription<User?>? _authSubscription;
-
-  StreamSubscription<List<Order>>? _ordersSubscription;
-
   bool _started = false;
-  int _bindingVersion = 0;
+  bool _disposed = false;
+  int _loadVersion = 0;
+  String? _boundAccountEmail;
 
   UnmodifiableListView<Order> get orders {
     return UnmodifiableListView(_orders);
@@ -41,81 +43,185 @@ class OrderProvider extends ChangeNotifier {
     return _status == OrderLoadStatus.loading;
   }
 
+  bool isCancellingOrder(String orderId) {
+    return _cancellingOrderIds.contains(orderId);
+  }
+
   void start() {
     if (_started) return;
 
     _started = true;
 
-    _authSubscription = _auth.authStateChanges().listen(
-      (user) {
-        unawaited(_bindUser(user));
-      },
-      onError: (Object error) {
-        _status = OrderLoadStatus.error;
-        _errorMessage = '登入狀態讀取失敗：$error';
-
-        notifyListeners();
-      },
+    _authProvider.addListener(
+      _handleAuthenticationChanged,
     );
+
+    unawaited(_syncAuthentication());
   }
 
-  Future<void> _bindUser(User? user) async {
-    final currentVersion = ++_bindingVersion;
+  void _handleAuthenticationChanged() {
+    unawaited(_syncAuthentication());
+  }
 
-    await _ordersSubscription?.cancel();
-    _ordersSubscription = null;
+  Future<void> _syncAuthentication() async {
+    if (_disposed) return;
 
-    if (currentVersion != _bindingVersion) {
+    if (_authProvider.status == CustomerAuthStatus.checking) {
+      if (_status == OrderLoadStatus.initial) {
+        _status = OrderLoadStatus.loading;
+        _errorMessage = null;
+        notifyListeners();
+      }
+
       return;
     }
 
-    if (user == null) {
+    final user = _authProvider.user;
+
+    if (!_authProvider.isLoggedIn || user == null) {
+      _loadVersion++;
+      _boundAccountEmail = null;
       _orders = const [];
+      _cancellingOrderIds.clear();
       _status = OrderLoadStatus.ready;
       _errorMessage = null;
-
       notifyListeners();
       return;
     }
 
-    _orders = const [];
-    _status = OrderLoadStatus.loading;
-    _errorMessage = null;
+    if (_boundAccountEmail == user.email &&
+        (_status == OrderLoadStatus.loading ||
+            _status == OrderLoadStatus.ready)) {
+      return;
+    }
 
-    notifyListeners();
+    _boundAccountEmail = user.email;
 
-    _ordersSubscription = _repository
-        .watchOrders(user.uid)
-        .listen(
-          (orders) {
-            if (currentVersion != _bindingVersion) {
-              return;
-            }
-
-            _orders = List<Order>.unmodifiable(orders);
-
-            _status = OrderLoadStatus.ready;
-            _errorMessage = null;
-
-            notifyListeners();
-          },
-          onError: (Object error, StackTrace stackTrace) {
-            if (currentVersion != _bindingVersion) {
-              return;
-            }
-
-            _status = OrderLoadStatus.error;
-            _errorMessage = '訂單監聽失敗：$error';
-
-            notifyListeners();
-          },
-        );
+    await _loadOrders();
   }
 
-  Future<void> refresh() {
-  return _bindUser(_auth.currentUser);
-}
-  
+  Future<void> _loadOrders() async {
+    final currentVersion = ++_loadVersion;
+
+    _status = OrderLoadStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final orders = await _repository.loadOrders();
+
+      if (_disposed || currentVersion != _loadVersion) {
+        return;
+      }
+
+      _orders = List<Order>.unmodifiable(orders);
+      _status = OrderLoadStatus.ready;
+      _errorMessage = null;
+    } catch (error) {
+      if (_disposed || currentVersion != _loadVersion) {
+        return;
+      }
+
+      _status = OrderLoadStatus.error;
+      _errorMessage = '訂單載入失敗：$error';
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> refresh() async {
+    if (!_authProvider.isLoggedIn || _authProvider.user == null) {
+      _orders = const [];
+      _status = OrderLoadStatus.ready;
+      _errorMessage = null;
+      notifyListeners();
+      return;
+    }
+
+    await _loadOrders();
+  }
+
+  void addCreatedOrder(Order order) {
+    _replaceOrder(order);
+  }
+
+  Future<bool> cancelOrder(String orderId) async {
+    if (_disposed || _cancellingOrderIds.contains(orderId)) {
+      return false;
+    }
+
+    final order = findById(orderId);
+
+    if (order == null) {
+      _errorMessage = '找不到這筆訂單';
+      notifyListeners();
+      return false;
+    }
+
+    if (order.status != OrderStatus.pendingPayment) {
+      _errorMessage = '只有待付款訂單可以取消';
+      notifyListeners();
+      return false;
+    }
+
+    _cancellingOrderIds.add(orderId);
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final cancelledOrder = await _repository.cancelOrder(orderId);
+
+      if (_disposed) {
+        return false;
+      }
+
+      _replaceOrder(
+        cancelledOrder,
+        notify: false,
+      );
+
+      _status = OrderLoadStatus.ready;
+      _errorMessage = null;
+
+      return true;
+    } catch (error) {
+      if (_disposed) {
+        return false;
+      }
+
+      _errorMessage = '取消訂單失敗：$error';
+      return false;
+    } finally {
+      if (!_disposed) {
+        _cancellingOrderIds.remove(orderId);
+        notifyListeners();
+      }
+    }
+  }
+
+  void _replaceOrder(
+    Order order, {
+    bool notify = true,
+  }) {
+    final nextOrders = <Order>[
+      order,
+      ..._orders.where(
+        (existingOrder) => existingOrder.id != order.id,
+      ),
+    ];
+
+    nextOrders.sort(
+      (left, right) => right.createdAt.compareTo(left.createdAt),
+    );
+
+    _orders = List<Order>.unmodifiable(nextOrders);
+    _status = OrderLoadStatus.ready;
+    _errorMessage = null;
+
+    if (notify) {
+      notifyListeners();
+    }
+  }
 
   Order? findById(String orderId) {
     for (final order in _orders) {
@@ -133,10 +239,14 @@ class OrderProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _bindingVersion++;
+    _disposed = true;
+    _loadVersion++;
 
-    _authSubscription?.cancel();
-    _ordersSubscription?.cancel();
+    if (_started) {
+      _authProvider.removeListener(
+        _handleAuthenticationChanged,
+      );
+    }
 
     super.dispose();
   }
