@@ -126,3 +126,9 @@ service-account.json
 service-account*.json
 *serviceAccount*.json
 *-firebase-adminsdk-*.json
+
+# Local AI / development tooling
+.agents/
+.claude/
+.ai-code-tutor/
+skills-lock.json
