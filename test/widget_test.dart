@@ -1,5 +1,5 @@
-import 'package:flutter_application_1/models/cart_item.dart';
-import 'package:flutter_application_1/models/product.dart';
+import 'package:flutter_application_1/features/cart/domain/models/cart_item.dart';
+import 'package:flutter_application_1/features/product/domain/models/product.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

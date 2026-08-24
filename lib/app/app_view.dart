@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubits/locale/locale_cubit.dart';
-import '../cubits/theme/theme_mode_cubit.dart';
+import '../core/settings/locale/locale_cubit.dart';
+import '../core/settings/theme/theme_mode_cubit.dart';
 import '../l10n/app_localizations.dart';
-import '../screens/auth/customer_auth_gate.dart';
+import '../features/auth/presentation/pages/customer_auth_gate.dart';
 import 'app_theme.dart';
 
 class AppView extends StatelessWidget {

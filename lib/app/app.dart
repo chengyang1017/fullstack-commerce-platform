@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubits/auth/customer_auth_cubit.dart';
-import '../cubits/cart/cart_cubit.dart';
-import '../cubits/locale/locale_cubit.dart';
-import '../cubits/order/order_cubit.dart';
-import '../cubits/product/product_cubit.dart';
-import '../cubits/theme/theme_mode_cubit.dart';
-import '../repositories/address_repository.dart';
-import '../repositories/cart_repository.dart';
-import '../repositories/locale_preferences_repository.dart';
-import '../repositories/order_repository.dart';
-import '../repositories/payment_repository.dart';
-import '../repositories/product_repository.dart';
-import '../repositories/theme_preferences_repository.dart';
-import '../services/address_service.dart';
-import '../services/cart_service.dart';
-import '../services/customer_auth_service.dart';
-import '../services/order_service.dart';
-import '../services/payment_service.dart';
+import '../features/auth/presentation/cubit/customer_auth_cubit.dart';
+import '../features/cart/presentation/cubit/cart_cubit.dart';
+import '../core/settings/locale/locale_cubit.dart';
+import '../features/order/presentation/cubit/order_cubit.dart';
+import '../features/product/presentation/cubit/product_cubit.dart';
+import '../core/settings/theme/theme_mode_cubit.dart';
+import '../features/address/data/repositories/address_repository.dart';
+import '../features/cart/data/repositories/cart_repository.dart';
+import '../core/settings/locale/locale_preferences_repository.dart';
+import '../features/order/data/repositories/order_repository.dart';
+import '../features/payment/data/repositories/payment_repository.dart';
+import '../features/product/data/repositories/product_repository.dart';
+import '../core/settings/theme/theme_preferences_repository.dart';
+import '../features/address/data/services/address_service.dart';
+import '../features/cart/data/services/cart_service.dart';
+import '../features/auth/data/services/customer_auth_service.dart';
+import '../features/order/data/services/order_service.dart';
+import '../features/payment/data/services/payment_service.dart';
 import 'app_view.dart';
 
 class ShoppingApp extends StatelessWidget {
