@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../l10n/app_localizations.dart';
+import '../../../account/presentation/pages/account_page.dart';
+import '../../../cart/presentation/widgets/cart_icon_button.dart';
+import '../../../product/domain/models/product.dart';
 import '../../../product/presentation/cubit/product_cubit.dart';
 import '../../../product/presentation/cubit/product_state.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../product/domain/models/product.dart';
-import '../../../cart/presentation/widgets/cart_icon_button.dart';
-import '../widgets/home_banner.dart';
-import '../widgets/home_categories.dart';
-import '../widgets/home_hot_products.dart';
-import '../widgets/home_product_card.dart';
-import '../widgets/home_product_status.dart';
-import '../widgets/home_quick_actions.dart';
-import '../widgets/home_search_bar.dart';
-import '../widgets/home_promotion_card.dart';
-import '../../../account/presentation/pages/account_page.dart';
 import '../../../product/presentation/pages/product_details.dart';
 import '../../../product/presentation/pages/product_list.dart';
+import '../widgets/home_banner.dart';
+import '../widgets/home_categories.dart';
+import '../widgets/home_coupon_strip.dart';
+import '../widgets/home_hot_products.dart';
+import '../widgets/home_new_arrivals.dart';
+import '../widgets/home_product_status.dart';
+import '../widgets/home_search_bar.dart';
+import 'all_categories_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -36,7 +36,7 @@ class HomePage extends StatelessWidget {
     final bestSellingProducts = List<Product>.of(readyProducts)
       ..sort((a, b) => b.sold.compareTo(a.sold));
 
-    final latestProducts = readyProducts.take(10).toList(growable: false);
+    final newArrivalProducts = readyProducts.take(4).toList(growable: false);
 
     final hasProducts = readyProducts.isNotEmpty;
 
@@ -48,31 +48,14 @@ class HomePage extends StatelessWidget {
           SliverToBoxAdapter(
             child: Column(
               children: [
+                const SizedBox(height: 8),
+
                 const HomeBanner(),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 22),
 
-                HomeQuickActions(
-                  onDailyDealsTap: () {
-                    _showComingSoon(context, l10n.dailyDealsComingSoon);
-                  },
-                  onNewArrivalsTap: () {
-                    _openProductList(
-                      context,
-                      categoryId: 'all',
-                      categoryTitle: l10n.newArrivals,
-                      mode: ProductListMode.latest,
-                    );
-                  },
-                  onBestSellersTap: () {
-                    _openProductList(
-                      context,
-                      categoryId: 'all',
-                      categoryTitle: l10n.bestSellers,
-                      mode: ProductListMode.bestSelling,
-                    );
-                  },
-                  onCouponsTap: () {
+                HomeCouponStrip(
+                  onCouponTap: () {
                     _showComingSoon(context, l10n.couponsComingSoon);
                   },
                 ),
@@ -87,9 +70,12 @@ class HomePage extends StatelessWidget {
                       categoryTitle: categoryTitle,
                     );
                   },
+                  onViewAll: () {
+                    _openAllCategories(context);
+                  },
                 ),
 
-                const SizedBox(height: 18),
+                const SizedBox(height: 26),
 
                 switch (productState) {
                   ProductInitial() => const HomeProductLoading(),
@@ -107,42 +93,47 @@ class HomePage extends StatelessWidget {
                     message: l10n.noProductsAvailable,
                   ),
 
-                  ProductReady() => HomeHotProducts(
-                    products: bestSellingProducts
-                        .take(8)
-                        .toList(growable: false),
-                    onProductTap: (product) {
-                      _openProductDetails(context, product);
-                    },
-                    onMorePressed: () {
-                      _openProductList(
-                        context,
-                        categoryId: 'all',
-                        categoryTitle: l10n.bestSellers,
-                        mode: ProductListMode.bestSelling,
-                      );
-                    },
+                  ProductReady() => Column(
+                    children: [
+                      HomeNewArrivals(
+                        products: newArrivalProducts,
+                        onProductTap: (product) {
+                          _openProductDetails(context, product);
+                        },
+                        onViewAll: () {
+                          _openProductList(
+                            context,
+                            categoryId: 'all',
+                            categoryTitle: l10n.newArrivals,
+                            mode: ProductListMode.latest,
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 26),
+
+                      HomeHotProducts(
+                        products: bestSellingProducts,
+                        onProductTap: (product) {
+                          _openProductDetails(context, product);
+                        },
+                        onMorePressed: () {
+                          _openProductList(
+                            context,
+                            categoryId: 'all',
+                            categoryTitle: l10n.bestSellers,
+                            mode: ProductListMode.bestSelling,
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 },
 
-                const SizedBox(height: 8),
-
-                const HomePromotionCard(),
-
-                if (hasProducts) ...[
-                  const SizedBox(height: 24),
-
-                  const _HomeRecommendationTitle(),
-
-                  const SizedBox(height: 14),
-                ],
+                const SizedBox(height: 36),
               ],
             ),
           ),
-
-          if (hasProducts) _buildRecommendationGrid(context, latestProducts),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
     );
@@ -159,8 +150,8 @@ class HomePage extends StatelessWidget {
       backgroundColor: colorScheme.surface,
       surfaceTintColor: colorScheme.surface,
       elevation: 0,
-      toolbarHeight: 76,
-      titleSpacing: 16,
+      toolbarHeight: 72,
+      titleSpacing: 12,
       title: HomeSearchBar(
         onScannerTap: () {
           _openScanner(context);
@@ -182,56 +173,31 @@ class HomePage extends StatelessWidget {
         ),
 
         const Padding(
-          padding: EdgeInsets.only(right: 8),
+          padding: EdgeInsets.only(right: 6),
           child: CartIconButton(),
         ),
       ],
     );
   }
 
-  Widget _buildRecommendationGrid(
-    BuildContext context,
-    List<Product> products,
-  ) {
-    return SliverLayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.crossAxisExtent;
+  Future<void> _openAllCategories(BuildContext context) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) {
+          return AllCategoriesPage(
+            onCategorySelected: (categoryId, categoryTitle) {
+              Navigator.pop(context);
 
-        final crossAxisCount = switch (width) {
-          >= 1100 => 5,
-          >= 800 => 4,
-          >= 600 => 3,
-          _ => 2,
-        };
-
-        final childAspectRatio = switch (crossAxisCount) {
-          >= 4 => 0.72,
-          3 => 0.70,
-          _ => 0.68,
-        };
-
-        return SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: SliverGrid(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final product = products[index];
-
-              return HomeProductCard(
-                product: product,
-                onTap: () {
-                  _openProductDetails(context, product);
-                },
+              _openProductList(
+                context,
+                categoryId: categoryId,
+                categoryTitle: categoryTitle,
               );
-            }, childCount: products.length),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: childAspectRatio,
-            ),
-          ),
-        );
-      },
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -294,28 +260,6 @@ class HomePage extends StatelessWidget {
         builder: (_) {
           return const AccountPage();
         },
-      ),
-    );
-  }
-}
-
-class _HomeRecommendationTitle extends StatelessWidget {
-  const _HomeRecommendationTitle();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          l10n.latestProducts,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
-        ),
       ),
     );
   }

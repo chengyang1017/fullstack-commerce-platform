@@ -13,211 +13,170 @@ class HomeBanner extends StatefulWidget {
 }
 
 class _HomeBannerState extends State<HomeBanner> {
-  int _bannerIndex = 0;
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     final l10n = AppLocalizations.of(context);
 
-    final banners = [
-      _HeroBannerData(
+    final slides = [
+      _HeroSlide(
         kicker: l10n.heroLaptopKicker,
         title: l10n.heroLaptopTitle,
         subtitle: l10n.heroLaptopSubtitle,
         icon: Icons.laptop_mac_rounded,
-        startColor: colorScheme.primary,
-        endColor: const Color(0xFF4338CA),
+        colors: const [Color(0xFF3166B3), Color(0xFF5E5CE6)],
       ),
-      _HeroBannerData(
+      _HeroSlide(
         kicker: l10n.heroMobileKicker,
         title: l10n.heroMobileTitle,
         subtitle: l10n.heroMobileSubtitle,
         icon: Icons.phone_iphone_rounded,
-        startColor: const Color(0xFFEA580C),
-        endColor: const Color(0xFFBE123C),
+        colors: const [Color(0xFFE85D24), Color(0xFFD51F4B)],
       ),
-      _HeroBannerData(
+      _HeroSlide(
         kicker: l10n.heroGamingKicker,
         title: l10n.heroGamingTitle,
         subtitle: l10n.heroGamingSubtitle,
         icon: Icons.sports_esports_rounded,
-        startColor: const Color(0xFF047857),
-        endColor: const Color(0xFF0F766E),
+        colors: const [Color(0xFF007A63), Color(0xFF15947F)],
       ),
     ];
 
-    return Container(
-      color: colorScheme.surface,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Column(
-        children: [
-          CarouselSlider.builder(
-            itemCount: banners.length,
-            itemBuilder: (context, index, realIndex) {
-              return _HeroBanner(data: banners[index]);
+    return Column(
+      children: [
+        CarouselSlider.builder(
+          itemCount: slides.length,
+          itemBuilder: (context, index, realIndex) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: _BannerCard(slide: slides[index]),
+            );
+          },
+          options: CarouselOptions(
+            height: 160,
+            viewportFraction: 0.94,
+            enableInfiniteScroll: true,
+            autoPlay: true,
+            autoPlayInterval: const Duration(seconds: 5),
+            onPageChanged: (index, reason) {
+              setState(() {
+                _currentIndex = index;
+              });
             },
-            options: CarouselOptions(
-              height: 200,
-              viewportFraction: 1,
-              autoPlay: true,
-              autoPlayInterval: const Duration(seconds: 5),
-              autoPlayAnimationDuration: const Duration(milliseconds: 650),
-              onPageChanged: (index, reason) {
-                setState(() {
-                  _bannerIndex = index;
-                });
-              },
-            ),
           ),
+        ),
 
-          const SizedBox(height: 12),
+        const SizedBox(height: 8),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(banners.length, (index) {
-              final selected = index == _bannerIndex;
-
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                width: selected ? 24 : 7,
-                height: 7,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var index = 0; index < slides.length; index++)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: index == _currentIndex ? 20 : 5,
+                height: 5,
                 decoration: BoxDecoration(
-                  color: selected
-                      ? colorScheme.primary
-                      : colorScheme.outlineVariant,
+                  color: index == _currentIndex
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(100),
                 ),
-              );
-            }),
-          ),
-        ],
-      ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
 
-class _HeroBanner extends StatelessWidget {
-  const _HeroBanner({required this.data});
+class _BannerCard extends StatelessWidget {
+  const _BannerCard({required this.slide});
 
-  final _HeroBannerData data;
+  final _HeroSlide slide;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [data.startColor, data.endColor],
+          colors: slide.colors,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Stack(
+      child: Row(
         children: [
-          Positioned(
-            top: -70,
-            right: -45,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-          ),
-
-          Positioned(
-            bottom: -90,
-            right: 40,
-            child: Container(
-              width: 190,
-              height: 190,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.06),
-              ),
-            ),
-          ),
-
-          Positioned(
-            right: 22,
-            top: 26,
-            bottom: 26,
-            child: Container(
-              width: 118,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-              ),
-              child: Icon(data.icon, size: 68, color: Colors.white),
-            ),
-          ),
-
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 150, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      data.kicker,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
                   ),
-
-                  const SizedBox(height: 10),
-
-                  Text(
-                    data.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    slide.kicker,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
-                      height: 1.08,
+                      fontSize: 9,
                       fontWeight: FontWeight.w800,
+                      letterSpacing: 0.7,
                     ),
                   ),
+                ),
 
-                  const SizedBox(height: 8),
+                const SizedBox(height: 8),
 
-                  Text(
-                    data.subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.82),
-                      fontSize: 12,
-                      height: 1.35,
-                    ),
+                Text(
+                  slide.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
                   ),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: 5),
+
+                Text(
+                  slide.subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.82),
+                    fontSize: 11,
+                    height: 1.3,
+                  ),
+                ),
+              ],
             ),
+          ),
+
+          const SizedBox(width: 14),
+
+          Container(
+            width: 78,
+            height: 78,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Icon(slide.icon, size: 40, color: Colors.white),
           ),
         ],
       ),
@@ -225,20 +184,18 @@ class _HeroBanner extends StatelessWidget {
   }
 }
 
-class _HeroBannerData {
-  const _HeroBannerData({
+class _HeroSlide {
+  const _HeroSlide({
     required this.kicker,
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.startColor,
-    required this.endColor,
+    required this.colors,
   });
 
   final String kicker;
   final String title;
   final String subtitle;
   final IconData icon;
-  final Color startColor;
-  final Color endColor;
+  final List<Color> colors;
 }

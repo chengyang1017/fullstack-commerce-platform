@@ -3,10 +3,16 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class HomeCategories extends StatelessWidget {
-  const HomeCategories({super.key, required this.onCategorySelected});
+  const HomeCategories({
+    super.key,
+    required this.onCategorySelected,
+    required this.onViewAll,
+  });
 
   final void Function(String categoryId, String categoryTitle)
   onCategorySelected;
+
+  final VoidCallback onViewAll;
 
   @override
   Widget build(BuildContext context) {
@@ -24,81 +30,74 @@ class HomeCategories extends StatelessWidget {
         icon: Icons.laptop_mac_rounded,
       ),
       _CategoryItem(
-        id: 'camera',
-        title: l10n.categoryCamera,
-        icon: Icons.photo_camera_rounded,
-      ),
-      _CategoryItem(
-        id: 'audio',
-        title: l10n.categoryAudio,
-        icon: Icons.headphones_rounded,
-      ),
-      _CategoryItem(
         id: 'gaming',
         title: l10n.categoryGaming,
         icon: Icons.sports_esports_rounded,
       ),
-      _CategoryItem(
-        id: 'accessory',
-        title: l10n.categoryAccessory,
-        icon: Icons.watch_rounded,
-      ),
-      _CategoryItem(
-        id: 'home',
-        title: l10n.categoryHomeAppliance,
-        icon: Icons.home_rounded,
-      ),
-      _CategoryItem(
-        id: 'all',
-        title: l10n.categoryAll,
-        icon: Icons.apps_rounded,
-      ),
     ];
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Column(
-        children: [
-          _SectionHeader(
-            title: l10n.productCategories,
-            actionText: l10n.viewAll,
-            onPressed: () {
-              onCategorySelected('all', l10n.allProducts);
-            },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.productCategories,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+
+              TextButton(
+                onPressed: onViewAll,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.viewAll),
+                    const SizedBox(width: 2),
+                    const Icon(Icons.chevron_right_rounded, size: 18),
+                  ],
+                ),
+              ),
+            ],
           ),
+        ),
 
-          const SizedBox(height: 18),
+        const SizedBox(height: 10),
 
-          GridView.builder(
-            shrinkWrap: true,
-            padding: EdgeInsets.zero,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: categories.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 18,
-              mainAxisExtent: 78,
-            ),
-            itemBuilder: (context, index) {
-              final category = categories[index];
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              for (var index = 0; index < categories.length; index++) ...[
+                Expanded(
+                  child: _CategoryCard(
+                    category: categories[index],
+                    onTap: () {
+                      onCategorySelected(
+                        categories[index].id,
+                        categories[index].title,
+                      );
+                    },
+                  ),
+                ),
 
-              return _CategoryButton(
-                category: category,
-                onTap: () {
-                  onCategorySelected(category.id, category.title);
-                },
-              );
-            },
+                if (index != categories.length - 1) const SizedBox(width: 10),
+              ],
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class _CategoryButton extends StatelessWidget {
-  const _CategoryButton({required this.category, required this.onTap});
+class _CategoryCard extends StatelessWidget {
+  const _CategoryCard({required this.category, required this.onTap});
 
   final _CategoryItem category;
   final VoidCallback onTap;
@@ -108,85 +107,52 @@ class _CategoryButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Material(
-      color: Colors.transparent,
+      color: colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Column(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(category.icon, size: 22, color: colorScheme.primary),
-            ),
+        child: SizedBox(
+          height: 118,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  category.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
 
-            const SizedBox(height: 7),
+                const Spacer(),
 
-            Text(
-              category.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 11,
-                height: 1,
-                fontWeight: FontWeight.w600,
-              ),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      category.icon,
+                      size: 27,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    required this.actionText,
-    required this.onPressed,
-  });
-
-  final String title;
-  final String actionText;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-        ),
-
-        TextButton(
-          onPressed: onPressed,
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.primary,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(actionText),
-              const SizedBox(width: 2),
-              const Icon(Icons.chevron_right_rounded, size: 18),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
