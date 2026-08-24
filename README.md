@@ -169,7 +169,6 @@ Both frontend applications communicate with the same backend and business data.
 │   ├── package.json
 │   └── ...
 │
-├── functions/
 ├── .firebaserc
 ├── firebase.json
 ├── .gitignore
