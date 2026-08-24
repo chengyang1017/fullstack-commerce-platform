@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../providers/customer_auth_provider.dart';
+import '../../cubits/auth/customer_auth_cubit.dart';
 import '../../services/customer_auth_service.dart';
 import 'customer_register_page.dart';
 
 class CustomerLoginPage extends StatefulWidget {
-  const CustomerLoginPage({super.key});
+  const CustomerLoginPage({
+    super.key,
+  });
 
   @override
-  State<CustomerLoginPage> createState() => _CustomerLoginPageState();
+  State<CustomerLoginPage> createState() {
+    return _CustomerLoginPageState();
+  }
 }
 
-class _CustomerLoginPageState extends State<CustomerLoginPage> {
-  final _formKey = GlobalKey<FormState>();
+class _CustomerLoginPageState
+    extends State<CustomerLoginPage> {
+  final _formKey =
+      GlobalKey<FormState>();
 
-  final _emailController = TextEditingController();
+  final _emailController =
+      TextEditingController();
 
-  final _passwordController = TextEditingController();
+  final _passwordController =
+      TextEditingController();
 
   bool _isSubmitting = false;
   bool _obscurePassword = true;
@@ -32,7 +40,9 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
   }
 
   Future<void> _submit() async {
-    if (_isSubmitting || !_formKey.currentState!.validate()) {
+    if (_isSubmitting ||
+        !_formKey.currentState!
+            .validate()) {
       return;
     }
 
@@ -42,9 +52,14 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     });
 
     try {
-      await context.read<CustomerAuthProvider>().login(
-        email: _emailController.text,
-        password: _passwordController.text,
+      await BlocProvider.of<
+          CustomerAuthCubit>(
+        context,
+      ).login(
+        email:
+            _emailController.text,
+        password:
+            _passwordController.text,
       );
     } on CustomerAuthException catch (error) {
       if (!mounted) {
@@ -52,7 +67,8 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
       }
 
       setState(() {
-        _errorMessage = error.message;
+        _errorMessage =
+            error.message;
       });
     } catch (_) {
       if (!mounted) {
@@ -60,7 +76,8 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
       }
 
       setState(() {
-        _errorMessage = '登录失败，请稍后重试';
+        _errorMessage =
+            '登录失败，请稍后重试';
       });
     } finally {
       if (mounted) {
@@ -71,9 +88,15 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     }
   }
 
-  Future<void> _openRegister() async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (_) => const CustomerRegisterPage()),
+  Future<void>
+      _openRegister() async {
+    await Navigator.of(context)
+        .push<void>(
+      MaterialPageRoute(
+        builder: (_) {
+          return const CustomerRegisterPage();
+        },
+      ),
     );
   }
 
@@ -82,127 +105,248 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     return Scaffold(
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+          child:
+              SingleChildScrollView(
+            padding:
+                const EdgeInsets.all(
+              24,
+            ),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints:
+                  const BoxConstraints(
+                maxWidth: 420,
+              ),
               child: AutofillGroup(
                 child: Form(
                   key: _formKey,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment:
+                        CrossAxisAlignment
+                            .stretch,
                     children: [
-                      const Icon(Icons.shopping_bag, size: 72),
-                      const SizedBox(height: 20),
+                      const Icon(
+                        Icons.shopping_bag,
+                        size: 72,
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
                       Text(
                         '欢迎回来',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        textAlign:
+                            TextAlign.center,
+                        style: Theme.of(
+                          context,
+                        )
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight:
+                                  FontWeight
+                                      .bold,
+                            ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(
+                        height: 8,
+                      ),
                       Text(
                         '登录后查看购物车和订单',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign:
+                            TextAlign.center,
+                        style: Theme.of(
+                          context,
+                        )
+                            .textTheme
+                            .bodyMedium,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(
+                        height: 32,
+                      ),
                       TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        autofillHints: const [AutofillHints.email],
-                        decoration: const InputDecoration(
+                        controller:
+                            _emailController,
+                        keyboardType:
+                            TextInputType
+                                .emailAddress,
+                        textInputAction:
+                            TextInputAction
+                                .next,
+                        autofillHints:
+                            const [
+                          AutofillHints
+                              .email,
+                        ],
+                        decoration:
+                            const InputDecoration(
                           labelText: '邮箱',
-                          prefixIcon: Icon(Icons.email),
-                          border: OutlineInputBorder(),
+                          prefixIcon:
+                              Icon(
+                            Icons.email,
+                          ),
+                          border:
+                              OutlineInputBorder(),
                         ),
-                        validator: (value) {
-                          final email = value?.trim() ?? '';
+                        validator:
+                            (value) {
+                          final email =
+                              value?.trim() ??
+                                  '';
 
-                          if (email.isEmpty) {
+                          if (email
+                              .isEmpty) {
                             return '请输入邮箱';
                           }
 
-                          if (!email.contains('@')) {
+                          if (!email
+                              .contains(
+                            '@',
+                          )) {
                             return '邮箱格式无效';
                           }
 
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(
+                        height: 16,
+                      ),
                       TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        textInputAction: TextInputAction.done,
-                        autofillHints: const [AutofillHints.password],
-                        decoration: InputDecoration(
+                        controller:
+                            _passwordController,
+                        obscureText:
+                            _obscurePassword,
+                        textInputAction:
+                            TextInputAction
+                                .done,
+                        autofillHints:
+                            const [
+                          AutofillHints
+                              .password,
+                        ],
+                        decoration:
+                            InputDecoration(
                           labelText: '密码',
-                          prefixIcon: const Icon(Icons.lock),
-                          border: const OutlineInputBorder(),
-                          suffixIcon: IconButton(
+                          prefixIcon:
+                              const Icon(
+                            Icons.lock,
+                          ),
+                          border:
+                              const OutlineInputBorder(),
+                          suffixIcon:
+                              IconButton(
                             onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
+                              setState(
+                                () {
+                                  _obscurePassword =
+                                      !_obscurePassword;
+                                },
+                              );
                             },
                             icon: Icon(
                               _obscurePassword
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
+                                  ? Icons
+                                      .visibility
+                                  : Icons
+                                      .visibility_off,
                             ),
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
+                        validator:
+                            (value) {
+                          if (value ==
+                                  null ||
+                              value
+                                  .isEmpty) {
                             return '请输入密码';
                           }
 
                           return null;
                         },
-                        onFieldSubmitted: (_) async {
+                        onFieldSubmitted:
+                            (_) async {
                           await _submit();
                         },
                       ),
-                      if (_errorMessage != null) ...[
-                        const SizedBox(height: 16),
+                      if (_errorMessage !=
+                          null) ...[
+                        const SizedBox(
+                          height: 16,
+                        ),
                         Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.errorContainer,
-                            borderRadius: BorderRadius.circular(10),
+                          padding:
+                              const EdgeInsets
+                                  .all(
+                            12,
+                          ),
+                          decoration:
+                              BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            )
+                                .colorScheme
+                                .errorContainer,
+                            borderRadius:
+                                BorderRadius
+                                    .circular(
+                              10,
+                            ),
                           ),
                           child: Text(
                             _errorMessage!,
-                            style: TextStyle(
+                            style:
+                                TextStyle(
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onErrorContainer,
+                              )
+                                  .colorScheme
+                                  .onErrorContainer,
                             ),
                           ),
                         ),
                       ],
-                      const SizedBox(height: 24),
+                      const SizedBox(
+                        height: 24,
+                      ),
                       FilledButton(
-                        onPressed: _isSubmitting ? null : _submit,
+                        onPressed:
+                            _isSubmitting
+                                ? null
+                                : _submit,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text('登录'),
+                          padding:
+                              const EdgeInsets
+                                  .symmetric(
+                            vertical: 14,
+                          ),
+                          child:
+                              _isSubmitting
+                                  ? const SizedBox(
+                                      width:
+                                          22,
+                                      height:
+                                          22,
+                                      child:
+                                          CircularProgressIndicator(
+                                        strokeWidth:
+                                            2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      '登录',
+                                    ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(
+                        height: 12,
+                      ),
                       TextButton(
-                        onPressed: _isSubmitting ? null : _openRegister,
-                        child: const Text('没有账号？立即注册'),
+                        onPressed:
+                            _isSubmitting
+                                ? null
+                                : _openRegister,
+                        child: const Text(
+                          '没有账号？立即注册',
+                        ),
                       ),
                     ],
                   ),

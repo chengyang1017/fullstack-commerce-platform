@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../cubits/cart/cart_cubit.dart';
+import '../cubits/checkout/checkout_cubit.dart';
+import '../cubits/checkout/checkout_state.dart';
 import '../models/address.dart';
 import '../models/cart_item.dart';
 import '../models/checkout_request.dart';
 import '../models/order.dart';
-import '../providers/cart_provider.dart';
-import '../providers/checkout_provider.dart';
-import '../providers/order_provider.dart';
+import '../cubits/order/order_cubit.dart';
 import 'address_form_page.dart';
 import 'order_success_page.dart';
 import 'payment_page.dart';
@@ -15,58 +16,62 @@ import 'payment_page.dart';
 class CheckoutPage extends StatelessWidget {
   final CheckoutRequest request;
 
-  const CheckoutPage({
-    super.key,
-    required this.request,
-  });
+  const CheckoutPage({super.key, required this.request});
 
   @override
   Widget build(BuildContext context) {
-    final checkout = context.watch<CheckoutProvider>();
+    return BlocBuilder<CheckoutCubit, CheckoutState>(
+      builder: (context, state) {
+        final checkout = context.read<CheckoutCubit>();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('確認訂單')),
-      body: checkout.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : _buildBody(context, checkout),
-      bottomNavigationBar:
-          checkout.isLoading || request.items.isEmpty
-          ? null
-          : _buildBottomBar(context, checkout),
+        final loading =
+            state.status == CheckoutStatus.initial || state.isLoading;
+
+        return Scaffold(
+          appBar: AppBar(title: const Text('確認訂單')),
+          body: loading
+              ? const Center(child: CircularProgressIndicator())
+              : _buildBody(context, state, checkout),
+          bottomNavigationBar: loading || request.items.isEmpty
+              ? null
+              : _buildBottomBar(context, state, checkout),
+        );
+      },
     );
   }
 
   Widget _buildBody(
     BuildContext context,
-    CheckoutProvider checkout,
+    CheckoutState state,
+    CheckoutCubit checkout,
   ) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        12,
-        12,
-        100,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
       children: [
-        _buildAddressSection(context, checkout),
+        _buildAddressSection(context, state, checkout),
+
         const SizedBox(height: 12),
+
         _buildProductSection(request.items),
+
         const SizedBox(height: 12),
-        _buildShippingSection(checkout),
+
+        _buildShippingSection(state, checkout),
+
         const SizedBox(height: 12),
-        _buildPaymentSection(checkout),
+
+        _buildPaymentSection(state, checkout),
+
         const SizedBox(height: 12),
-        _buildPriceSection(checkout),
-        if (checkout.errorMessage != null)
+
+        _buildPriceSection(state, checkout),
+
+        if (state.errorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 12),
             child: Text(
-              checkout.errorMessage!,
-              style: const TextStyle(
-                color: Colors.red,
-              ),
+              state.errorMessage!,
+              style: const TextStyle(color: Colors.red),
             ),
           ),
       ],
@@ -75,7 +80,8 @@ class CheckoutPage extends StatelessWidget {
 
   Widget _buildAddressSection(
     BuildContext context,
-    CheckoutProvider checkout,
+    CheckoutState state,
+    CheckoutCubit checkout,
   ) {
     return _SectionCard(
       title: '收貨地址',
@@ -85,27 +91,21 @@ class CheckoutPage extends StatelessWidget {
         },
         child: const Text('新增'),
       ),
-      child: checkout.addresses.isEmpty
+      child: state.addresses.isEmpty
           ? ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(
-                Icons.add_location_alt_outlined,
-              ),
+              leading: const Icon(Icons.add_location_alt_outlined),
               title: const Text('新增收貨地址'),
-              subtitle: const Text(
-                '結算前必須填寫配送地址',
-              ),
+              subtitle: const Text('結算前必須填寫配送地址'),
               onTap: () {
                 _addAddress(context);
               },
             )
           : Column(
-              children: checkout.addresses.map((address) {
+              children: state.addresses.map((address) {
                 return _AddressOption(
                   address: address,
-                  selected:
-                      checkout.selectedAddress?.id ==
-                      address.id,
+                  selected: state.selectedAddress?.id == address.id,
                   onTap: () {
                     checkout.selectAddress(address.id);
                   },
@@ -115,9 +115,7 @@ class CheckoutPage extends StatelessWidget {
     );
   }
 
-  Widget _buildProductSection(
-    List<CartItem> items,
-  ) {
+  Widget _buildProductSection(List<CartItem> items) {
     return _SectionCard(
       title: '商品',
       child: Column(
@@ -133,46 +131,42 @@ class CheckoutPage extends StatelessWidget {
                     width: 64,
                     height: 64,
                     fit: BoxFit.cover,
-                    errorBuilder: (
-                      context,
-                      error,
-                      stackTrace,
-                    ) {
+                    errorBuilder: (context, error, stackTrace) {
                       return const SizedBox(
                         width: 64,
                         height: 64,
                         child: ColoredBox(
                           color: Color(0xFFF2F2F2),
-                          child: Icon(
-                            Icons.broken_image_outlined,
-                          ),
+                          child: Icon(Icons.broken_image_outlined),
                         ),
                       );
                     },
                   ),
                 ),
+
                 const SizedBox(width: 12),
+
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         item.product.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+
                       const SizedBox(height: 6),
+
                       Text(
                         'RM '
                         '${item.product.price.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          color: Colors.red,
-                        ),
+                        style: const TextStyle(color: Colors.red),
                       ),
                     ],
                   ),
                 ),
+
                 Text('× ${item.quantity}'),
               ],
             ),
@@ -182,15 +176,12 @@ class CheckoutPage extends StatelessWidget {
     );
   }
 
-  Widget _buildShippingSection(
-    CheckoutProvider checkout,
-  ) {
+  Widget _buildShippingSection(CheckoutState state, CheckoutCubit checkout) {
     return _SectionCard(
       title: '配送方式',
       child: Column(
         children: ShippingMethod.values.map((method) {
-          final selected =
-              checkout.shippingMethod == method;
+          final selected = state.shippingMethod == method;
 
           return _OptionTile(
             title: method.title,
@@ -207,16 +198,14 @@ class CheckoutPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentSection(
-    CheckoutProvider checkout,
-  ) {
+  Widget _buildPaymentSection(CheckoutState state, CheckoutCubit checkout) {
     return _SectionCard(
       title: '付款方式',
       child: Column(
         children: PaymentMethod.values.map((method) {
           return _OptionTile(
             title: method.title,
-            selected: checkout.paymentMethod == method,
+            selected: state.paymentMethod == method,
             onTap: () {
               checkout.selectPaymentMethod(method);
             },
@@ -226,29 +215,28 @@ class CheckoutPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceSection(
-    CheckoutProvider checkout,
-  ) {
+  Widget _buildPriceSection(CheckoutState state, CheckoutCubit checkout) {
     return _SectionCard(
       title: '金額明細',
       child: Column(
         children: [
           _PriceRow(
             label: '商品小計',
-            value:
-                'RM ${checkout.subtotal(request).toStringAsFixed(2)}',
+            value: 'RM ${checkout.subtotal(request).toStringAsFixed(2)}',
           ),
+
           const SizedBox(height: 10),
+
           _PriceRow(
             label: '運費',
-            value:
-                'RM ${checkout.shippingFee.toStringAsFixed(2)}',
+            value: 'RM ${state.shippingFee.toStringAsFixed(2)}',
           ),
+
           const Divider(height: 24),
+
           _PriceRow(
             label: '應付總額',
-            value:
-                'RM ${checkout.total(request).toStringAsFixed(2)}',
+            value: 'RM ${checkout.total(request).toStringAsFixed(2)}',
             emphasized: true,
           ),
         ],
@@ -258,7 +246,8 @@ class CheckoutPage extends StatelessWidget {
 
   Widget _buildBottomBar(
     BuildContext context,
-    CheckoutProvider checkout,
+    CheckoutState state,
+    CheckoutCubit checkout,
   ) {
     return SafeArea(
       child: Container(
@@ -286,19 +275,18 @@ class CheckoutPage extends StatelessWidget {
                 ),
               ),
             ),
+
             FilledButton(
-              onPressed: checkout.isSubmitting
+              onPressed: state.isSubmitting
                   ? null
                   : () {
                       _placeOrder(context);
                     },
-              child: checkout.isSubmitting
+              child: state.isSubmitting
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('提交訂單'),
             ),
@@ -308,9 +296,7 @@ class CheckoutPage extends StatelessWidget {
     );
   }
 
-  Future<void> _addAddress(
-    BuildContext context,
-  ) async {
+  Future<void> _addAddress(BuildContext context) async {
     final address = await Navigator.push<Address>(
       context,
       MaterialPageRoute(
@@ -325,58 +311,47 @@ class CheckoutPage extends StatelessWidget {
     }
 
     try {
-      await context
-          .read<CheckoutProvider>()
-          .addAddress(address);
+      await context.read<CheckoutCubit>().addAddress(address);
     } catch (_) {
-      if (!context.mounted) return;
+      if (!context.mounted) {
+        return;
+      }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('保存地址失敗'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('保存地址失敗')));
     }
   }
 
-  Future<void> _placeOrder(
-    BuildContext context,
-  ) async {
-    final checkout = context.read<CheckoutProvider>();
-    final cart = context.read<CartProvider>();
+  Future<void> _placeOrder(BuildContext context) async {
+    final checkout = context.read<CheckoutCubit>();
 
-    final order = await checkout.placeOrder(
-      request: request,
-      cart: cart,
-    );
+    final cart = context.read<CartCubit>();
 
-    if (!context.mounted) return;
+    final order = await checkout.placeOrder(request: request, cart: cart);
 
-    if (order == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            checkout.errorMessage ?? '建立訂單失敗',
-          ),
-        ),
-      );
+    if (!context.mounted) {
       return;
     }
 
-    context
-        .read<OrderProvider>()
-        .addCreatedOrder(order);
+    if (order == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(checkout.state.errorMessage ?? '建立訂單失敗')),
+      );
 
-    if (order.paymentMethod ==
-        PaymentMethod.cashOnDelivery) {
+      return;
+    }
+
+    BlocProvider.of<OrderCubit>(context).addCreatedOrder(order);
+
+    if (order.paymentMethod == PaymentMethod.cashOnDelivery) {
       await Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) {
             return OrderSuccessPage(
               order: order,
-              cartClearFailed:
-                  checkout.cartClearFailed,
+              cartClearFailed: checkout.state.cartClearFailed,
             );
           },
         ),
@@ -401,11 +376,7 @@ class _SectionCard extends StatelessWidget {
   final Widget child;
   final Widget? action;
 
-  const _SectionCard({
-    required this.title,
-    required this.child,
-    this.action,
-  });
+  const _SectionCard({required this.title, required this.child, this.action});
 
   @override
   Widget build(BuildContext context) {
@@ -429,7 +400,9 @@ class _SectionCard extends StatelessWidget {
                 ?action,
               ],
             ),
+
             const SizedBox(height: 12),
+
             child,
           ],
         ),
@@ -455,20 +428,15 @@ class _AddressOption extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       onTap: onTap,
       leading: Icon(
-        selected
-            ? Icons.check_circle
-            : Icons.circle_outlined,
-        color: selected
-            ? Theme.of(context).colorScheme.primary
-            : Colors.grey,
+        selected ? Icons.check_circle : Icons.circle_outlined,
+        color: selected ? Theme.of(context).colorScheme.primary : Colors.grey,
       ),
       title: Text(
-        '${address.receiverName}  ${address.phone}',
+        '${address.receiverName}  '
+        '${address.phone}',
       ),
       subtitle: Text(address.fullAddress),
-      trailing: address.isDefault
-          ? const Chip(label: Text('預設'))
-          : null,
+      trailing: address.isDefault ? const Chip(label: Text('預設')) : null,
     );
   }
 }
@@ -492,16 +460,11 @@ class _OptionTile extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       onTap: onTap,
       leading: Icon(
-        selected
-            ? Icons.check_circle
-            : Icons.circle_outlined,
-        color: selected
-            ? Theme.of(context).colorScheme.primary
-            : Colors.grey,
+        selected ? Icons.check_circle : Icons.circle_outlined,
+        color: selected ? Theme.of(context).colorScheme.primary : Colors.grey,
       ),
       title: Text(title),
-      subtitle:
-          subtitle == null ? null : Text(subtitle!),
+      subtitle: subtitle == null ? null : Text(subtitle!),
     );
   }
 }
@@ -521,9 +484,7 @@ class _PriceRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = TextStyle(
       fontSize: emphasized ? 18 : 15,
-      fontWeight: emphasized
-          ? FontWeight.bold
-          : FontWeight.normal,
+      fontWeight: emphasized ? FontWeight.bold : FontWeight.normal,
       color: emphasized ? Colors.red : null,
     );
 

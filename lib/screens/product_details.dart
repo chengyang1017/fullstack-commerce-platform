@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../cubits/cart/cart_cubit.dart';
+import '../cubits/cart/cart_state.dart';
 import '../models/cart_item.dart';
 import '../models/checkout_request.dart';
 import '../models/product.dart';
-import '../providers/cart_provider.dart';
-import '../providers/checkout_provider.dart';
+import '../cubits/checkout/checkout_cubit.dart';
 import '../repositories/address_repository.dart';
 import '../repositories/order_repository.dart';
 import '../widgets/cart_icon_button.dart';
@@ -15,10 +16,7 @@ import 'checkout_page.dart';
 class ProductDetails extends StatefulWidget {
   final Product product;
 
-  const ProductDetails({
-    super.key,
-    required this.product,
-  });
+  const ProductDetails({super.key, required this.product});
 
   @override
   State<ProductDetails> createState() {
@@ -42,11 +40,7 @@ class _ProductDetailsState extends State<ProductDetails> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      title: Text(
-        product.title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(product.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       actions: [
         IconButton(
           onPressed: () {
@@ -55,9 +49,7 @@ class _ProductDetailsState extends State<ProductDetails> {
             });
           },
           icon: Icon(
-            _isFavorite
-                ? Icons.favorite
-                : Icons.favorite_border,
+            _isFavorite ? Icons.favorite : Icons.favorite_border,
             color: _isFavorite ? Colors.red : null,
           ),
         ),
@@ -77,11 +69,7 @@ class _ProductDetailsState extends State<ProductDetails> {
               product.image,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (
-                context,
-                error,
-                stackTrace,
-              ) {
+              errorBuilder: (context, error, stackTrace) {
                 return const ColoredBox(
                   color: Color(0xFFF2F2F2),
                   child: Center(
@@ -98,8 +86,7 @@ class _ProductDetailsState extends State<ProductDetails> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'RM ${product.price.toStringAsFixed(2)}',
@@ -121,9 +108,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                 const SizedBox(height: 12),
                 Text(
                   '已售 ${product.sold}',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(color: Colors.grey),
                 ),
               ],
             ),
@@ -134,105 +119,90 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   Widget _buildBottomNavigationBar() {
-    final quantity = context.select(
-      (CartProvider cart) {
-        return cart.quantityOf(product.id);
+    return BlocSelector<CartCubit, CartState, int>(
+      selector: (state) {
+        return state.quantityOf(product.id);
       },
-    );
-
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 8,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: _addToCart,
-                child: Text(
-                  quantity == 0
-                      ? '加入購物車'
-                      : '加入購物車 ($quantity)',
+      builder: (context, quantity) {
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: Offset(0, -2),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: FilledButton(
-                onPressed: _buyNow,
-                child: const Text('立即購買'),
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _addToCart,
+                    child: Text(quantity == 0 ? '加入購物車' : '加入購物車 ($quantity)'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _buyNow,
+                    child: const Text('立即購買'),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   Future<void> _addToCart() async {
     try {
-      await context
-          .read<CartProvider>()
-          .addProduct(product);
+      await context.read<CartCubit>().addProduct(product);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${product.title} 已加入購物車'),
-          action: SnackBarAction(
-            label: '查看',
-            onPressed: _openCart,
-          ),
+          action: SnackBarAction(label: '查看', onPressed: _openCart),
         ),
       );
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
-      final message =
-          context.read<CartProvider>().errorMessage ??
-          '加入購物車失敗';
+      final message = context.read<CartCubit>().state.errorMessage ?? '加入購物車失敗';
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
   Future<void> _buyNow() async {
-    final addressRepository =
-        context.read<AddressRepository>();
+    final addressRepository = context.read<AddressRepository>();
 
-    final orderRepository =
-        context.read<OrderRepository>();
+    final orderRepository = context.read<OrderRepository>();
 
     final request = CheckoutRequest.buyNow(
-      items: [
-        CartItem(
-          product: product,
-          quantity: 1,
-        ),
-      ],
+      items: [CartItem(product: product, quantity: 1)],
     );
 
     await Navigator.push<void>(
       context,
       MaterialPageRoute(
         builder: (context) {
-          return ChangeNotifierProvider(
-            create: (context) {
-              return CheckoutProvider(
+          return BlocProvider<CheckoutCubit>(
+            create: (_) {
+              return CheckoutCubit(
                 addressRepository: addressRepository,
                 orderRepository: orderRepository,
               )..initialize();
@@ -245,16 +215,16 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   void _openCart() {
-  if (!mounted) {
-    return;
-  }
+    if (!mounted) {
+      return;
+    }
 
-  Navigator.of(context).push<void>(
-    MaterialPageRoute(
-      builder: (_) {
-        return const CartPage();
-      },
-    ),
-  );
-}
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) {
+          return const CartPage();
+        },
+      ),
+    );
+  }
 }

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../cubits/order/order_cubit.dart';
+import '../cubits/order/order_state.dart';
 import '../models/order.dart';
-import '../providers/order_provider.dart';
 import 'order_details_page.dart';
 
 class OrdersPage extends StatefulWidget {
@@ -32,8 +33,6 @@ class _OrdersPageState extends State<OrdersPage> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<OrderProvider>();
-
     return DefaultTabController(
       length: _filters.length,
       child: Scaffold(
@@ -46,37 +45,39 @@ class _OrdersPageState extends State<OrdersPage> {
             }).toList(),
           ),
         ),
-        body: _buildBody(provider),
+        body: BlocBuilder<OrderCubit, OrderState>(
+          builder: (context, state) {
+            return _buildBody(state);
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildBody(OrderProvider provider) {
-    if (provider.isLoading && provider.orders.isEmpty) {
+  Widget _buildBody(OrderState state) {
+    if (state.isLoading && state.orders.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (provider.status == OrderLoadStatus.error && provider.orders.isEmpty) {
-      return _buildErrorView(provider);
+    if (state.status == OrderLoadStatus.error && state.orders.isEmpty) {
+      return _buildErrorView(state);
     }
 
     return TabBarView(
       children: _filters.map((filter) {
-        final orders = provider.orders
+        final orders = state.orders
             .where(filter.matches)
             .toList(growable: false);
 
-        return _buildOrderList(provider, orders);
+        return _buildOrderList(orders);
       }).toList(),
     );
   }
 
-  Widget _buildOrderList(OrderProvider provider, List<Order> orders) {
+  Widget _buildOrderList(List<Order> orders) {
     if (orders.isEmpty) {
       return RefreshIndicator(
-        onRefresh: () {
-          return provider.refresh();
-        },
+        onRefresh: _refresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: const [
@@ -95,9 +96,7 @@ class _OrdersPageState extends State<OrdersPage> {
     }
 
     return RefreshIndicator(
-      onRefresh: () {
-        return provider.refresh();
-      },
+      onRefresh: _refresh,
       child: ListView.separated(
         padding: const EdgeInsets.all(12),
         itemCount: orders.length,
@@ -118,7 +117,7 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  Widget _buildErrorView(OrderProvider provider) {
+  Widget _buildErrorView(OrderState state) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -127,14 +126,11 @@ class _OrdersPageState extends State<OrdersPage> {
           children: [
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
-            Text(
-              provider.errorMessage ?? '訂單載入失敗',
-              textAlign: TextAlign.center,
-            ),
+            Text(state.errorMessage ?? '訂單載入失敗', textAlign: TextAlign.center),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () {
-                provider.refresh();
+                _refresh();
               },
               child: const Text('重新載入'),
             ),
@@ -142,6 +138,10 @@ class _OrdersPageState extends State<OrdersPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _refresh() {
+    return BlocProvider.of<OrderCubit>(context).refresh();
   }
 
   Future<void> _openOrderDetails(String orderId) async {
@@ -179,7 +179,8 @@ class _OrderCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      '訂單 ${order.displayNumber}',
+                      '訂單 '
+                      '${order.displayNumber}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 13, color: Colors.grey),
@@ -224,8 +225,12 @@ class _OrderCard extends StatelessWidget {
                         const SizedBox(height: 6),
                         Text(
                           order.items.length == 1
-                              ? '共 ${firstItem.quantity} 件商品'
-                              : '共 ${order.items.length} 種商品',
+                              ? '共 '
+                                    '${firstItem.quantity} '
+                                    '件商品'
+                              : '共 '
+                                    '${order.items.length} '
+                                    '種商品',
                           style: const TextStyle(color: Colors.grey),
                         ),
                       ],
@@ -243,7 +248,8 @@ class _OrderCard extends StatelessWidget {
                   const Spacer(),
                   const Text('總額：'),
                   Text(
-                    'RM ${order.total.toStringAsFixed(2)}',
+                    'RM '
+                    '${order.total.toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.red,
                       fontSize: 17,

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../cubits/product/product_cubit.dart';
+import '../cubits/product/product_state.dart';
 import '../models/product.dart';
-import '../providers/product_provider.dart';
 import '../widgets/cart_icon_button.dart';
 import 'product_card.dart';
 import 'product_details.dart';
@@ -26,48 +27,56 @@ class ProductList extends StatefulWidget {
 class _ProductListState extends State<ProductList> {
   @override
   Widget build(BuildContext context) {
-    final productProvider = context.watch<ProductProvider>();
+    return BlocBuilder<ProductCubit, ProductState>(
+      builder: (context, state) {
+        if (state is ProductInitial || state is ProductLoading) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(widget.categoryTitle),
+              actions: const [CartIconButton()],
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    if (productProvider.status == ProductStatus.initial) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+        if (state is ProductError) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(widget.categoryTitle),
+              actions: const [CartIconButton()],
+            ),
+            body: _buildErrorView(state.message),
+          );
+        }
 
-    if (productProvider.status == ProductStatus.loading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.categoryTitle),
-          actions: const [CartIconButton()],
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
+        final products = (state as ProductReady).products;
 
-    if (productProvider.status == ProductStatus.error) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.categoryTitle),
-          actions: const [CartIconButton()],
-        ),
-        body: _buildErrorView(productProvider),
-      );
-    }
+        final filteredProducts = _productsByCategory(products);
 
-    final filteredProducts = productProvider.productsByCategory(
-      widget.categoryId,
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.categoryTitle),
+            actions: const [CartIconButton()],
+          ),
+          body: RefreshIndicator(
+            onRefresh: context.read<ProductCubit>().refreshProducts,
+            child: filteredProducts.isEmpty
+                ? _buildEmptyView()
+                : _buildProductGrid(filteredProducts),
+          ),
+        );
+      },
     );
+  }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.categoryTitle),
-        actions: const [CartIconButton()],
-      ),
-      body: RefreshIndicator(
-        onRefresh: productProvider.refreshProducts,
-        child: filteredProducts.isEmpty
-            ? _buildEmptyView()
-            : _buildProductGrid(filteredProducts),
-      ),
-    );
+  List<Product> _productsByCategory(List<Product> products) {
+    if (widget.categoryId.isEmpty || widget.categoryId == 'all') {
+      return products;
+    }
+
+    return products
+        .where((product) => product.categoryId == widget.categoryId)
+        .toList(growable: false);
   }
 
   Widget _buildProductGrid(List<Product> filteredProducts) {
@@ -94,19 +103,16 @@ class _ProductListState extends State<ProductList> {
     );
   }
 
-  Widget _buildErrorView(ProductProvider productProvider) {
+  Widget _buildErrorView(String message) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            productProvider.errorMessage ?? '加载商品失败',
-            textAlign: TextAlign.center,
-          ),
+          Text(message, textAlign: TextAlign.center),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: () {
-              productProvider.refreshProducts();
+              context.read<ProductCubit>().refreshProducts();
             },
             child: const Text('重新加载'),
           ),

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../cubits/order/order_cubit.dart';
+import '../cubits/payment/payment_cubit.dart';
+import '../cubits/payment/payment_state.dart';
 import '../models/order.dart';
-import '../providers/order_provider.dart';
-import '../providers/payment_provider.dart';
 import '../repositories/payment_repository.dart';
 
 class PaymentFlowPage extends StatelessWidget {
@@ -13,9 +14,11 @@ class PaymentFlowPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) {
-        return PaymentProvider(context.read<PaymentRepository>());
+    final paymentRepository = context.read<PaymentRepository>();
+
+    return BlocProvider<PaymentCubit>(
+      create: (_) {
+        return PaymentCubit(repository: paymentRepository);
       },
       child: PaymentPage(order: order),
     );
@@ -37,16 +40,19 @@ class _PaymentPageState extends State<PaymentPage> {
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
-    final payment = context.watch<PaymentProvider>();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('訂單付款')),
-      body: _buildBody(order, payment),
-      bottomNavigationBar: _buildBottomBar(order, payment),
+    return BlocBuilder<PaymentCubit, PaymentState>(
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('訂單付款')),
+          body: _buildBody(order, state),
+          bottomNavigationBar: _buildBottomBar(order, state),
+        );
+      },
     );
   }
 
-  Widget _buildBody(Order order, PaymentProvider payment) {
+  Widget _buildBody(Order order, PaymentState state) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -58,7 +64,8 @@ class _PaymentPageState extends State<PaymentPage> {
                 const Text('應付金額', style: TextStyle(color: Colors.grey)),
                 const SizedBox(height: 10),
                 Text(
-                  'RM ${order.total.toStringAsFixed(2)}',
+                  'RM '
+                  '${order.total.toStringAsFixed(2)}',
                   style: const TextStyle(
                     color: Colors.red,
                     fontSize: 32,
@@ -87,11 +94,11 @@ class _PaymentPageState extends State<PaymentPage> {
             ],
           ),
         ),
-        if (payment.errorMessage != null)
+        if (state.errorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 16),
             child: Text(
-              payment.errorMessage!,
+              state.errorMessage!,
               style: const TextStyle(color: Colors.red),
             ),
           ),
@@ -105,23 +112,26 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  Widget _buildBottomBar(Order order, PaymentProvider payment) {
+  Widget _buildBottomBar(Order order, PaymentState state) {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: FilledButton(
-          onPressed: payment.isProcessing
+          onPressed: state.isProcessing
               ? null
               : () {
                   _pay(order);
                 },
-          child: payment.isProcessing
+          child: state.isProcessing
               ? const SizedBox(
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text('確認付款 RM ${order.total.toStringAsFixed(2)}'),
+              : Text(
+                  '確認付款 RM '
+                  '${order.total.toStringAsFixed(2)}',
+                ),
         ),
       ),
     );
@@ -136,28 +146,28 @@ class _PaymentPageState extends State<PaymentPage> {
       return;
     }
 
-    final submitted = await context.read<PaymentProvider>().pay(
-      orderId: order.id,
-    );
+    final submitted = await BlocProvider.of<PaymentCubit>(
+      context,
+    ).pay(orderId: order.id);
 
     if (!mounted || !submitted) {
       return;
     }
 
-    final orderProvider = context.read<OrderProvider>();
-    await orderProvider.refresh();
+    final orderCubit = BlocProvider.of<OrderCubit>(context);
 
-    if (!mounted) return;
+    await orderCubit.refresh();
 
-    final latestOrder = orderProvider.findById(order.id);
+    if (!mounted) {
+      return;
+    }
+
+    final latestOrder = orderCubit.state.findById(order.id);
+
     final isPaid = latestOrder?.status == OrderStatus.paid;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isPaid ? '付款成功，訂單已更新' : '付款已提交，系統會自動更新訂單狀態',
-        ),
-      ),
+      SnackBar(content: Text(isPaid ? '付款成功，訂單已更新' : '付款已提交，系統會自動更新訂單狀態')),
     );
 
     Navigator.pop(context, true);
