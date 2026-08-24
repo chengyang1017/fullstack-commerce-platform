@@ -373,5 +373,17 @@
 "paymentUnknownError": "付款失败，请稍后重试",
 "authConnectionFailed": "无法连接服务器，请检查网络连接",
 "authSessionExpired": "登录已失效，请重新登录",
-"authInvalidResponse": "服务器返回的资料格式无效"
+"authInvalidResponse": "服务器返回的资料格式无效",
+"noProductsAvailable": "目前没有可显示的商品",
+"dailyDealsComingSoon": "每日优惠功能即将推出",
+"couponsComingSoon": "优惠券功能即将推出",
+"heroLaptopKicker": "工作与创作",
+"heroLaptopTitle": "升级你的工作空间",
+"heroLaptopSubtitle": "探索适合学习、工作与创作的电脑设备",
+"heroMobileKicker": "手机精选",
+"heroMobileTitle": "下一台手机，就在这里",
+"heroMobileSubtitle": "探索最新智能手机与日常科技产品",
+"heroGamingKicker": "游戏升级",
+"heroGamingTitle": "为下一场游戏而生",
+"heroGamingSubtitle": "游戏设备、音频与配件一次找齐"
 }

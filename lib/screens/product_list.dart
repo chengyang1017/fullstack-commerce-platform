@@ -9,15 +9,19 @@ import '../widgets/cart_icon_button.dart';
 import 'product_card.dart';
 import 'product_details.dart';
 
+enum ProductListMode { category, latest, bestSelling }
+
 class ProductList extends StatefulWidget {
   const ProductList({
     super.key,
     required this.categoryId,
     required this.categoryTitle,
+    this.mode = ProductListMode.category,
   });
 
   final String categoryId;
   final String categoryTitle;
+  final ProductListMode mode;
 
   @override
   State<ProductList> createState() {
@@ -46,15 +50,15 @@ class _ProductListState extends State<ProductList> {
 
         final products = (state as ProductReady).products;
 
-        final filteredProducts = _productsByCategory(products);
+        final displayedProducts = _buildDisplayedProducts(products);
 
         return Scaffold(
           appBar: _buildAppBar(),
           body: RefreshIndicator(
             onRefresh: context.read<ProductCubit>().refreshProducts,
-            child: filteredProducts.isEmpty
+            child: displayedProducts.isEmpty
                 ? _buildEmptyView()
-                : _buildProductGrid(filteredProducts),
+                : _buildProductGrid(displayedProducts),
           ),
         );
       },
@@ -68,9 +72,19 @@ class _ProductListState extends State<ProductList> {
     );
   }
 
+  List<Product> _buildDisplayedProducts(List<Product> products) {
+    return switch (widget.mode) {
+      ProductListMode.category => _productsByCategory(products),
+
+      ProductListMode.latest => List<Product>.unmodifiable(products),
+
+      ProductListMode.bestSelling => _bestSellingProducts(products),
+    };
+  }
+
   List<Product> _productsByCategory(List<Product> products) {
     if (widget.categoryId.isEmpty || widget.categoryId == 'all') {
-      return products;
+      return List<Product>.unmodifiable(products);
     }
 
     return products
@@ -78,7 +92,15 @@ class _ProductListState extends State<ProductList> {
         .toList(growable: false);
   }
 
-  Widget _buildProductGrid(List<Product> filteredProducts) {
+  List<Product> _bestSellingProducts(List<Product> products) {
+    final sorted = List<Product>.of(products);
+
+    sorted.sort((left, right) => right.sold.compareTo(left.sold));
+
+    return List<Product>.unmodifiable(sorted);
+  }
+
+  Widget _buildProductGrid(List<Product> products) {
     return GridView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(8),
@@ -88,9 +110,9 @@ class _ProductListState extends State<ProductList> {
         mainAxisSpacing: 8,
         childAspectRatio: 0.65,
       ),
-      itemCount: filteredProducts.length,
+      itemCount: products.length,
       itemBuilder: (context, index) {
-        final product = filteredProducts[index];
+        final product = products[index];
 
         return ProductCard(
           product: product,

@@ -375,5 +375,17 @@
 "paymentUnknownError": "Payment failed. Please try again",
 "authConnectionFailed": "Unable to connect to the server. Please check your connection",
 "authSessionExpired": "Your session has expired. Please sign in again",
-"authInvalidResponse": "The server returned an invalid response"
+"authInvalidResponse": "The server returned an invalid response",
+"noProductsAvailable": "No products are available right now",
+"dailyDealsComingSoon": "Daily deals are coming soon",
+"couponsComingSoon": "Coupons are coming soon",
+"heroLaptopKicker": "WORK & CREATE",
+"heroLaptopTitle": "Power up your workspace",
+"heroLaptopSubtitle": "Discover laptops built for study, work and creativity",
+"heroMobileKicker": "MOBILE WEEK",
+"heroMobileTitle": "Your next phone is here",
+"heroMobileSubtitle": "Explore the latest smartphones and everyday essentials",
+"heroGamingKicker": "LEVEL UP",
+"heroGamingTitle": "Built for your next game",
+"heroGamingSubtitle": "Gaming gear, audio and accessories in one place"
 }

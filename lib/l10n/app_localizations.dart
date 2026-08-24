@@ -1279,6 +1279,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The server returned an invalid response'**
   String get authInvalidResponse;
+
+  /// No description provided for @noProductsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No products are available right now'**
+  String get noProductsAvailable;
+
+  /// No description provided for @dailyDealsComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily deals are coming soon'**
+  String get dailyDealsComingSoon;
+
+  /// No description provided for @couponsComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupons are coming soon'**
+  String get couponsComingSoon;
+
+  /// No description provided for @heroLaptopKicker.
+  ///
+  /// In en, this message translates to:
+  /// **'WORK & CREATE'**
+  String get heroLaptopKicker;
+
+  /// No description provided for @heroLaptopTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Power up your workspace'**
+  String get heroLaptopTitle;
+
+  /// No description provided for @heroLaptopSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover laptops built for study, work and creativity'**
+  String get heroLaptopSubtitle;
+
+  /// No description provided for @heroMobileKicker.
+  ///
+  /// In en, this message translates to:
+  /// **'MOBILE WEEK'**
+  String get heroMobileKicker;
+
+  /// No description provided for @heroMobileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your next phone is here'**
+  String get heroMobileTitle;
+
+  /// No description provided for @heroMobileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore the latest smartphones and everyday essentials'**
+  String get heroMobileSubtitle;
+
+  /// No description provided for @heroGamingKicker.
+  ///
+  /// In en, this message translates to:
+  /// **'LEVEL UP'**
+  String get heroGamingKicker;
+
+  /// No description provided for @heroGamingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Built for your next game'**
+  String get heroGamingTitle;
+
+  /// No description provided for @heroGamingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gaming gear, audio and accessories in one place'**
+  String get heroGamingSubtitle;
 }
 
 class _AppLocalizationsDelegate

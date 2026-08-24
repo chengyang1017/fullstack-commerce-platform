@@ -632,4 +632,40 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authInvalidResponse => '服务器返回的资料格式无效';
+
+  @override
+  String get noProductsAvailable => '目前没有可显示的商品';
+
+  @override
+  String get dailyDealsComingSoon => '每日优惠功能即将推出';
+
+  @override
+  String get couponsComingSoon => '优惠券功能即将推出';
+
+  @override
+  String get heroLaptopKicker => '工作与创作';
+
+  @override
+  String get heroLaptopTitle => '升级你的工作空间';
+
+  @override
+  String get heroLaptopSubtitle => '探索适合学习、工作与创作的电脑设备';
+
+  @override
+  String get heroMobileKicker => '手机精选';
+
+  @override
+  String get heroMobileTitle => '下一台手机，就在这里';
+
+  @override
+  String get heroMobileSubtitle => '探索最新智能手机与日常科技产品';
+
+  @override
+  String get heroGamingKicker => '游戏升级';
+
+  @override
+  String get heroGamingTitle => '为下一场游戏而生';
+
+  @override
+  String get heroGamingSubtitle => '游戏设备、音频与配件一次找齐';
 }

@@ -655,4 +655,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authInvalidResponse => 'The server returned an invalid response';
+
+  @override
+  String get noProductsAvailable => 'No products are available right now';
+
+  @override
+  String get dailyDealsComingSoon => 'Daily deals are coming soon';
+
+  @override
+  String get couponsComingSoon => 'Coupons are coming soon';
+
+  @override
+  String get heroLaptopKicker => 'WORK & CREATE';
+
+  @override
+  String get heroLaptopTitle => 'Power up your workspace';
+
+  @override
+  String get heroLaptopSubtitle =>
+      'Discover laptops built for study, work and creativity';
+
+  @override
+  String get heroMobileKicker => 'MOBILE WEEK';
+
+  @override
+  String get heroMobileTitle => 'Your next phone is here';
+
+  @override
+  String get heroMobileSubtitle =>
+      'Explore the latest smartphones and everyday essentials';
+
+  @override
+  String get heroGamingKicker => 'LEVEL UP';
+
+  @override
+  String get heroGamingTitle => 'Built for your next game';
+
+  @override
+  String get heroGamingSubtitle =>
+      'Gaming gear, audio and accessories in one place';
 }
