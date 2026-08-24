@@ -1,29 +1,54 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/customer_user.dart';
 
-class CustomerAuthException implements Exception {
-  final String message;
+enum CustomerAuthFailureType {
+  sessionExpired,
+  connectionFailed,
+  invalidSessionResponse,
+  invalidResponse,
+  requestFailed,
+}
 
-  const CustomerAuthException(this.message);
+class CustomerAuthException implements Exception {
+  const CustomerAuthException({
+    required this.type,
+    this.statusCode,
+    this.serverMessage,
+    this.cause,
+  });
+
+  final CustomerAuthFailureType type;
+
+  final int? statusCode;
+
+  /// 服务器返回的原始错误说明。
+  ///
+  /// 保留给日志 / 调试使用，
+  /// 不应该直接显示给最终用户。
+  final String? serverMessage;
+
+  final Object? cause;
 
   @override
-  String toString() => message;
+  String toString() {
+    return 'CustomerAuthException('
+        'type: $type, '
+        'statusCode: $statusCode, '
+        'serverMessage: $serverMessage, '
+        'cause: $cause'
+        ')';
+  }
 }
 
 class CustomerAuthService {
   static const _accessTokenKey = 'customer_access_token';
 
   static const _refreshTokenKey = 'customer_refresh_token';
-
-  final http.Client _client;
-  final FlutterSecureStorage _storage;
-  final String _baseUrl;
-
-  CustomerUser? _currentUser;
 
   CustomerAuthService({
     http.Client? client,
@@ -36,6 +61,14 @@ class CustomerAuthService {
        _storage = storage ?? const FlutterSecureStorage(),
        _baseUrl = baseUrl.replaceFirst(RegExp(r'/$'), '');
 
+  final http.Client _client;
+
+  final FlutterSecureStorage _storage;
+
+  final String _baseUrl;
+
+  CustomerUser? _currentUser;
+
   CustomerUser? get currentUser => _currentUser;
 
   String get baseUrl => _baseUrl;
@@ -45,6 +78,7 @@ class CustomerAuthService {
 
     if (refreshToken == null || refreshToken.isEmpty) {
       _currentUser = null;
+
       return null;
     }
 
@@ -53,7 +87,14 @@ class CustomerAuthService {
         path: '/api/auth/customer/refresh',
         body: {'refreshToken': refreshToken},
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to restore customer session',
+        name: 'CustomerAuthService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
       await clearLocalSession();
 
       return null;
@@ -91,8 +132,16 @@ class CustomerAuthService {
           body: {'refreshToken': refreshToken},
         );
       }
-    } catch (_) {
-      // 即使服务器暂时无法访问，本机也必须完成退出。
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to notify server about logout',
+        name: 'CustomerAuthService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      // 即使服务器暂时不可访问，
+      // 本机也必须完成退出。
     } finally {
       await clearLocalSession();
     }
@@ -112,13 +161,17 @@ class CustomerAuthService {
     final restoredUser = await restoreSession();
 
     if (restoredUser == null) {
-      throw const CustomerAuthException('登入已失效，請重新登入');
+      throw const CustomerAuthException(
+        type: CustomerAuthFailureType.sessionExpired,
+      );
     }
 
     accessToken = await readAccessToken();
 
     if (accessToken == null || accessToken.isEmpty) {
-      throw const CustomerAuthException('登入已失效，請重新登入');
+      throw const CustomerAuthException(
+        type: CustomerAuthFailureType.sessionExpired,
+      );
     }
 
     return accessToken;
@@ -160,10 +213,21 @@ class CustomerAuthService {
         refreshToken is! String ||
         refreshToken.isEmpty ||
         userData is! Map) {
-      throw const CustomerAuthException('服务器返回的登录资料无效');
+      throw const CustomerAuthException(
+        type: CustomerAuthFailureType.invalidSessionResponse,
+      );
     }
 
-    final user = CustomerUser.fromJson(Map<String, dynamic>.from(userData));
+    late final CustomerUser user;
+
+    try {
+      user = CustomerUser.fromJson(Map<String, dynamic>.from(userData));
+    } catch (error) {
+      throw CustomerAuthException(
+        type: CustomerAuthFailureType.invalidSessionResponse,
+        cause: error,
+      );
+    }
 
     await Future.wait([
       _storage.write(key: _accessTokenKey, value: accessToken),
@@ -179,7 +243,7 @@ class CustomerAuthService {
     required String path,
     required Map<String, dynamic> body,
   }) async {
-    http.Response response;
+    late final http.Response response;
 
     try {
       response = await _client.post(
@@ -190,17 +254,24 @@ class CustomerAuthService {
         },
         body: jsonEncode(body),
       );
-    } catch (_) {
-      throw const CustomerAuthException('无法连接服务器，请检查网络和后端服务');
+    } catch (error) {
+      throw CustomerAuthException(
+        type: CustomerAuthFailureType.connectionFailed,
+        cause: error,
+      );
     }
 
     final responseData = _decodeResponse(response);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      final message = responseData['message'];
+      final rawMessage = responseData['message'];
 
       throw CustomerAuthException(
-        message is String && message.isNotEmpty ? message : '请求失败，请稍后重试',
+        type: CustomerAuthFailureType.requestFailed,
+        statusCode: response.statusCode,
+        serverMessage: rawMessage is String && rawMessage.isNotEmpty
+            ? rawMessage
+            : null,
       );
     }
 
@@ -218,11 +289,16 @@ class CustomerAuthService {
       if (decoded is Map) {
         return Map<String, dynamic>.from(decoded);
       }
-    } catch (_) {
-      throw const CustomerAuthException('服务器返回格式无效');
+    } catch (error) {
+      throw CustomerAuthException(
+        type: CustomerAuthFailureType.invalidResponse,
+        cause: error,
+      );
     }
 
-    throw const CustomerAuthException('服务器返回格式无效');
+    throw const CustomerAuthException(
+      type: CustomerAuthFailureType.invalidResponse,
+    );
   }
 
   void dispose() {

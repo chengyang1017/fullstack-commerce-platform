@@ -15,7 +15,7 @@ class CustomerUser {
     final name = json['name'];
 
     if (id is! String || email is! String || name is! String) {
-      throw const FormatException('用户资料格式无效');
+      throw const FormatException('Invalid customer user data');
     }
 
     return CustomerUser(id: id, email: email, name: name);

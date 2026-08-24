@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../models/product.dart';
@@ -30,8 +32,15 @@ class ProductCubit extends Cubit<ProductState> {
       final products = await _productRepository.getProducts();
 
       emit(ProductReady(products: List.unmodifiable(products)));
-    } catch (error) {
-      emit(ProductError(message: '加载商品失败：$error'));
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to load products',
+        name: 'ProductCubit',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      emit(const ProductError(type: ProductErrorType.loadFailed));
     }
   }
 

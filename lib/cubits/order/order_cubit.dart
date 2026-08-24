@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -12,15 +13,14 @@ class OrderCubit extends Cubit<OrderState> {
   OrderCubit({
     required OrderRepository repository,
     required CustomerAuthCubit authCubit,
-  })  : _repository = repository,
-        _authCubit = authCubit,
-        super(const OrderState());
+  }) : _repository = repository,
+       _authCubit = authCubit,
+       super(const OrderState());
 
   final OrderRepository _repository;
   final CustomerAuthCubit _authCubit;
 
-  StreamSubscription<CustomerAuthState>?
-      _authSubscription;
+  StreamSubscription<CustomerAuthState>? _authSubscription;
 
   bool _started = false;
 
@@ -35,18 +35,11 @@ class OrderCubit extends Cubit<OrderState> {
 
     _started = true;
 
-    _authSubscription =
-        _authCubit.stream.listen(
-      (_) {
-        unawaited(
-          _syncAuthentication(),
-        );
-      },
-    );
+    _authSubscription = _authCubit.stream.listen((_) {
+      unawaited(_syncAuthentication());
+    });
 
-    unawaited(
-      _syncAuthentication(),
-    );
+    unawaited(_syncAuthentication());
   }
 
   Future<void> _syncAuthentication() async {
@@ -56,17 +49,9 @@ class OrderCubit extends Cubit<OrderState> {
 
     final authState = _authCubit.state;
 
-    if (authState.status ==
-        CustomerAuthStatus.checking) {
-      if (state.status ==
-          OrderLoadStatus.initial) {
-        emit(
-          state.copyWith(
-            status:
-                OrderLoadStatus.loading,
-            clearError: true,
-          ),
-        );
+    if (authState.status == CustomerAuthStatus.checking) {
+      if (state.status == OrderLoadStatus.initial) {
+        emit(state.copyWith(status: OrderLoadStatus.loading, clearError: true));
       }
 
       return;
@@ -74,28 +59,19 @@ class OrderCubit extends Cubit<OrderState> {
 
     final user = authState.user;
 
-    if (!authState.isLoggedIn ||
-        user == null) {
+    if (!authState.isLoggedIn || user == null) {
       _loadVersion++;
 
       _boundAccountEmail = null;
 
-      emit(
-        const OrderState(
-          status:
-              OrderLoadStatus.ready,
-        ),
-      );
+      emit(const OrderState(status: OrderLoadStatus.ready));
 
       return;
     }
 
-    if (_boundAccountEmail ==
-            user.email &&
-        (state.status ==
-                OrderLoadStatus.loading ||
-            state.status ==
-                OrderLoadStatus.ready)) {
+    if (_boundAccountEmail == user.email &&
+        (state.status == OrderLoadStatus.loading ||
+            state.status == OrderLoadStatus.ready)) {
       return;
     }
 
@@ -105,68 +81,50 @@ class OrderCubit extends Cubit<OrderState> {
   }
 
   Future<void> _loadOrders() async {
-    final currentVersion =
-        ++_loadVersion;
+    final currentVersion = ++_loadVersion;
 
-    emit(
-      state.copyWith(
-        status:
-            OrderLoadStatus.loading,
-        clearError: true,
-      ),
-    );
+    emit(state.copyWith(status: OrderLoadStatus.loading, clearError: true));
 
     try {
-      final orders =
-          await _repository.loadOrders();
+      final orders = await _repository.loadOrders();
 
-      if (isClosed ||
-          currentVersion !=
-              _loadVersion) {
+      if (isClosed || currentVersion != _loadVersion) {
         return;
       }
 
       emit(
         state.copyWith(
-          status:
-              OrderLoadStatus.ready,
-          orders:
-              List.unmodifiable(
-            orders,
-          ),
+          status: OrderLoadStatus.ready,
+          orders: List.unmodifiable(orders),
           clearError: true,
         ),
       );
-    } catch (error) {
-      if (isClosed ||
-          currentVersion !=
-              _loadVersion) {
+    } catch (error, stackTrace) {
+      if (isClosed || currentVersion != _loadVersion) {
         return;
       }
 
+      developer.log(
+        'Failed to load orders',
+        name: 'OrderCubit',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
       emit(
         state.copyWith(
-          status:
-              OrderLoadStatus.error,
-          errorMessage:
-              '訂單載入失敗：$error',
+          status: OrderLoadStatus.error,
+          errorType: OrderErrorType.loadFailed,
         ),
       );
     }
   }
 
   Future<void> refresh() async {
-    final authState =
-        _authCubit.state;
+    final authState = _authCubit.state;
 
-    if (!authState.isLoggedIn ||
-        authState.user == null) {
-      emit(
-        const OrderState(
-          status:
-              OrderLoadStatus.ready,
-        ),
-      );
+    if (!authState.isLoggedIn || authState.user == null) {
+      emit(const OrderState(status: OrderLoadStatus.ready));
 
       return;
     }
@@ -174,138 +132,90 @@ class OrderCubit extends Cubit<OrderState> {
     await _loadOrders();
   }
 
-  void addCreatedOrder(
-    Order order,
-  ) {
+  void addCreatedOrder(Order order) {
     _replaceOrder(order);
   }
 
-  Future<bool> cancelOrder(
-    String orderId,
-  ) async {
-    if (isClosed ||
-        state.isCancellingOrder(
-          orderId,
-        )) {
+  Future<bool> cancelOrder(String orderId) async {
+    if (isClosed || state.isCancellingOrder(orderId)) {
       return false;
     }
 
-    final order =
-        state.findById(orderId);
+    final order = state.findById(orderId);
 
     if (order == null) {
-      emit(
-        state.copyWith(
-          errorMessage:
-              '找不到這筆訂單',
-        ),
-      );
+      emit(state.copyWith(errorType: OrderErrorType.notFound));
 
       return false;
     }
 
-    if (order.status !=
-        OrderStatus.pendingPayment) {
-      emit(
-        state.copyWith(
-          errorMessage:
-              '只有待付款訂單可以取消',
-        ),
-      );
+    if (order.status != OrderStatus.pendingPayment) {
+      emit(state.copyWith(errorType: OrderErrorType.cancellationNotAllowed));
 
       return false;
     }
 
-    final cancellingIds =
-        Set<String>.from(
-      state.cancellingOrderIds,
-    )..add(orderId);
+    final cancellingIds = Set<String>.from(state.cancellingOrderIds)
+      ..add(orderId);
 
     emit(
       state.copyWith(
-        cancellingOrderIds:
-            Set.unmodifiable(
-          cancellingIds,
-        ),
+        cancellingOrderIds: Set.unmodifiable(cancellingIds),
         clearError: true,
       ),
     );
 
     try {
-      final cancelledOrder =
-          await _repository
-              .cancelOrder(
-        orderId,
-      );
+      final cancelledOrder = await _repository.cancelOrder(orderId);
 
       if (isClosed) {
         return false;
       }
 
-      _replaceOrder(
-        cancelledOrder,
-      );
+      _replaceOrder(cancelledOrder);
 
       return true;
-    } catch (error) {
+    } catch (error, stackTrace) {
       if (isClosed) {
         return false;
       }
 
-      emit(
-        state.copyWith(
-          errorMessage:
-              '取消訂單失敗：$error',
-        ),
+      developer.log(
+        'Failed to cancel order',
+        name: 'OrderCubit',
+        error: error,
+        stackTrace: stackTrace,
       );
+
+      emit(state.copyWith(errorType: OrderErrorType.cancelFailed));
 
       return false;
     } finally {
       if (!isClosed) {
-        final nextCancellingIds =
-            Set<String>.from(
-          state.cancellingOrderIds,
-        )..remove(orderId);
+        final nextCancellingIds = Set<String>.from(state.cancellingOrderIds)
+          ..remove(orderId);
 
         emit(
           state.copyWith(
-            cancellingOrderIds:
-                Set.unmodifiable(
-              nextCancellingIds,
-            ),
+            cancellingOrderIds: Set.unmodifiable(nextCancellingIds),
           ),
         );
       }
     }
   }
 
-  void _replaceOrder(
-    Order order,
-  ) {
+  void _replaceOrder(Order order) {
     final nextOrders = <Order>[
       order,
-      ...state.orders.where(
-        (existingOrder) =>
-            existingOrder.id !=
-            order.id,
-      ),
+      ...state.orders.where((existingOrder) => existingOrder.id != order.id),
     ];
 
-    nextOrders.sort(
-      (left, right) =>
-          right.createdAt.compareTo(
-        left.createdAt,
-      ),
-    );
+    nextOrders.sort((left, right) => right.createdAt.compareTo(left.createdAt));
 
     emit(
       state.copyWith(
-        orders:
-            List.unmodifiable(
-          nextOrders,
-        ),
-        status:
-            OrderLoadStatus.ready,
+        orders: List.unmodifiable(nextOrders),
+        status: OrderLoadStatus.ready,
         clearError: true,
       ),
     );

@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubits/cart/cart_cubit.dart';
 import '../cubits/cart/cart_state.dart';
-import '../models/cart_item.dart';
-import '../models/checkout_request.dart';
 import '../cubits/checkout/checkout_cubit.dart';
+import '../l10n/app_localizations.dart';
+import '../models/checkout_request.dart';
 import '../repositories/address_repository.dart';
 import '../repositories/order_repository.dart';
 import '../widgets/cart_item_tile.dart';
@@ -23,16 +23,18 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return BlocBuilder<CartCubit, CartState>(
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
-            title: Text('購物車 (${state.totalQuantity})'),
+            title: Text(l10n.cartTitle(state.totalQuantity)),
             actions: [
               if (!state.isEmpty)
                 TextButton(
                   onPressed: _confirmClearCart,
-                  child: const Text('清空'),
+                  child: Text(l10n.clear),
                 ),
             ],
           ),
@@ -58,7 +60,7 @@ class _CartPageState extends State<CartPage> {
 
     return RefreshIndicator(
       onRefresh: () {
-        return BlocProvider.of<CartCubit>(context).loadCart(force: true);
+        return context.read<CartCubit>().loadCart(force: true);
       },
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -75,23 +77,21 @@ class _CartPageState extends State<CartPage> {
             item: item,
             onIncrease: () {
               _runCartAction(() {
-                return BlocProvider.of<CartCubit>(
-                  context,
-                ).increaseQuantity(item.product.id);
+                return context.read<CartCubit>().increaseQuantity(
+                  item.product.id,
+                );
               });
             },
             onDecrease: () {
               _runCartAction(() {
-                return BlocProvider.of<CartCubit>(
-                  context,
-                ).decreaseQuantity(item.product.id);
+                return context.read<CartCubit>().decreaseQuantity(
+                  item.product.id,
+                );
               });
             },
             onRemove: () {
               _runCartAction(() {
-                return BlocProvider.of<CartCubit>(
-                  context,
-                ).removeProduct(item.product.id);
+                return context.read<CartCubit>().removeProduct(item.product.id);
               });
             },
           );
@@ -101,34 +101,56 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget _buildEmptyView() {
-    return const Center(
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey),
-          SizedBox(height: 16),
-          Text('購物車還是空的', style: TextStyle(color: Colors.grey, fontSize: 18)),
+          Icon(
+            Icons.shopping_cart_outlined,
+            size: 80,
+            color: colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.cartEmpty,
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 18),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildErrorView(CartState state) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            Icon(Icons.error_outline, size: 64, color: colorScheme.error),
             const SizedBox(height: 16),
-            Text(state.errorMessage ?? '購物車載入失敗', textAlign: TextAlign.center),
+            Text(
+              _cartErrorMessage(
+                l10n,
+                state.errorType,
+                fallback: l10n.cartLoadFailed,
+              ),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () {
-                BlocProvider.of<CartCubit>(context).loadCart(force: true);
+                context.read<CartCubit>().loadCart(force: true);
               },
-              child: const Text('重新載入'),
+              child: Text(l10n.reload),
             ),
           ],
         ),
@@ -137,16 +159,20 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget _buildCheckoutBar(CartState state) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black12,
+              color: colorScheme.shadow.withValues(alpha: 0.12),
               blurRadius: 8,
-              offset: Offset(0, -2),
+              offset: const Offset(0, -2),
             ),
           ],
         ),
@@ -157,11 +183,14 @@ class _CartPageState extends State<CartPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('總計', style: TextStyle(color: Colors.grey)),
+                  Text(
+                    l10n.total,
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  ),
                   Text(
                     'RM ${state.totalPrice.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: Colors.red,
+                    style: TextStyle(
+                      color: colorScheme.primary,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
@@ -171,10 +200,7 @@ class _CartPageState extends State<CartPage> {
             ),
             FilledButton(
               onPressed: _checkout,
-              child: Text(
-                '結算 '
-                '(${state.totalQuantity})',
-              ),
+              child: Text(l10n.checkoutCount(state.totalQuantity)),
             ),
           ],
         ),
@@ -183,24 +209,26 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<void> _confirmClearCart() async {
+    final l10n = AppLocalizations.of(context);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('清空購物車'),
-          content: const Text('確定要刪除購物車中的所有商品嗎？'),
+          title: Text(l10n.clearCart),
+          content: Text(l10n.clearCartConfirmation),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext, false);
               },
-              child: const Text('取消'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.pop(dialogContext, true);
               },
-              child: const Text('清空'),
+              child: Text(l10n.clear),
             ),
           ],
         );
@@ -212,7 +240,7 @@ class _CartPageState extends State<CartPage> {
     }
 
     await _runCartAction(() {
-      return BlocProvider.of<CartCubit>(context).clearCart();
+      return context.read<CartCubit>().clearCart();
     });
   }
 
@@ -224,9 +252,15 @@ class _CartPageState extends State<CartPage> {
         return;
       }
 
-      final state = BlocProvider.of<CartCubit>(context).state;
+      final state = context.read<CartCubit>().state;
 
-      final message = state.errorMessage ?? '購物車操作失敗';
+      final l10n = AppLocalizations.of(context);
+
+      final message = _cartErrorMessage(
+        l10n,
+        state.errorType,
+        fallback: l10n.cartActionFailed,
+      );
 
       ScaffoldMessenger.of(
         context,
@@ -235,7 +269,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<void> _checkout() async {
-    final cartState = BlocProvider.of<CartCubit>(context).state;
+    final cartState = context.read<CartCubit>().state;
 
     final request = CheckoutRequest.cart(
       items: cartState.items.toList(growable: false),
@@ -265,5 +299,21 @@ class _CartPageState extends State<CartPage> {
         },
       ),
     );
+  }
+
+  String _cartErrorMessage(
+    AppLocalizations l10n,
+    CartErrorType? type, {
+    required String fallback,
+  }) {
+    return switch (type) {
+      CartErrorType.loadFailed => l10n.cartLoadFailed,
+
+      CartErrorType.clearFailed => l10n.clearCartFailed,
+
+      CartErrorType.updateFailed => l10n.cartUpdateFailed,
+
+      null => fallback,
+    };
   }
 }

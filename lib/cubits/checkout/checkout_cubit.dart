@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../models/address.dart';
@@ -17,7 +19,6 @@ class CheckoutCubit extends Cubit<CheckoutState> {
        super(const CheckoutState());
 
   final AddressRepository _addressRepository;
-
   final OrderRepository _orderRepository;
 
   Future<void> initialize() async {
@@ -37,11 +38,18 @@ class CheckoutCubit extends Cubit<CheckoutState> {
           clearError: true,
         ),
       );
-    } catch (error) {
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to initialize checkout',
+        name: 'CheckoutCubit',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
       emit(
         state.copyWith(
           status: CheckoutStatus.error,
-          errorMessage: '無法載入結算資料：$error',
+          errorType: CheckoutErrorType.loadFailed,
         ),
       );
     }
@@ -105,13 +113,13 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     final address = state.selectedAddress;
 
     if (request.items.isEmpty) {
-      _setError('沒有可以結算的商品');
+      _setError(CheckoutErrorType.emptyItems);
 
       return null;
     }
 
     if (address == null) {
-      _setError('請先選擇收貨地址');
+      _setError(CheckoutErrorType.addressRequired);
 
       return null;
     }
@@ -153,7 +161,14 @@ class CheckoutCubit extends Cubit<CheckoutState> {
       if (request.isFromCart) {
         try {
           await cart.removePurchasedItems(request.items);
-        } catch (_) {
+        } catch (error, stackTrace) {
+          developer.log(
+            'Order created but failed to remove purchased cart items',
+            name: 'CheckoutCubit',
+            error: error,
+            stackTrace: stackTrace,
+          );
+
           // 訂單已經建立成功，
           // 不能因購物車同步失敗再次提交訂單。
           cartClearFailed = true;
@@ -170,11 +185,18 @@ class CheckoutCubit extends Cubit<CheckoutState> {
       );
 
       return createdOrder;
-    } catch (error) {
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to create order',
+        name: 'CheckoutCubit',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
       emit(
         state.copyWith(
           status: CheckoutStatus.error,
-          errorMessage: '建立訂單失敗：$error',
+          errorType: CheckoutErrorType.createOrderFailed,
         ),
       );
 
@@ -182,8 +204,8 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     }
   }
 
-  void _setError(String message) {
-    emit(state.copyWith(status: CheckoutStatus.error, errorMessage: message));
+  void _setError(CheckoutErrorType type) {
+    emit(state.copyWith(status: CheckoutStatus.error, errorType: type));
   }
 
   String? _initialAddressId(List<Address> addresses) {

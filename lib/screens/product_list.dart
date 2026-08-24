@@ -3,20 +3,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubits/product/product_cubit.dart';
 import '../cubits/product/product_state.dart';
+import '../l10n/app_localizations.dart';
 import '../models/product.dart';
 import '../widgets/cart_icon_button.dart';
 import 'product_card.dart';
 import 'product_details.dart';
 
 class ProductList extends StatefulWidget {
-  final String categoryId;
-  final String categoryTitle;
-
   const ProductList({
     super.key,
     required this.categoryId,
     required this.categoryTitle,
   });
+
+  final String categoryId;
+  final String categoryTitle;
 
   @override
   State<ProductList> createState() {
@@ -31,21 +32,15 @@ class _ProductListState extends State<ProductList> {
       builder: (context, state) {
         if (state is ProductInitial || state is ProductLoading) {
           return Scaffold(
-            appBar: AppBar(
-              title: Text(widget.categoryTitle),
-              actions: const [CartIconButton()],
-            ),
+            appBar: _buildAppBar(),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
 
         if (state is ProductError) {
           return Scaffold(
-            appBar: AppBar(
-              title: Text(widget.categoryTitle),
-              actions: const [CartIconButton()],
-            ),
-            body: _buildErrorView(state.message),
+            appBar: _buildAppBar(),
+            body: _buildErrorView(state.type),
           );
         }
 
@@ -54,10 +49,7 @@ class _ProductListState extends State<ProductList> {
         final filteredProducts = _productsByCategory(products);
 
         return Scaffold(
-          appBar: AppBar(
-            title: Text(widget.categoryTitle),
-            actions: const [CartIconButton()],
-          ),
+          appBar: _buildAppBar(),
           body: RefreshIndicator(
             onRefresh: context.read<ProductCubit>().refreshProducts,
             child: filteredProducts.isEmpty
@@ -66,6 +58,13 @@ class _ProductListState extends State<ProductList> {
           ),
         );
       },
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: Text(widget.categoryTitle),
+      actions: const [CartIconButton()],
     );
   }
 
@@ -103,25 +102,38 @@ class _ProductListState extends State<ProductList> {
     );
   }
 
-  Widget _buildErrorView(String message) {
+  Widget _buildErrorView(ProductErrorType type) {
+    final l10n = AppLocalizations.of(context);
+
+    final message = switch (type) {
+      ProductErrorType.loadFailed => l10n.productLoadFailed,
+    };
+
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(message, textAlign: TextAlign.center),
-          const SizedBox(height: 12),
-          FilledButton(
-            onPressed: () {
-              context.read<ProductCubit>().refreshProducts();
-            },
-            child: const Text('重新加载'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () {
+                context.read<ProductCubit>().refreshProducts();
+              },
+              child: Text(l10n.reload),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyView() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
@@ -131,15 +143,19 @@ class _ProductListState extends State<ProductList> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.inventory_2_outlined,
                   size: 72,
-                  color: Colors.grey,
+                  color: colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '${widget.categoryTitle}暫時沒有商品',
-                  style: const TextStyle(color: Colors.grey, fontSize: 17),
+                  l10n.categoryNoProducts(widget.categoryTitle),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 17,
+                  ),
                 ),
               ],
             ),

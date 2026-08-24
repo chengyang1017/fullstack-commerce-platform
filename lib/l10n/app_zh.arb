@@ -1,0 +1,377 @@
+{
+  "@@locale": "zh",
+
+  "appTitle": "购物平台",
+
+  "welcomeBack": "欢迎回来",
+  "loginSubtitle": "登录后查看购物车和订单",
+  "email": "邮箱",
+  "password": "密码",
+  "enterEmail": "请输入邮箱",
+  "invalidEmail": "请输入有效邮箱",
+  "enterPassword": "请输入密码",
+  "login": "登录",
+  "loginFailed": "登录失败，请稍后重试",
+  "noAccountRegister": "没有账号？立即注册",
+
+  "createAccount": "创建账号",
+  "registerCustomerAccount": "注册客户账号",
+  "username": "用户名",
+  "invalidUsernameLength": "用户名长度必须为 2 至 60 个字符",
+  "passwordMinimumLength": "密码至少需要 8 个字符",
+  "confirmPassword": "确认密码",
+  "passwordMismatch": "两次输入的密码不一致",
+  "registerAndLogin": "注册并登录",
+  "registerFailed": "注册失败，请稍后重试",
+
+  "account": "我的",
+  "unknownUser": "未知用户",
+  "myOrders": "我的订单",
+  "viewOrderHistory": "查看订单记录",
+
+  "orderCount": "共有 {count} 笔订单",
+  "@orderCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "appearance": "外观模式",
+  "followSystem": "跟随系统",
+  "light": "浅色",
+  "dark": "深色",
+  "followSystemThemeDescription": "根据设备的浅色或深色模式自动切换",
+  "lightThemeDescription": "始终使用浅色外观",
+  "darkThemeDescription": "始终使用深色外观",
+
+  "language": "语言",
+  "followSystemLanguage": "跟随系统",
+  "chinese": "中文",
+  "english": "English",
+  "followSystemLanguageDescription": "根据设备语言自动选择",
+  "chineseDescription": "使用中文界面",
+  "englishDescription": "使用英文界面",
+
+  "logout": "退出登录",
+
+  "home": "主页",
+  "me": "我",
+
+  "myAccount": "我的账户",
+  "searchProductsBrands": "搜索商品、品牌",
+
+  "categoryPhone": "手机",
+  "categoryComputer": "电脑",
+  "categoryCamera": "相机",
+  "categoryAudio": "音频",
+  "categoryGaming": "游戏",
+  "categoryAccessory": "配件",
+  "categoryHomeAppliance": "家电",
+  "categoryAll": "全部",
+
+  "techWeek": "TECH WEEK",
+  "bannerDiscount": "最高优惠 40%",
+  "bannerTechDeal": "精选科技商品限时优惠",
+
+  "dailyDeals": "每日优惠",
+  "newArrivals": "新品上市",
+  "bestSellers": "热销排行",
+  "coupons": "优惠券",
+
+  "productCategories": "商品分类",
+  "viewAll": "查看全部",
+  "allProducts": "全部商品",
+
+  "hotProducts": "热销商品",
+  "more": "更多",
+
+  "memberExclusive": "会员专属优惠",
+  "joinMemberDiscount": "加入会员享更多折扣",
+
+  "latestProducts": "最新商品",
+
+  "scannerComingSoon": "扫码功能尚未接入",
+  "searchComingSoon": "搜索页面尚未接入",
+
+  "soldCount": "已售 {count}",
+  "@soldCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "soldAndStock": "已售 {sold} · 库存 {stock}",
+  "@soldAndStock": {
+    "placeholders": {
+      "sold": {
+        "type": "int"
+      },
+      "stock": {
+        "type": "int"
+      }
+    }
+  },
+  "cartTitle": "购物车 ({count})",
+"@cartTitle": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+
+"clear": "清空",
+"cartEmpty": "购物车还是空的",
+"cartLoadFailed": "购物车加载失败",
+"reload": "重新加载",
+"total": "总计",
+
+"checkoutCount": "结算 ({count})",
+"@checkoutCount": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+
+"clearCart": "清空购物车",
+"clearCartConfirmation": "确定要删除购物车中的所有商品吗？",
+"cancel": "取消",
+"cartActionFailed": "购物车操作失败",
+"cartItemSubtotal": "小计：RM {amount}",
+"@cartItemSubtotal": {
+  "placeholders": {
+    "amount": {
+      "type": "String"
+    }
+  }
+},
+
+"delete": "删除",
+"confirmOrder": "确认订单",
+"shippingAddress": "收货地址",
+"add": "新增",
+"addShippingAddress": "新增收货地址",
+"shippingAddressRequired": "结算前必须填写配送地址",
+
+"products": "商品",
+
+"shippingMethod": "配送方式",
+"standardShipping": "标准配送",
+"expressShipping": "快速配送",
+"standardShippingDescription": "预计 3 至 5 天送达",
+"expressShippingDescription": "预计 1 至 2 天送达",
+
+"paymentMethod": "付款方式",
+"onlineBanking": "网上银行",
+"creditDebitCard": "信用卡／签账卡",
+"cashOnDelivery": "货到付款",
+
+"amountDetails": "金额明细",
+"productSubtotal": "商品小计",
+"shippingFee": "运费",
+"amountDue": "应付总额",
+
+"placeOrder": "提交订单",
+
+"saveAddressFailed": "保存地址失败",
+"createOrderFailed": "建立订单失败",
+
+"defaultAddress": "默认",
+"recipientName": "收件人姓名",
+"phoneNumber": "电话号码",
+"detailedAddress": "详细地址",
+"city": "城市",
+"stateRegion": "州属",
+"postcode": "邮递区号",
+"country": "国家",
+"setAsDefaultAddress": "设为默认地址",
+"saveAddress": "保存地址",
+
+"requiredField": "请输入{field}",
+"@requiredField": {
+  "placeholders": {
+    "field": {
+      "type": "String"
+    }
+  }
+},
+"all": "全部",
+"pendingPayment": "待付款",
+"processing": "处理中",
+"awaitingDelivery": "待收货",
+"completed": "已完成",
+"cancelled": "已取消",
+
+"orderStatusPaid": "已付款",
+"orderStatusShipped": "已出货",
+"orderStatusDelivered": "已送达",
+"orderStatusRefunded": "已退款",
+
+"noOrders": "暂时没有订单",
+"orderLoadFailed": "订单加载失败",
+
+"orderNumber": "订单 {number}",
+"@orderNumber": {
+  "placeholders": {
+    "number": {
+      "type": "String"
+    }
+  }
+},
+
+"orderItemQuantity": "共 {count} 件商品",
+"@orderItemQuantity": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+
+"orderProductTypes": "共 {count} 种商品",
+"@orderProductTypes": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+
+"orderTotal": "总额：",
+"orderDetails": "订单详情",
+
+"cancelOrder": "取消订单",
+"goToPayment": "去付款 · RM {amount}",
+"@goToPayment": {
+  "placeholders": {
+    "amount": {
+      "type": "String"
+    }
+  }
+},
+
+"cancelOrderConfirmation": "取消后，这笔订单占用的商品库存会自动恢复。确定取消吗？",
+"back": "返回",
+"confirmCancellation": "确定取消",
+
+"orderCancelledStockRestored": "订单已取消，商品库存已恢复",
+"cancelOrderFailed": "取消订单失败",
+
+"statusPendingPaymentDescription": "请完成付款以继续处理订单",
+"statusPaidDescription": "付款成功，等待商家处理",
+"statusProcessingDescription": "商家正在准备您的商品",
+"statusShippedDescription": "商品已交给物流公司",
+"statusDeliveredDescription": "商品已送达，请确认收货",
+"statusCompletedDescription": "这笔订单已完成",
+"statusCancelledDescription": "这笔订单已取消",
+"statusRefundedDescription": "这笔订单已退款",
+
+"deliveryAndPayment": "配送与付款",
+"discount": "优惠",
+"orderGrandTotal": "订单总额",
+
+"orderInformation": "订单信息",
+"orderNumberLabel": "订单编号",
+"createdAt": "建立时间",
+
+"orderNotFound": "找不到这笔订单",
+"orderPayment": "订单付款",
+"paymentAutoUpdateNote": "付款完成后会自动确认并更新订单，不需要再次点击付款。",
+
+"confirmPayment": "确认付款 RM {amount}",
+"@confirmPayment": {
+  "placeholders": {
+    "amount": {
+      "type": "String"
+    }
+  }
+},
+
+"orderDoesNotNeedPayment": "这笔订单目前不需要付款",
+"paymentSuccessOrderUpdated": "付款成功，订单已更新",
+"paymentSubmittedAutoUpdate": "付款已提交，系统会自动更新订单状态",
+"orderCreatedSuccessfully": "订单建立成功",
+"orderCreated": "订单已建立",
+
+"orderNumberValue": "订单编号：{number}",
+"@orderNumberValue": {
+  "placeholders": {
+    "number": {
+      "type": "String"
+    }
+  }
+},
+
+"paymentAmount": "付款金额：RM {amount}",
+"@paymentAmount": {
+  "placeholders": {
+    "amount": {
+      "type": "String"
+    }
+  }
+},
+
+"cartClearFailedAfterOrder": "订单已建立，但购物车清理失败。",
+
+"payNow": "立即付款",
+"viewThisOrder": "查看这笔订单",
+"viewAllOrders": "查看全部订单",
+"continueShopping": "继续购物",
+"addToCart": "加入购物车",
+
+"addToCartWithQuantity": "加入购物车 ({count})",
+"@addToCartWithQuantity": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+
+"buyNow": "立即购买",
+
+"productAddedToCart": "{product} 已加入购物车",
+"@productAddedToCart": {
+  "placeholders": {
+    "product": {
+      "type": "String"
+    }
+  }
+},
+
+"viewCart": "查看购物车",
+"addToCartFailed": "加入购物车失败",
+"categoryNoProducts": "{category}暂时没有商品",
+"@categoryNoProducts": {
+  "placeholders": {
+    "category": {
+      "type": "String"
+    }
+  }
+},
+"cart": "购物车",
+"productLoadFailed": "商品加载失败",
+"clearCartFailed": "清空购物车失败",
+"cartUpdateFailed": "购物车更新失败",
+"checkoutLoadFailed": "结算资料加载失败",
+"checkoutNoItems": "没有可以结算的商品",
+"checkoutSelectAddress": "请先选择收货地址",
+"onlyPendingPaymentCanBeCancelled": "只有待付款订单可以取消",
+"paymentCredentialMissing": "无法初始化付款",
+"paymentFailedTryAnotherMethod": "付款失败，请更换付款方式后重试",
+"paymentConnectionFailed": "无法连接付款服务",
+"paymentSessionExpired": "登录已失效，请重新登录",
+"paymentInvalidResponse": "付款服务返回的资料格式无效",
+"paymentCreationFailed": "无法建立付款",
+"paymentConfirmationFailed": "无法确认付款结果",
+"paymentUnknownError": "付款失败，请稍后重试",
+"authConnectionFailed": "无法连接服务器，请检查网络连接",
+"authSessionExpired": "登录已失效，请重新登录",
+"authInvalidResponse": "服务器返回的资料格式无效"
+}

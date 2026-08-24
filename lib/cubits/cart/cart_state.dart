@@ -2,16 +2,18 @@ import '../../models/cart_item.dart';
 
 enum CartStatus { initial, loading, ready, error }
 
+enum CartErrorType { loadFailed, clearFailed, updateFailed }
+
 class CartState {
   const CartState({
     this.status = CartStatus.initial,
     this.items = const [],
-    this.errorMessage,
+    this.errorType,
   });
 
   final CartStatus status;
   final List<CartItem> items;
-  final String? errorMessage;
+  final CartErrorType? errorType;
 
   bool get isLoading {
     return status == CartStatus.loading;

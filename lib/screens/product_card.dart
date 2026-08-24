@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/product.dart';
 
 class ProductCard extends StatelessWidget {
+  const ProductCard({super.key, required this.product, required this.onTap});
+
   final Product product;
   final VoidCallback onTap;
 
-  const ProductCard({super.key, required this.product, required this.onTap});
-
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -24,9 +29,12 @@ class ProductCard extends StatelessWidget {
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  return const ColoredBox(
-                    color: Color(0xFFF2F2F2),
-                    child: Icon(Icons.broken_image_outlined),
+                  return ColoredBox(
+                    color: colorScheme.surfaceContainerHighest,
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   );
                 },
               ),
@@ -42,10 +50,9 @@ class ProductCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
-                'RM '
-                '${product.price.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: Colors.red,
+                'RM ${product.price.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: colorScheme.primary,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -54,8 +61,8 @@ class ProductCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(8),
               child: Text(
-                '已售 ${product.sold}',
-                style: const TextStyle(color: Colors.grey),
+                l10n.soldCount(product.sold),
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
               ),
             ),
           ],

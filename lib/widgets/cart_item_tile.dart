@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/cart_item.dart';
 
 class CartItemTile extends StatelessWidget {
-  final CartItem item;
-  final VoidCallback onIncrease;
-  final VoidCallback onDecrease;
-  final VoidCallback onRemove;
-
   const CartItemTile({
     super.key,
     required this.item,
@@ -16,70 +12,136 @@ class CartItemTile extends StatelessWidget {
     required this.onRemove,
   });
 
+  final CartItem item;
+  final VoidCallback onIncrease;
+  final VoidCallback onDecrease;
+  final VoidCallback onRemove;
+
   @override
   Widget build(BuildContext context) {
     final product = item.product;
 
+    final colorScheme =
+        Theme.of(context).colorScheme;
+
+    final l10n =
+        AppLocalizations.of(context);
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(
+          12,
+        ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
           children: [
-            _ProductImage(imageUrl: product.image),
-            const SizedBox(width: 12),
+            _ProductImage(
+              imageUrl: product.image,
+            ),
+
+            const SizedBox(
+              width: 12,
+            ),
+
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   Text(
                     product.title,
                     maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    overflow:
+                        TextOverflow.ellipsis,
+                    style:
+                        const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight:
+                          FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 8),
+
+                  const SizedBox(
+                    height: 8,
+                  ),
+
                   Text(
                     'RM ${product.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: Colors.red,
+                    style: TextStyle(
+                      color:
+                          colorScheme.primary,
                       fontSize: 17,
-                      fontWeight: FontWeight.w600,
+                      fontWeight:
+                          FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '小計：RM '
-                    '${item.subtotal.toStringAsFixed(2)}',
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+
+                  const SizedBox(
+                    height: 4,
                   ),
-                  const SizedBox(height: 12),
+
+                  Text(
+                    l10n.cartItemSubtotal(
+                      item.subtotal
+                          .toStringAsFixed(
+                        2,
+                      ),
+                    ),
+                    style: TextStyle(
+                      color: colorScheme
+                          .onSurfaceVariant,
+                      fontSize: 13,
+                    ),
+                  ),
+
+                  const SizedBox(
+                    height: 12,
+                  ),
+
                   Row(
                     children: [
                       _QuantityButton(
                         icon: Icons.remove,
-                        onPressed: onDecrease,
+                        onPressed:
+                            onDecrease,
                       ),
+
                       SizedBox(
                         width: 42,
                         child: Text(
                           '${item.quantity}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          textAlign:
+                              TextAlign.center,
+                          style:
+                              const TextStyle(
+                            fontWeight:
+                                FontWeight
+                                    .w600,
+                          ),
                         ),
                       ),
-                      _QuantityButton(icon: Icons.add, onPressed: onIncrease),
+
+                      _QuantityButton(
+                        icon: Icons.add,
+                        onPressed:
+                            onIncrease,
+                      ),
+
                       const Spacer(),
+
                       IconButton(
-                        tooltip: '刪除',
-                        onPressed: onRemove,
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.red,
+                        tooltip:
+                            l10n.delete,
+                        onPressed:
+                            onRemove,
+                        icon: Icon(
+                          Icons
+                              .delete_outline,
+                          color:
+                              colorScheme
+                                  .error,
                         ),
                       ),
                     ],
@@ -94,27 +156,46 @@ class CartItemTile extends StatelessWidget {
   }
 }
 
-class _ProductImage extends StatelessWidget {
-  final String imageUrl;
+class _ProductImage
+    extends StatelessWidget {
+  const _ProductImage({
+    required this.imageUrl,
+  });
 
-  const _ProductImage({required this.imageUrl});
+  final String imageUrl;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme =
+        Theme.of(context).colorScheme;
+
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius:
+          BorderRadius.circular(
+        8,
+      ),
       child: Image.network(
         imageUrl,
         width: 100,
         height: 100,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return const SizedBox(
+        errorBuilder: (
+          context,
+          error,
+          stackTrace,
+        ) {
+          return SizedBox(
             width: 100,
             height: 100,
             child: ColoredBox(
-              color: Color(0xFFF2F2F2),
-              child: Icon(Icons.broken_image_outlined, color: Colors.grey),
+              color: colorScheme
+                  .surfaceContainerHighest,
+              child: Icon(
+                Icons
+                    .broken_image_outlined,
+                color: colorScheme
+                    .onSurfaceVariant,
+              ),
             ),
           );
         },
@@ -123,11 +204,15 @@ class _ProductImage extends StatelessWidget {
   }
 }
 
-class _QuantityButton extends StatelessWidget {
+class _QuantityButton
+    extends StatelessWidget {
+  const _QuantityButton({
+    required this.icon,
+    required this.onPressed,
+  });
+
   final IconData icon;
   final VoidCallback onPressed;
-
-  const _QuantityButton({required this.icon, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -136,8 +221,14 @@ class _QuantityButton extends StatelessWidget {
       height: 34,
       child: OutlinedButton(
         onPressed: onPressed,
-        style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
-        child: Icon(icon, size: 18),
+        style:
+            OutlinedButton.styleFrom(
+          padding: EdgeInsets.zero,
+        ),
+        child: Icon(
+          icon,
+          size: 18,
+        ),
       ),
     );
   }

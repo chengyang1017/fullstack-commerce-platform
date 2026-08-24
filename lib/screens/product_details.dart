@@ -3,10 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubits/cart/cart_cubit.dart';
 import '../cubits/cart/cart_state.dart';
+import '../cubits/checkout/checkout_cubit.dart';
+import '../l10n/app_localizations.dart';
 import '../models/cart_item.dart';
 import '../models/checkout_request.dart';
 import '../models/product.dart';
-import '../cubits/checkout/checkout_cubit.dart';
 import '../repositories/address_repository.dart';
 import '../repositories/order_repository.dart';
 import '../widgets/cart_icon_button.dart';
@@ -14,9 +15,9 @@ import 'cart_page.dart';
 import 'checkout_page.dart';
 
 class ProductDetails extends StatefulWidget {
-  final Product product;
-
   const ProductDetails({super.key, required this.product});
+
+  final Product product;
 
   @override
   State<ProductDetails> createState() {
@@ -39,6 +40,8 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   AppBar _buildAppBar() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return AppBar(
       title: Text(product.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       actions: [
@@ -50,7 +53,7 @@ class _ProductDetailsState extends State<ProductDetails> {
           },
           icon: Icon(
             _isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: _isFavorite ? Colors.red : null,
+            color: _isFavorite ? colorScheme.error : null,
           ),
         ),
         const CartIconButton(),
@@ -59,6 +62,10 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   Widget _buildBody() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,13 +77,13 @@ class _ProductDetailsState extends State<ProductDetails> {
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                return const ColoredBox(
-                  color: Color(0xFFF2F2F2),
+                return ColoredBox(
+                  color: colorScheme.surfaceContainerHighest,
                   child: Center(
                     child: Icon(
                       Icons.broken_image_outlined,
                       size: 64,
-                      color: Colors.grey,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 );
@@ -90,8 +97,8 @@ class _ProductDetailsState extends State<ProductDetails> {
               children: [
                 Text(
                   'RM ${product.price.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: Colors.red,
+                  style: TextStyle(
+                    color: colorScheme.primary,
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                   ),
@@ -107,8 +114,8 @@ class _ProductDetailsState extends State<ProductDetails> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '已售 ${product.sold}',
-                  style: const TextStyle(color: Colors.grey),
+                  l10n.soldCount(product.sold),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -119,6 +126,10 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   Widget _buildBottomNavigationBar() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return BlocSelector<CartCubit, CartState, int>(
       selector: (state) {
         return state.quantityOf(product.id);
@@ -127,13 +138,13 @@ class _ProductDetailsState extends State<ProductDetails> {
         return SafeArea(
           child: Container(
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black12,
+                  color: colorScheme.shadow.withValues(alpha: 0.12),
                   blurRadius: 8,
-                  offset: Offset(0, -2),
+                  offset: const Offset(0, -2),
                 ),
               ],
             ),
@@ -142,14 +153,18 @@ class _ProductDetailsState extends State<ProductDetails> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: _addToCart,
-                    child: Text(quantity == 0 ? '加入購物車' : '加入購物車 ($quantity)'),
+                    child: Text(
+                      quantity == 0
+                          ? l10n.addToCart
+                          : l10n.addToCartWithQuantity(quantity),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: FilledButton(
                     onPressed: _buyNow,
-                    child: const Text('立即購買'),
+                    child: Text(l10n.buyNow),
                   ),
                 ),
               ],
@@ -168,10 +183,12 @@ class _ProductDetailsState extends State<ProductDetails> {
         return;
       }
 
+      final l10n = AppLocalizations.of(context);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${product.title} 已加入購物車'),
-          action: SnackBarAction(label: '查看', onPressed: _openCart),
+          content: Text(l10n.productAddedToCart(product.title)),
+          action: SnackBarAction(label: l10n.viewCart, onPressed: _openCart),
         ),
       );
     } catch (_) {
@@ -179,7 +196,19 @@ class _ProductDetailsState extends State<ProductDetails> {
         return;
       }
 
-      final message = context.read<CartCubit>().state.errorMessage ?? '加入購物車失敗';
+      final l10n = AppLocalizations.of(context);
+
+      final cartState = context.read<CartCubit>().state;
+
+      final message = switch (cartState.errorType) {
+        CartErrorType.loadFailed => l10n.cartLoadFailed,
+
+        CartErrorType.updateFailed => l10n.addToCartFailed,
+
+        CartErrorType.clearFailed => l10n.addToCartFailed,
+
+        null => l10n.addToCartFailed,
+      };
 
       ScaffoldMessenger.of(
         context,

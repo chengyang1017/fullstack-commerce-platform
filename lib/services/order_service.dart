@@ -5,17 +5,43 @@ import 'package:http/http.dart' as http;
 import '../models/order.dart';
 import 'customer_auth_service.dart';
 
-class ApiOrderException implements Exception {
-  final String message;
-  final int? statusCode;
+enum ApiOrderFailureType {
+  invalidOrderListResponse,
+  invalidOrderResponse,
+  invalidOrderId,
+  connectionFailed,
+  authenticationExpired,
+  requestFailed,
+  invalidResponse,
+}
 
-  const ApiOrderException(
-    this.message, {
+class ApiOrderException implements Exception {
+  const ApiOrderException({
+    required this.type,
     this.statusCode,
+    this.serverMessage,
+    this.cause,
   });
 
+  final ApiOrderFailureType type;
+
+  final int? statusCode;
+
+  /// Backend message retained for diagnostics only.
+  /// Do not display this directly in the UI.
+  final String? serverMessage;
+
+  final Object? cause;
+
   @override
-  String toString() => message;
+  String toString() {
+    return 'ApiOrderException('
+        'type: $type, '
+        'statusCode: $statusCode, '
+        'serverMessage: $serverMessage, '
+        'cause: $cause'
+        ')';
+  }
 }
 
 abstract class OrderService {
@@ -29,10 +55,6 @@ abstract class OrderService {
 }
 
 class ApiOrderService implements OrderService {
-  final CustomerAuthService _authService;
-  final http.Client _client;
-  final bool _ownsClient;
-
   ApiOrderService({
     required CustomerAuthService authService,
     http.Client? client,
@@ -40,35 +62,35 @@ class ApiOrderService implements OrderService {
        _client = client ?? http.Client(),
        _ownsClient = client == null;
 
+  final CustomerAuthService _authService;
+  final http.Client _client;
+  final bool _ownsClient;
+
   Uri get _ordersUri {
-    return Uri.parse(
-      '${_authService.baseUrl}/api/customer/orders',
-    );
+    return Uri.parse('${_authService.baseUrl}/api/customer/orders');
   }
 
   @override
   Future<List<Order>> loadOrders() async {
-    final response = await _sendAuthorized(
-      method: 'GET',
-      uri: _ordersUri,
-    );
+    final response = await _sendAuthorized(method: 'GET', uri: _ordersUri);
 
     final decoded = _decodeResponse(response);
 
     if (decoded is! List) {
-      throw const ApiOrderException('服务器返回的订单列表格式无效');
+      throw const ApiOrderException(
+        type: ApiOrderFailureType.invalidOrderListResponse,
+      );
     }
 
     try {
       return decoded
-          .map(
-            (item) => Order.fromJson(
-              Map<String, dynamic>.from(item as Map),
-            ),
-          )
+          .map((item) => Order.fromJson(Map<String, dynamic>.from(item as Map)))
           .toList(growable: false);
-    } catch (_) {
-      throw const ApiOrderException('服务器返回的订单资料格式无效');
+    } catch (error) {
+      throw ApiOrderException(
+        type: ApiOrderFailureType.invalidOrderListResponse,
+        cause: error,
+      );
     }
   }
 
@@ -80,10 +102,7 @@ class ApiOrderService implements OrderService {
       body: order.toCreateOrderJson(),
     );
 
-    return _readOrderResponse(
-      response,
-      invalidMessage: '服务器返回的新订单资料格式无效',
-    );
+    return _readOrderResponse(response);
   }
 
   @override
@@ -91,7 +110,7 @@ class ApiOrderService implements OrderService {
     final normalizedOrderId = orderId.trim();
 
     if (normalizedOrderId.isEmpty) {
-      throw const ApiOrderException('订单 ID 不能为空');
+      throw const ApiOrderException(type: ApiOrderFailureType.invalidOrderId);
     }
 
     final uri = Uri.parse(
@@ -99,33 +118,29 @@ class ApiOrderService implements OrderService {
       '${Uri.encodeComponent(normalizedOrderId)}/cancel',
     );
 
-    final response = await _sendAuthorized(
-      method: 'POST',
-      uri: uri,
-    );
+    final response = await _sendAuthorized(method: 'POST', uri: uri);
 
-    return _readOrderResponse(
-      response,
-      invalidMessage: '服务器返回的取消订单资料格式无效',
-    );
+    return _readOrderResponse(response);
   }
 
-  Order _readOrderResponse(
-    http.Response response, {
-    required String invalidMessage,
-  }) {
+  Order _readOrderResponse(http.Response response) {
     final decoded = _decodeResponse(response);
 
     if (decoded is! Map) {
-      throw ApiOrderException(invalidMessage);
+      throw ApiOrderException(
+        type: ApiOrderFailureType.invalidOrderResponse,
+        statusCode: response.statusCode,
+      );
     }
 
     try {
-      return Order.fromJson(
-        Map<String, dynamic>.from(decoded),
+      return Order.fromJson(Map<String, dynamic>.from(decoded));
+    } catch (error) {
+      throw ApiOrderException(
+        type: ApiOrderFailureType.invalidOrderResponse,
+        statusCode: response.statusCode,
+        cause: error,
       );
-    } catch (_) {
-      throw ApiOrderException(invalidMessage);
     }
   }
 
@@ -135,9 +150,18 @@ class ApiOrderService implements OrderService {
     Map<String, dynamic>? body,
     bool allowRefresh = true,
   }) async {
-    final accessToken = await _authService.requireAccessToken();
+    late final String accessToken;
 
-    http.Response response;
+    try {
+      accessToken = await _authService.requireAccessToken();
+    } on CustomerAuthException catch (error) {
+      throw ApiOrderException(
+        type: ApiOrderFailureType.authenticationExpired,
+        cause: error,
+      );
+    }
+
+    late final http.Response response;
 
     try {
       response = await _send(
@@ -146,17 +170,37 @@ class ApiOrderService implements OrderService {
         accessToken: accessToken,
         body: body,
       );
-    } catch (_) {
-      throw const ApiOrderException('无法连接服务器，请检查网络和后端服务');
+    } catch (error) {
+      throw ApiOrderException(
+        type: ApiOrderFailureType.connectionFailed,
+        cause: error,
+      );
     }
 
-    if (response.statusCode == 401 && allowRefresh) {
-      final refreshedToken = await _authService.refreshAccessToken();
+    if (response.statusCode == 401) {
+      if (!allowRefresh) {
+        throw ApiOrderException(
+          type: ApiOrderFailureType.authenticationExpired,
+          statusCode: response.statusCode,
+        );
+      }
+
+      String? refreshedToken;
+
+      try {
+        refreshedToken = await _authService.refreshAccessToken();
+      } catch (error) {
+        throw ApiOrderException(
+          type: ApiOrderFailureType.authenticationExpired,
+          statusCode: response.statusCode,
+          cause: error,
+        );
+      }
 
       if (refreshedToken == null || refreshedToken.isEmpty) {
-        throw const ApiOrderException(
-          '登入已失效，請重新登入',
-          statusCode: 401,
+        throw ApiOrderException(
+          type: ApiOrderFailureType.authenticationExpired,
+          statusCode: response.statusCode,
         );
       }
 
@@ -171,13 +215,14 @@ class ApiOrderService implements OrderService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final decoded = _decodeResponse(response);
 
-      final message = decoded is Map ? decoded['message'] : null;
+      final rawMessage = decoded is Map ? decoded['message'] : null;
 
       throw ApiOrderException(
-        message is String && message.isNotEmpty
-            ? message
-            : '订单请求失败，请稍后重试',
+        type: ApiOrderFailureType.requestFailed,
         statusCode: response.statusCode,
+        serverMessage: rawMessage is String && rawMessage.isNotEmpty
+            ? rawMessage
+            : null,
       );
     }
 
@@ -198,10 +243,7 @@ class ApiOrderService implements OrderService {
 
     switch (method) {
       case 'GET':
-        return _client.get(
-          uri,
-          headers: headers,
-        );
+        return _client.get(uri, headers: headers);
 
       case 'POST':
         return _client.post(
@@ -214,7 +256,7 @@ class ApiOrderService implements OrderService {
         throw ArgumentError.value(
           method,
           'method',
-          '不支持的请求方法',
+          'Unsupported request method',
         );
     }
   }
@@ -225,13 +267,12 @@ class ApiOrderService implements OrderService {
     }
 
     try {
-      return jsonDecode(
-        utf8.decode(response.bodyBytes),
-      );
-    } catch (_) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } catch (error) {
       throw ApiOrderException(
-        '服务器返回格式无效',
+        type: ApiOrderFailureType.invalidResponse,
         statusCode: response.statusCode,
+        cause: error,
       );
     }
   }

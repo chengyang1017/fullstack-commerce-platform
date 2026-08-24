@@ -4,13 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/order/order_cubit.dart';
 import '../cubits/payment/payment_cubit.dart';
 import '../cubits/payment/payment_state.dart';
+import '../l10n/app_localizations.dart';
 import '../models/order.dart';
 import '../repositories/payment_repository.dart';
 
 class PaymentFlowPage extends StatelessWidget {
-  final Order order;
-
   const PaymentFlowPage({super.key, required this.order});
+
+  final Order order;
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +27,9 @@ class PaymentFlowPage extends StatelessWidget {
 }
 
 class PaymentPage extends StatefulWidget {
-  final Order order;
-
   const PaymentPage({super.key, required this.order});
+
+  final Order order;
 
   @override
   State<PaymentPage> createState() {
@@ -41,10 +42,12 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget build(BuildContext context) {
     final order = widget.order;
 
+    final l10n = AppLocalizations.of(context);
+
     return BlocBuilder<PaymentCubit, PaymentState>(
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(title: const Text('訂單付款')),
+          appBar: AppBar(title: Text(l10n.orderPayment)),
           body: _buildBody(order, state),
           bottomNavigationBar: _buildBottomBar(order, state),
         );
@@ -53,6 +56,10 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Widget _buildBody(Order order, PaymentState state) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -61,13 +68,17 @@ class _PaymentPageState extends State<PaymentPage> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                const Text('應付金額', style: TextStyle(color: Colors.grey)),
-                const SizedBox(height: 10),
                 Text(
-                  'RM '
-                  '${order.total.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: Colors.red,
+                  l10n.amountDue,
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                ),
+
+                const SizedBox(height: 10),
+
+                Text(
+                  'RM ${order.total.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: colorScheme.primary,
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                   ),
@@ -76,43 +87,52 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
           ),
         ),
+
         const SizedBox(height: 12),
+
         Card(
           child: Column(
             children: [
               ListTile(
                 leading: const Icon(Icons.receipt_long_outlined),
-                title: const Text('訂單編號'),
+                title: Text(l10n.orderNumberLabel),
                 subtitle: Text(order.displayNumber),
               ),
+
               const Divider(height: 1),
+
               ListTile(
                 leading: const Icon(Icons.payment_outlined),
-                title: const Text('付款方式'),
-                subtitle: Text(order.paymentMethod.title),
+                title: Text(l10n.paymentMethod),
+                subtitle: Text(_paymentMethodTitle(l10n, order.paymentMethod)),
               ),
             ],
           ),
         ),
-        if (state.errorMessage != null)
+
+        if (state.errorType != null)
           Padding(
             padding: const EdgeInsets.only(top: 16),
             child: Text(
-              state.errorMessage!,
-              style: const TextStyle(color: Colors.red),
+              _paymentErrorMessage(l10n, state.errorType!),
+              style: TextStyle(color: colorScheme.error),
             ),
           ),
+
         const SizedBox(height: 16),
-        const Text(
-          '付款完成後會自動確認並更新訂單，不需要再次點擊付款。',
+
+        Text(
+          l10n.paymentAutoUpdateNote,
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: colorScheme.onSurfaceVariant),
         ),
       ],
     );
   }
 
   Widget _buildBottomBar(Order order, PaymentState state) {
+    final l10n = AppLocalizations.of(context);
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -128,33 +148,30 @@ class _PaymentPageState extends State<PaymentPage> {
                   height: 22,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(
-                  '確認付款 RM '
-                  '${order.total.toStringAsFixed(2)}',
-                ),
+              : Text(l10n.confirmPayment(order.total.toStringAsFixed(2))),
         ),
       ),
     );
   }
 
   Future<void> _pay(Order order) async {
+    final l10n = AppLocalizations.of(context);
+
     if (order.status != OrderStatus.pendingPayment) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('這筆訂單目前不需要付款')));
+      ).showSnackBar(SnackBar(content: Text(l10n.orderDoesNotNeedPayment)));
 
       return;
     }
 
-    final submitted = await BlocProvider.of<PaymentCubit>(
-      context,
-    ).pay(orderId: order.id);
+    final submitted = await context.read<PaymentCubit>().pay(orderId: order.id);
 
     if (!mounted || !submitted) {
       return;
     }
 
-    final orderCubit = BlocProvider.of<OrderCubit>(context);
+    final orderCubit = context.read<OrderCubit>();
 
     await orderCubit.refresh();
 
@@ -166,10 +183,48 @@ class _PaymentPageState extends State<PaymentPage> {
 
     final isPaid = latestOrder?.status == OrderStatus.paid;
 
+    final currentL10n = AppLocalizations.of(context);
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(isPaid ? '付款成功，訂單已更新' : '付款已提交，系統會自動更新訂單狀態')),
+      SnackBar(
+        content: Text(
+          isPaid
+              ? currentL10n.paymentSuccessOrderUpdated
+              : currentL10n.paymentSubmittedAutoUpdate,
+        ),
+      ),
     );
 
     Navigator.pop(context, true);
   }
+}
+
+String _paymentMethodTitle(AppLocalizations l10n, PaymentMethod method) {
+  return switch (method) {
+    PaymentMethod.onlineBanking => l10n.onlineBanking,
+
+    PaymentMethod.card => l10n.creditDebitCard,
+
+    PaymentMethod.cashOnDelivery => l10n.cashOnDelivery,
+  };
+}
+
+String _paymentErrorMessage(AppLocalizations l10n, PaymentErrorType type) {
+  return switch (type) {
+    PaymentErrorType.missingCredential => l10n.paymentCredentialMissing,
+
+    PaymentErrorType.paymentFailed => l10n.paymentFailedTryAnotherMethod,
+
+    PaymentErrorType.connectionFailed => l10n.paymentConnectionFailed,
+
+    PaymentErrorType.authenticationExpired => l10n.paymentSessionExpired,
+
+    PaymentErrorType.invalidResponse => l10n.paymentInvalidResponse,
+
+    PaymentErrorType.createPaymentFailed => l10n.paymentCreationFailed,
+
+    PaymentErrorType.confirmationFailed => l10n.paymentConfirmationFailed,
+
+    PaymentErrorType.unknown => l10n.paymentUnknownError,
+  };
 }

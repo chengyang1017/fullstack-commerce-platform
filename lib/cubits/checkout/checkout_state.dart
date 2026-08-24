@@ -3,6 +3,13 @@ import '../../models/order.dart';
 
 enum CheckoutStatus { initial, loading, ready, submitting, success, error }
 
+enum CheckoutErrorType {
+  loadFailed,
+  emptyItems,
+  addressRequired,
+  createOrderFailed,
+}
+
 class CheckoutState {
   const CheckoutState({
     this.status = CheckoutStatus.initial,
@@ -10,7 +17,7 @@ class CheckoutState {
     this.selectedAddressId,
     this.shippingMethod = ShippingMethod.standard,
     this.paymentMethod = PaymentMethod.onlineBanking,
-    this.errorMessage,
+    this.errorType,
     this.createdOrder,
     this.cartClearFailed = false,
   });
@@ -23,7 +30,8 @@ class CheckoutState {
   final ShippingMethod shippingMethod;
   final PaymentMethod paymentMethod;
 
-  final String? errorMessage;
+  final CheckoutErrorType? errorType;
+
   final Order? createdOrder;
 
   final bool cartClearFailed;
@@ -63,7 +71,7 @@ class CheckoutState {
     bool clearSelectedAddress = false,
     ShippingMethod? shippingMethod,
     PaymentMethod? paymentMethod,
-    String? errorMessage,
+    CheckoutErrorType? errorType,
     bool clearError = false,
     Order? createdOrder,
     bool clearCreatedOrder = false,
@@ -77,7 +85,7 @@ class CheckoutState {
           : selectedAddressId ?? this.selectedAddressId,
       shippingMethod: shippingMethod ?? this.shippingMethod,
       paymentMethod: paymentMethod ?? this.paymentMethod,
-      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+      errorType: clearError ? null : errorType ?? this.errorType,
       createdOrder: clearCreatedOrder
           ? null
           : createdOrder ?? this.createdOrder,

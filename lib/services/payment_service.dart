@@ -10,13 +10,41 @@ class PaymentCancelledException implements Exception {
   const PaymentCancelledException();
 }
 
-class PaymentFailedException implements Exception {
-  final String message;
+enum PaymentFailureType {
+  missingCredential,
+  paymentFailed,
+  connectionFailed,
+  authenticationExpired,
+  invalidResponse,
+  createPaymentFailed,
+  confirmationFailed,
+}
 
-  const PaymentFailedException(this.message);
+class PaymentFailedException implements Exception {
+  const PaymentFailedException({
+    required this.type,
+    this.cause,
+    this.statusCode,
+    this.serverMessage,
+  });
+
+  final PaymentFailureType type;
+
+  final Object? cause;
+
+  final int? statusCode;
+
+  final String? serverMessage;
 
   @override
-  String toString() => message;
+  String toString() {
+    return 'PaymentFailedException('
+        'type: $type, '
+        'statusCode: $statusCode, '
+        'serverMessage: $serverMessage, '
+        'cause: $cause'
+        ')';
+  }
 }
 
 abstract class PaymentService {
@@ -24,16 +52,18 @@ abstract class PaymentService {
 }
 
 class StripePaymentService implements PaymentService {
-  final CustomerAuthService _authService;
-  final http.Client _client;
-  final bool _ownsClient;
-
   StripePaymentService({
     required CustomerAuthService authService,
     http.Client? client,
   }) : _authService = authService,
        _client = client ?? http.Client(),
        _ownsClient = client == null;
+
+  final CustomerAuthService _authService;
+
+  final http.Client _client;
+
+  final bool _ownsClient;
 
   @override
   Future<void> pay({required String orderId}) async {
@@ -47,7 +77,9 @@ class StripePaymentService implements PaymentService {
       final clientSecret = data['clientSecret'];
 
       if (clientSecret is! String || clientSecret.isEmpty) {
-        throw const PaymentFailedException('後端沒有返回付款憑證');
+        throw const PaymentFailedException(
+          type: PaymentFailureType.missingCredential,
+        );
       }
 
       await Stripe.instance.initPaymentSheet(
@@ -55,13 +87,17 @@ class StripePaymentService implements PaymentService {
           paymentIntentClientSecret: clientSecret,
           merchantDisplayName: 'Flutter Shopping',
           returnURL: 'flutterstripe://redirect',
-          primaryButtonLabel: '確認付款',
+
+          // 不在 Service 寫死中文 UI。
+          // Stripe PaymentSheet 使用其原生 UI。
           style: ThemeMode.system,
+
           googlePay: const PaymentSheetGooglePay(
             merchantCountryCode: 'MY',
             currencyCode: 'MYR',
             testEnv: true,
           ),
+
           billingDetailsCollectionConfiguration:
               const BillingDetailsCollectionConfiguration(
                 name: CollectionMode.always,
@@ -75,9 +111,12 @@ class StripePaymentService implements PaymentService {
       await Stripe.instance.presentPaymentSheet();
 
       /*
-       * PaymentSheet 成功關閉後，客戶端主動要求 Node
-       * 向 Stripe 查詢 PaymentIntent，並同步 PostgreSQL。
-       * 即使本地 webhook 沒有及時轉發，使用者也不用再點一次付款。
+       * PaymentSheet 成功關閉後，
+       * 客戶端主動要求 Node 向 Stripe
+       * 查詢 PaymentIntent，
+       * 並同步 PostgreSQL。
+       *
+       * 最終付款狀態仍然由後端決定。
        */
       await _waitForPaymentConfirmation(orderId);
     } on PaymentCancelledException {
@@ -90,10 +129,15 @@ class StripePaymentService implements PaymentService {
       }
 
       throw PaymentFailedException(
-        error.error.localizedMessage ?? 'Stripe 付款失敗',
+        type: PaymentFailureType.paymentFailed,
+        cause: error,
+        serverMessage: error.error.localizedMessage,
       );
     } catch (error) {
-      throw PaymentFailedException('無法建立付款：$error');
+      throw PaymentFailedException(
+        type: PaymentFailureType.createPaymentFailed,
+        cause: error,
+      );
     }
   }
 
@@ -105,7 +149,7 @@ class StripePaymentService implements PaymentService {
       orderId: orderId,
       endpoint: 'payment-intent',
       allowRefresh: allowRefresh,
-      fallbackMessage: '無法建立付款',
+      fallbackType: PaymentFailureType.createPaymentFailed,
     );
   }
 
@@ -122,23 +166,24 @@ class StripePaymentService implements PaymentService {
       final paymentIntentStatus = data['paymentIntentStatus'];
 
       if (paymentIntentStatus == 'canceled') {
-        throw const PaymentFailedException('付款已取消');
+        throw const PaymentCancelledException();
       }
 
       if (paymentIntentStatus == 'requires_payment_method') {
-        throw const PaymentFailedException('付款失敗，請更換付款方式');
+        throw const PaymentFailedException(
+          type: PaymentFailureType.paymentFailed,
+        );
       }
 
       if (attempt < maxAttempts - 1) {
-        await Future<void>.delayed(
-          const Duration(milliseconds: 750),
-        );
+        await Future<void>.delayed(const Duration(milliseconds: 750));
       }
     }
 
     /*
      * 部分付款方式可能需要較長處理時間。
-     * 此時不把已提交的付款當成失敗，後續仍由 webhook 完成更新。
+     * 此時不把已提交的付款當成失敗，
+     * 後續仍由 webhook 完成更新。
      */
   }
 
@@ -150,7 +195,7 @@ class StripePaymentService implements PaymentService {
       orderId: orderId,
       endpoint: 'payment-sync',
       allowRefresh: allowRefresh,
-      fallbackMessage: '無法確認付款結果',
+      fallbackType: PaymentFailureType.confirmationFailed,
     );
   }
 
@@ -158,11 +203,20 @@ class StripePaymentService implements PaymentService {
     required String orderId,
     required String endpoint,
     required bool allowRefresh,
-    required String fallbackMessage,
+    required PaymentFailureType fallbackType,
   }) async {
-    final accessToken = await _authService.requireAccessToken();
+    late final String accessToken;
 
-    http.Response response;
+    try {
+      accessToken = await _authService.requireAccessToken();
+    } catch (error) {
+      throw PaymentFailedException(
+        type: PaymentFailureType.authenticationExpired,
+        cause: error,
+      );
+    }
+
+    late final http.Response response;
 
     try {
       response = await _client.post(
@@ -178,36 +232,59 @@ class StripePaymentService implements PaymentService {
         },
         body: jsonEncode(const <String, dynamic>{}),
       );
-    } catch (_) {
-      throw const PaymentFailedException(
-        '無法連接服務器，請檢查網絡和後端服務',
+    } catch (error) {
+      throw PaymentFailedException(
+        type: PaymentFailureType.connectionFailed,
+        cause: error,
       );
     }
 
-    if (response.statusCode == 401 && allowRefresh) {
-      final refreshedToken = await _authService.refreshAccessToken();
+    if (response.statusCode == 401) {
+      if (!allowRefresh) {
+        throw PaymentFailedException(
+          type: PaymentFailureType.authenticationExpired,
+          statusCode: response.statusCode,
+        );
+      }
+
+      String? refreshedToken;
+
+      try {
+        refreshedToken = await _authService.refreshAccessToken();
+      } catch (error) {
+        throw PaymentFailedException(
+          type: PaymentFailureType.authenticationExpired,
+          cause: error,
+          statusCode: response.statusCode,
+        );
+      }
 
       if (refreshedToken == null || refreshedToken.isEmpty) {
-        throw const PaymentFailedException('登入已失效，請重新登入');
+        throw PaymentFailedException(
+          type: PaymentFailureType.authenticationExpired,
+          statusCode: response.statusCode,
+        );
       }
 
       return _postOrderPaymentEndpoint(
         orderId: orderId,
         endpoint: endpoint,
         allowRefresh: false,
-        fallbackMessage: fallbackMessage,
+        fallbackType: fallbackType,
       );
     }
 
     final decoded = _decodeResponse(response);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      final message = decoded['message'];
+      final rawMessage = decoded['message'];
 
       throw PaymentFailedException(
-        message is String && message.isNotEmpty
-            ? message
-            : fallbackMessage,
+        type: fallbackType,
+        statusCode: response.statusCode,
+        serverMessage: rawMessage is String && rawMessage.isNotEmpty
+            ? rawMessage
+            : null,
       );
     }
 
@@ -225,11 +302,16 @@ class StripePaymentService implements PaymentService {
       if (decoded is Map) {
         return Map<String, dynamic>.from(decoded);
       }
-    } catch (_) {
-      throw const PaymentFailedException('服務器返回格式無效');
+    } catch (error) {
+      throw PaymentFailedException(
+        type: PaymentFailureType.invalidResponse,
+        cause: error,
+      );
     }
 
-    throw const PaymentFailedException('服務器返回格式無效');
+    throw const PaymentFailedException(
+      type: PaymentFailureType.invalidResponse,
+    );
   }
 
   void dispose() {

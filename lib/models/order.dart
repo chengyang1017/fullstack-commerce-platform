@@ -26,28 +26,11 @@ enum ShippingMethod { standard, express }
 enum PaymentMethod { onlineBanking, card, cashOnDelivery }
 
 extension ShippingMethodDetails on ShippingMethod {
-  String get title {
-    switch (this) {
-      case ShippingMethod.standard:
-        return '標準配送';
-      case ShippingMethod.express:
-        return '快速配送';
-    }
-  }
-
-  String get description {
-    switch (this) {
-      case ShippingMethod.standard:
-        return '預計 3 至 5 天送達';
-      case ShippingMethod.express:
-        return '預計 1 至 2 天送達';
-    }
-  }
-
   double get fee {
     switch (this) {
       case ShippingMethod.standard:
         return 5;
+
       case ShippingMethod.express:
         return 15;
     }
@@ -57,6 +40,7 @@ extension ShippingMethodDetails on ShippingMethod {
     switch (this) {
       case ShippingMethod.standard:
         return 'STANDARD';
+
       case ShippingMethod.express:
         return 'EXPRESS';
     }
@@ -64,23 +48,14 @@ extension ShippingMethodDetails on ShippingMethod {
 }
 
 extension PaymentMethodDetails on PaymentMethod {
-  String get title {
-    switch (this) {
-      case PaymentMethod.onlineBanking:
-        return '網上銀行';
-      case PaymentMethod.card:
-        return '信用卡／簽帳卡';
-      case PaymentMethod.cashOnDelivery:
-        return '貨到付款';
-    }
-  }
-
   String get apiValue {
     switch (this) {
       case PaymentMethod.onlineBanking:
         return 'ONLINE_BANKING';
+
       case PaymentMethod.card:
         return 'CARD';
+
       case PaymentMethod.cashOnDelivery:
         return 'CASH_ON_DELIVERY';
     }
@@ -88,12 +63,6 @@ extension PaymentMethodDetails on PaymentMethod {
 }
 
 class OrderItem {
-  final String productId;
-  final String productTitle;
-  final String productImage;
-  final double unitPrice;
-  final int quantity;
-
   const OrderItem({
     required this.productId,
     required this.productTitle,
@@ -101,6 +70,12 @@ class OrderItem {
     required this.unitPrice,
     required this.quantity,
   });
+
+  final String productId;
+  final String productTitle;
+  final String productImage;
+  final double unitPrice;
+  final int quantity;
 
   double get subtotal {
     return unitPrice * quantity;
@@ -149,21 +124,6 @@ class OrderItem {
 }
 
 class Order {
-  final String id;
-  final String orderNumber;
-  final String? userId;
-  final Address address;
-  final List<OrderItem> items;
-  final ShippingMethod shippingMethod;
-  final PaymentMethod paymentMethod;
-  final OrderStatus status;
-  final OrderPaymentStatus paymentStatus;
-  final double subtotal;
-  final double shippingFee;
-  final double discount;
-  final double total;
-  final DateTime createdAt;
-
   const Order({
     required this.id,
     this.orderNumber = '',
@@ -180,6 +140,21 @@ class Order {
     required this.total,
     required this.createdAt,
   });
+
+  final String id;
+  final String orderNumber;
+  final String? userId;
+  final Address address;
+  final List<OrderItem> items;
+  final ShippingMethod shippingMethod;
+  final PaymentMethod paymentMethod;
+  final OrderStatus status;
+  final OrderPaymentStatus paymentStatus;
+  final double subtotal;
+  final double shippingFee;
+  final double discount;
+  final double total;
+  final DateTime createdAt;
 
   String get displayNumber {
     return orderNumber.isEmpty ? id : orderNumber;
@@ -227,7 +202,7 @@ class Order {
     final rawItems = json['items'];
 
     if (rawItems is! List) {
-      throw const FormatException('訂單商品資料格式無效');
+      throw const FormatException('Invalid order item data');
     }
 
     final address = json['address'] is Map
@@ -316,29 +291,6 @@ class Order {
   }
 }
 
-extension OrderStatusDetails on OrderStatus {
-  String get title {
-    switch (this) {
-      case OrderStatus.pendingPayment:
-        return '待付款';
-      case OrderStatus.paid:
-        return '已付款';
-      case OrderStatus.processing:
-        return '處理中';
-      case OrderStatus.shipped:
-        return '已出貨';
-      case OrderStatus.delivered:
-        return '已送達';
-      case OrderStatus.completed:
-        return '已完成';
-      case OrderStatus.cancelled:
-        return '已取消';
-      case OrderStatus.refunded:
-        return '已退款';
-    }
-  }
-}
-
 String _readRequiredString(Map<String, dynamic> json, String key) {
   final value = json[key];
 
@@ -346,7 +298,7 @@ String _readRequiredString(Map<String, dynamic> json, String key) {
     return value;
   }
 
-  throw FormatException('缺少訂單欄位：$key');
+  throw FormatException('Missing order field: $key');
 }
 
 String? _readOptionalString(Map<String, dynamic> json, String key) {
@@ -366,7 +318,7 @@ int _readRequiredInt(Map<String, dynamic> json, String key) {
     return value.toInt();
   }
 
-  throw FormatException('缺少訂單數字欄位：$key');
+  throw FormatException('Missing numeric order field: $key');
 }
 
 double _readMoney(

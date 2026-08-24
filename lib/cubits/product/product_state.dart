@@ -1,5 +1,7 @@
 import '../../models/product.dart';
 
+enum ProductErrorType { loadFailed }
+
 sealed class ProductState {
   const ProductState();
 }
@@ -19,7 +21,7 @@ final class ProductReady extends ProductState {
 }
 
 final class ProductError extends ProductState {
-  const ProductError({required this.message});
+  const ProductError({required this.type});
 
-  final String message;
+  final ProductErrorType type;
 }

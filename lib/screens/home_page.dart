@@ -2,9 +2,10 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../models/product.dart';
 import '../cubits/product/product_cubit.dart';
 import '../cubits/product/product_state.dart';
+import '../l10n/app_localizations.dart';
+import '../models/product.dart';
 import '../widgets/cart_icon_button.dart';
 import 'account_page.dart';
 import 'product_details.dart';
@@ -14,49 +15,19 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() {
+    return _HomePageState();
+  }
 }
 
 class _HomePageState extends State<HomePage> {
-  static const Color primary = Color(0xFF2563EB);
-  static const Color background = Color(0xFFF6F7F9);
-  static const Color textPrimary = Color(0xFF18181B);
-  static const Color textSecondary = Color(0xFF71717A);
-
-  int _bannerIndex = 0;
-
-  final List<String> banners = const [
+  static const List<String> _banners = [
     'https://picsum.photos/id/26/1200/550',
     'https://picsum.photos/id/96/1200/550',
     'https://picsum.photos/id/119/1200/550',
   ];
 
-  final List<_CategoryItem> categories = const [
-    _CategoryItem(
-      id: 'phone',
-      title: 'æ‰‹æ©Ÿ',
-      icon: Icons.phone_android_rounded,
-    ),
-    _CategoryItem(
-      id: 'computer',
-      title: 'é›»è…¦',
-      icon: Icons.laptop_mac_rounded,
-    ),
-    _CategoryItem(
-      id: 'camera',
-      title: 'ç›¸æ©Ÿ',
-      icon: Icons.camera_alt_rounded,
-    ),
-    _CategoryItem(id: 'audio', title: 'éŸ³è¨Š', icon: Icons.headphones_rounded),
-    _CategoryItem(
-      id: 'gaming',
-      title: 'éŠæˆ²',
-      icon: Icons.sports_esports_rounded,
-    ),
-    _CategoryItem(id: 'accessory', title: 'é…ä»¶', icon: Icons.watch_rounded),
-    _CategoryItem(id: 'home', title: 'å®¶é›»', icon: Icons.kitchen_rounded),
-    _CategoryItem(id: 'all', title: 'å…¨éƒ¨', icon: Icons.grid_view_rounded),
-  ];
+  int _bannerIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +44,6 @@ class _HomePageState extends State<HomePage> {
     final latestProducts = products.take(10).toList(growable: false);
 
     return Scaffold(
-      backgroundColor: background,
       body: CustomScrollView(
         slivers: [
           _buildAppBar(),
@@ -93,7 +63,7 @@ class _HomePageState extends State<HomePage> {
 
                 const SizedBox(height: 12),
 
-                _buildFlashSale(
+                _buildHotProducts(
                   bestSellingProducts.take(8).toList(growable: false),
                 ),
 
@@ -119,20 +89,27 @@ class _HomePageState extends State<HomePage> {
   }
 
   SliverAppBar _buildAppBar() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return SliverAppBar(
       pinned: true,
       floating: true,
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
+      backgroundColor: colorScheme.surface,
+      surfaceTintColor: colorScheme.surface,
       elevation: 0,
       toolbarHeight: 76,
       titleSpacing: 16,
       title: _buildSearchBar(),
       actions: [
         IconButton(
-          tooltip: 'æˆ‘çš„å¸³æˆ¶',
+          tooltip: l10n.myAccount,
           onPressed: _openAccount,
-          icon: const Icon(Icons.person_outline_rounded, color: textPrimary),
+          icon: Icon(
+            Icons.person_outline_rounded,
+            color: colorScheme.onSurface,
+          ),
         ),
         const Padding(
           padding: EdgeInsets.only(right: 8),
@@ -143,18 +120,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSearchBar() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return Row(
       children: [
         Material(
-          color: const Color(0xFFF1F5F9),
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(14),
           child: InkWell(
             onTap: _openScanner,
             borderRadius: BorderRadius.circular(14),
-            child: const SizedBox(
+            child: SizedBox(
               width: 46,
               height: 46,
-              child: Icon(Icons.qr_code_scanner_rounded, size: 22),
+              child: Icon(
+                Icons.qr_code_scanner_rounded,
+                size: 22,
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
         ),
@@ -163,25 +148,31 @@ class _HomePageState extends State<HomePage> {
 
         Expanded(
           child: Material(
-            color: const Color(0xFFF1F5F9),
+            color: colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(14),
             child: InkWell(
               onTap: _openSearch,
               borderRadius: BorderRadius.circular(14),
-              child: const SizedBox(
+              child: SizedBox(
                 height: 46,
                 child: Row(
                   children: [
-                    SizedBox(width: 14),
+                    const SizedBox(width: 14),
 
-                    Icon(Icons.search_rounded, color: textSecondary),
+                    Icon(
+                      Icons.search_rounded,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
 
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
 
                     Expanded(
                       child: Text(
-                        'æœå°‹å•†å“ã€å“ç‰Œ',
-                        style: TextStyle(color: textSecondary, fontSize: 14),
+                        l10n.searchProductsBrands,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ],
@@ -195,27 +186,34 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBanner() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return Container(
-      color: Colors.white,
+      color: colorScheme.surface,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: CarouselSlider.builder(
-              itemCount: banners.length,
+              itemCount: _banners.length,
               itemBuilder: (context, index, realIndex) {
                 return Stack(
                   fit: StackFit.expand,
                   children: [
                     Image.network(
-                      banners[index],
+                      _banners[index],
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: const Color(0xFFE5E7EB),
+                          color: colorScheme.surfaceContainerHighest,
                           alignment: Alignment.center,
-                          child: const Icon(Icons.image_not_supported_outlined),
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         );
                       },
                     ),
@@ -230,33 +228,36 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                    const Positioned(
+                    Positioned(
                       left: 22,
                       bottom: 24,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'TECH WEEK',
-                            style: TextStyle(
+                            l10n.techWeek,
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 1.5,
                             ),
                           ),
-                          SizedBox(height: 5),
+                          const SizedBox(height: 5),
                           Text(
-                            'æœ€é«˜å„ªæƒ  40%',
-                            style: TextStyle(
+                            l10n.bannerDiscount,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 25,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            'ç²¾é¸ç§‘æŠ€å•†å“é™æ™‚å„ªæƒ ',
-                            style: TextStyle(color: Colors.white, fontSize: 13),
+                            l10n.bannerTechDeal,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
@@ -282,7 +283,7 @@ class _HomePageState extends State<HomePage> {
 
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(banners.length, (index) {
+            children: List.generate(_banners.length, (index) {
               final selected = index == _bannerIndex;
 
               return AnimatedContainer(
@@ -291,7 +292,9 @@ class _HomePageState extends State<HomePage> {
                 height: 7,
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 decoration: BoxDecoration(
-                  color: selected ? primary : const Color(0xFFD4D4D8),
+                  color: selected
+                      ? colorScheme.primary
+                      : colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(20),
                 ),
               );
@@ -303,15 +306,31 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildQuickActions() {
-    const items = [
-      (title: 'æ¯æ—¥å„ªæƒ ', icon: Icons.local_offer_outlined),
-      (title: 'æ–°å“ä¸Šå¸‚', icon: Icons.new_releases_outlined),
-      (title: 'ç†±éŠ·æŽ’è¡Œ', icon: Icons.local_fire_department_outlined),
-      (title: 'å„ªæƒ åˆ¸', icon: Icons.confirmation_number_outlined),
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
+    final items = [
+      _QuickActionItem(
+        title: l10n.dailyDeals,
+        icon: Icons.local_offer_outlined,
+      ),
+      _QuickActionItem(
+        title: l10n.newArrivals,
+        icon: Icons.new_releases_outlined,
+      ),
+      _QuickActionItem(
+        title: l10n.bestSellers,
+        icon: Icons.local_fire_department_outlined,
+      ),
+      _QuickActionItem(
+        title: l10n.coupons,
+        icon: Icons.confirmation_number_outlined,
+      ),
     ];
 
     return Container(
-      color: Colors.white,
+      color: colorScheme.surface,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       child: Row(
         children: items.map((item) {
@@ -326,12 +345,12 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       width: 48,
                       height: 48,
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: primary.withValues(alpha: 0.08),
+                        color: colorScheme.primary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      alignment: Alignment.center,
-                      child: Icon(item.icon, color: primary),
+                      child: Icon(item.icon, color: colorScheme.primary),
                     ),
 
                     const SizedBox(height: 8),
@@ -354,19 +373,66 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCategories() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
+    final categories = [
+      _CategoryItem(
+        id: 'phone',
+        title: l10n.categoryPhone,
+        icon: Icons.phone_android_rounded,
+      ),
+      _CategoryItem(
+        id: 'computer',
+        title: l10n.categoryComputer,
+        icon: Icons.laptop_mac_rounded,
+      ),
+      _CategoryItem(
+        id: 'camera',
+        title: l10n.categoryCamera,
+        icon: Icons.camera_alt_rounded,
+      ),
+      _CategoryItem(
+        id: 'audio',
+        title: l10n.categoryAudio,
+        icon: Icons.headphones_rounded,
+      ),
+      _CategoryItem(
+        id: 'gaming',
+        title: l10n.categoryGaming,
+        icon: Icons.sports_esports_rounded,
+      ),
+      _CategoryItem(
+        id: 'accessory',
+        title: l10n.categoryAccessory,
+        icon: Icons.watch_rounded,
+      ),
+      _CategoryItem(
+        id: 'home',
+        title: l10n.categoryHomeAppliance,
+        icon: Icons.kitchen_rounded,
+      ),
+      _CategoryItem(
+        id: 'all',
+        title: l10n.categoryAll,
+        icon: Icons.grid_view_rounded,
+      ),
+    ];
+
     return Container(
-      color: Colors.white,
+      color: colorScheme.surface,
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionTitle(
-            title: 'å•†å“åˆ†é¡ž',
-            actionText: 'æŸ¥çœ‹å…¨éƒ¨',
+            title: l10n.productCategories,
+            actionText: l10n.viewAll,
             onPressed: () {
               _openProductList(
                 categoryId: 'all',
-                categoryTitle: 'å…¨éƒ¨å•†å“',
+                categoryTitle: l10n.allProducts,
               );
             },
           ),
@@ -401,10 +467,14 @@ class _HomePageState extends State<HomePage> {
                       width: 52,
                       height: 52,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(17),
                       ),
-                      child: Icon(category.icon, color: primary, size: 25),
+                      child: Icon(
+                        category.icon,
+                        color: colorScheme.primary,
+                        size: 25,
+                      ),
                     ),
 
                     const SizedBox(height: 7),
@@ -426,9 +496,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFlashSale(List<Product> products) {
+  Widget _buildHotProducts(List<Product> products) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return Container(
-      color: Colors.white,
+      color: colorScheme.surface,
       padding: const EdgeInsets.symmetric(vertical: 18),
       child: Column(
         children: [
@@ -436,22 +510,21 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                const Icon(Icons.bolt_rounded, color: Color(0xFFEF4444)),
+                Icon(Icons.bolt_rounded, color: colorScheme.error),
 
                 const SizedBox(width: 5),
 
-                const Text(
-                  'ç†±éŠ·å•†å“',
-                  style: TextStyle(
+                Text(
+                  l10n.hotProducts,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: textPrimary,
                   ),
                 ),
 
                 const Spacer(),
 
-                TextButton(onPressed: () {}, child: const Text('æ›´å¤š')),
+                TextButton(onPressed: () {}, child: Text(l10n.more)),
               ],
             ),
           ),
@@ -468,7 +541,7 @@ class _HomePageState extends State<HomePage> {
                 return const SizedBox(width: 12);
               },
               itemBuilder: (context, index) {
-                return _FlashSaleCard(product: products[index]);
+                return _HotProductCard(product: products[index]);
               },
             ),
           ),
@@ -477,27 +550,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTimeBox(String value) {
-    return Container(
-      width: 30,
-      height: 27,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: textPrimary,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        value,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
   Widget _buildPromotionBanner() {
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
@@ -509,7 +564,7 @@ class _HomePageState extends State<HomePage> {
           ),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: const Row(
+        child: Row(
           children: [
             Expanded(
               child: Column(
@@ -517,13 +572,13 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'æœƒå“¡å°ˆå±¬å„ªæƒ ',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                    l10n.memberExclusive,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
-                    'åŠ å…¥æœƒå“¡äº«æ›´å¤šæŠ˜æ‰£',
-                    style: TextStyle(
+                    l10n.joinMemberDiscount,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 19,
                       fontWeight: FontWeight.bold,
@@ -532,8 +587,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-
-            Icon(Icons.arrow_forward_rounded, color: Colors.white),
+            const Icon(Icons.arrow_forward_rounded, color: Colors.white),
           ],
         ),
       ),
@@ -541,17 +595,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildRecommendationTitle() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
+    final l10n = AppLocalizations.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          'æœ€æ–°å•†å“',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: textPrimary,
-          ),
+          l10n.latestProducts,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -592,21 +644,29 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _openScanner() {
+    final l10n = AppLocalizations.of(context);
+
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('æŽƒæåŠŸèƒ½å°šæœªæŽ¥å…¥')));
+    ).showSnackBar(SnackBar(content: Text(l10n.scannerComingSoon)));
   }
 
   void _openSearch() {
+    final l10n = AppLocalizations.of(context);
+
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('æœå°‹é é¢å°šæœªæŽ¥å…¥')));
+    ).showSnackBar(SnackBar(content: Text(l10n.searchComingSoon)));
   }
 
   Future<void> _openAccount() async {
     await Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (_) => const AccountPage()),
+      MaterialPageRoute(
+        builder: (_) {
+          return const AccountPage();
+        },
+      ),
     );
   }
 }
@@ -628,11 +688,7 @@ class _SectionTitle extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: _HomePageState.textPrimary,
-          ),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const Spacer(),
         TextButton(
@@ -651,13 +707,17 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _FlashSaleCard extends StatelessWidget {
-  const _FlashSaleCard({required this.product});
+class _HotProductCard extends StatelessWidget {
+  const _HotProductCard({required this.product});
 
   final Product product;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return SizedBox(
       width: 145,
       child: InkWell(
@@ -665,7 +725,11 @@ class _FlashSaleCard extends StatelessWidget {
         onTap: () {
           Navigator.push<void>(
             context,
-            MaterialPageRoute(builder: (_) => ProductDetails(product: product)),
+            MaterialPageRoute(
+              builder: (_) {
+                return ProductDetails(product: product);
+              },
+            ),
           );
         },
         child: Column(
@@ -692,17 +756,17 @@ class _FlashSaleCard extends StatelessWidget {
 
             Text(
               'RM ${product.price.toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: Color(0xFFEF4444),
+              style: TextStyle(
+                color: colorScheme.error,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
             ),
 
             Text(
-              'å·²å”® ${product.sold}',
-              style: const TextStyle(
-                color: _HomePageState.textSecondary,
+              l10n.soldCount(product.sold),
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
                 fontSize: 11,
               ),
             ),
@@ -720,15 +784,23 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final l10n = AppLocalizations.of(context);
+
     return Material(
-      color: Colors.white,
+      color: colorScheme.surface,
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
           Navigator.push<void>(
             context,
-            MaterialPageRoute(builder: (_) => ProductDetails(product: product)),
+            MaterialPageRoute(
+              builder: (_) {
+                return ProductDetails(product: product);
+              },
+            ),
           );
         },
         child: Column(
@@ -746,13 +818,14 @@ class _ProductCard extends StatelessWidget {
                     child: Container(
                       width: 34,
                       height: 34,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.favorite_border_rounded,
                         size: 19,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -780,8 +853,8 @@ class _ProductCard extends StatelessWidget {
 
                   Text(
                     'RM ${product.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: _HomePageState.primary,
+                    style: TextStyle(
+                      color: colorScheme.primary,
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
                     ),
@@ -790,10 +863,10 @@ class _ProductCard extends StatelessWidget {
                   const SizedBox(height: 7),
 
                   Text(
-                    'å·²å”® ${product.sold} Â· åº«å­˜ ${product.stock}',
-                    style: const TextStyle(
+                    l10n.soldAndStock(product.sold, product.stock),
+                    style: TextStyle(
                       fontSize: 11,
-                      color: _HomePageState.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -818,22 +891,9 @@ class _CategoryItem {
   final IconData icon;
 }
 
-class _ProductItem {
-  const _ProductItem({
-    required this.name,
-    required this.image,
-    required this.price,
-    this.oldPrice,
-    this.rating = 0,
-    this.sold = 0,
-  });
+class _QuickActionItem {
+  const _QuickActionItem({required this.title, required this.icon});
 
-  final String name;
-  final String image;
-
-  final double price;
-  final double? oldPrice;
-
-  final double rating;
-  final int sold;
+  final String title;
+  final IconData icon;
 }

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/address.dart';
 
-class AddressFormPage extends StatefulWidget {
-  const AddressFormPage({super.key});
+class AddressFormPage
+    extends StatefulWidget {
+  const AddressFormPage({
+    super.key,
+  });
 
   @override
   State<AddressFormPage> createState() {
@@ -11,22 +15,33 @@ class AddressFormPage extends StatefulWidget {
   }
 }
 
-class _AddressFormPageState extends State<AddressFormPage> {
-  final _formKey = GlobalKey<FormState>();
+class _AddressFormPageState
+    extends State<AddressFormPage> {
+  final _formKey =
+      GlobalKey<FormState>();
 
-  final _receiverController = TextEditingController();
+  final _receiverController =
+      TextEditingController();
 
-  final _phoneController = TextEditingController();
+  final _phoneController =
+      TextEditingController();
 
-  final _addressController = TextEditingController();
+  final _addressController =
+      TextEditingController();
 
-  final _cityController = TextEditingController();
+  final _cityController =
+      TextEditingController();
 
-  final _stateController = TextEditingController();
+  final _stateController =
+      TextEditingController();
 
-  final _postcodeController = TextEditingController();
+  final _postcodeController =
+      TextEditingController();
 
-  final _countryController = TextEditingController(text: 'Malaysia');
+  final _countryController =
+      TextEditingController(
+    text: 'Malaysia',
+  );
 
   bool _isDefault = false;
 
@@ -45,44 +60,104 @@ class _AddressFormPageState extends State<AddressFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n =
+        AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('新增收貨地址')),
+      appBar: AppBar(
+        title: Text(
+          l10n.addShippingAddress,
+        ),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding:
+              const EdgeInsets.all(
+            16,
+          ),
           children: [
-            _buildField(controller: _receiverController, label: '收件人姓名'),
             _buildField(
-              controller: _phoneController,
-              label: '電話號碼',
-              keyboardType: TextInputType.phone,
+              controller:
+                  _receiverController,
+              label:
+                  l10n.recipientName,
             ),
+
             _buildField(
-              controller: _addressController,
-              label: '詳細地址',
+              controller:
+                  _phoneController,
+              label:
+                  l10n.phoneNumber,
+              keyboardType:
+                  TextInputType.phone,
+            ),
+
+            _buildField(
+              controller:
+                  _addressController,
+              label:
+                  l10n.detailedAddress,
               maxLines: 2,
             ),
-            _buildField(controller: _cityController, label: '城市'),
-            _buildField(controller: _stateController, label: '州屬'),
+
             _buildField(
-              controller: _postcodeController,
-              label: '郵遞區號',
-              keyboardType: TextInputType.number,
+              controller:
+                  _cityController,
+              label: l10n.city,
             ),
-            _buildField(controller: _countryController, label: '國家'),
+
+            _buildField(
+              controller:
+                  _stateController,
+              label:
+                  l10n.stateRegion,
+            ),
+
+            _buildField(
+              controller:
+                  _postcodeController,
+              label:
+                  l10n.postcode,
+              keyboardType:
+                  TextInputType.number,
+            ),
+
+            _buildField(
+              controller:
+                  _countryController,
+              label:
+                  l10n.country,
+            ),
+
             SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('設為預設地址'),
+              contentPadding:
+                  EdgeInsets.zero,
+              title: Text(
+                l10n
+                    .setAsDefaultAddress,
+              ),
               value: _isDefault,
-              onChanged: (value) {
+              onChanged: (
+                value,
+              ) {
                 setState(() {
-                  _isDefault = value;
+                  _isDefault =
+                      value;
                 });
               },
             ),
-            const SizedBox(height: 20),
-            FilledButton(onPressed: _submit, child: const Text('保存地址')),
+
+            const SizedBox(
+              height: 20,
+            ),
+
+            FilledButton(
+              onPressed: _submit,
+              child: Text(
+                l10n.saveAddress,
+              ),
+            ),
           ],
         ),
       ),
@@ -90,24 +165,38 @@ class _AddressFormPageState extends State<AddressFormPage> {
   }
 
   Widget _buildField({
-    required TextEditingController controller,
+    required TextEditingController
+        controller,
     required String label,
     TextInputType? keyboardType,
     int maxLines = 1,
   }) {
+    final l10n =
+        AppLocalizations.of(context);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding:
+          const EdgeInsets.only(
+        bottom: 14,
+      ),
       child: TextFormField(
         controller: controller,
-        keyboardType: keyboardType,
+        keyboardType:
+            keyboardType,
         maxLines: maxLines,
-        decoration: InputDecoration(
+        decoration:
+            InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
         ),
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) {
-            return '請輸入$label';
+        validator: (
+          value,
+        ) {
+          if (value == null ||
+              value.trim().isEmpty) {
+            return l10n
+                .requiredField(
+              label,
+            );
           }
 
           return null;
@@ -117,26 +206,45 @@ class _AddressFormPageState extends State<AddressFormPage> {
   }
 
   void _submit() {
-    if (!_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!
+        .validate()) {
       return;
     }
 
-    final now = DateTime.now();
+    final now =
+        DateTime.now();
 
     final address = Address(
       id:
-          'address_'
-          '${now.microsecondsSinceEpoch}',
-      receiverName: _receiverController.text.trim(),
-      phone: _phoneController.text.trim(),
-      addressLine: _addressController.text.trim(),
-      city: _cityController.text.trim(),
-      state: _stateController.text.trim(),
-      postcode: _postcodeController.text.trim(),
-      country: _countryController.text.trim(),
-      isDefault: _isDefault,
+          'address_${now.microsecondsSinceEpoch}',
+      receiverName:
+          _receiverController.text
+              .trim(),
+      phone:
+          _phoneController.text
+              .trim(),
+      addressLine:
+          _addressController.text
+              .trim(),
+      city:
+          _cityController.text
+              .trim(),
+      state:
+          _stateController.text
+              .trim(),
+      postcode:
+          _postcodeController.text
+              .trim(),
+      country:
+          _countryController.text
+              .trim(),
+      isDefault:
+          _isDefault,
     );
 
-    Navigator.pop(context, address);
+    Navigator.pop(
+      context,
+      address,
+    );
   }
 }

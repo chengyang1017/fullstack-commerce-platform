@@ -1,0 +1,379 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Shopping App",
+
+  "welcomeBack": "Welcome back",
+  "loginSubtitle": "Sign in to view your cart and orders",
+  "email": "Email",
+  "password": "Password",
+  "enterEmail": "Please enter your email",
+  "invalidEmail": "Please enter a valid email address",
+  "enterPassword": "Please enter your password",
+  "login": "Sign in",
+  "loginFailed": "Sign in failed. Please try again later.",
+  "noAccountRegister": "Don't have an account? Create one",
+
+  "createAccount": "Create account",
+  "registerCustomerAccount": "Create your customer account",
+  "username": "Username",
+  "invalidUsernameLength": "Username must be between 2 and 60 characters",
+  "passwordMinimumLength": "Password must contain at least 8 characters",
+  "confirmPassword": "Confirm password",
+  "passwordMismatch": "Passwords do not match",
+  "registerAndLogin": "Create account and sign in",
+  "registerFailed": "Registration failed. Please try again later.",
+
+  "account": "Account",
+  "unknownUser": "Unknown user",
+  "myOrders": "My orders",
+  "viewOrderHistory": "View order history",
+
+  "orderCount": "{count} orders",
+  "@orderCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "appearance": "Appearance",
+  "followSystem": "Follow system",
+  "light": "Light",
+  "dark": "Dark",
+  "followSystemThemeDescription": "Automatically match your device appearance",
+  "lightThemeDescription": "Always use light appearance",
+  "darkThemeDescription": "Always use dark appearance",
+
+  "language": "Language",
+  "followSystemLanguage": "Follow system",
+  "chinese": "Chinese",
+  "english": "English",
+  "followSystemLanguageDescription": "Use your device language",
+  "chineseDescription": "Use Chinese",
+  "englishDescription": "Use the English interface",
+
+  "logout": "Sign out",
+
+  "home": "Home",
+  "me": "Me",
+
+  "myAccount": "My account",
+  "searchProductsBrands": "Search products and brands",
+
+  "categoryPhone": "Phones",
+  "categoryComputer": "Computers",
+  "categoryCamera": "Cameras",
+  "categoryAudio": "Audio",
+  "categoryGaming": "Gaming",
+  "categoryAccessory": "Accessories",
+  "categoryHomeAppliance": "Home appliances",
+  "categoryAll": "All",
+
+  "techWeek": "TECH WEEK",
+  "bannerDiscount": "Up to 40% off",
+  "bannerTechDeal": "Limited-time deals on selected tech",
+
+  "dailyDeals": "Daily deals",
+  "newArrivals": "New arrivals",
+  "bestSellers": "Best sellers",
+  "coupons": "Coupons",
+
+  "productCategories": "Product categories",
+  "viewAll": "View all",
+  "allProducts": "All products",
+
+  "hotProducts": "Best sellers",
+  "more": "More",
+
+  "memberExclusive": "Member exclusive",
+  "joinMemberDiscount": "Join to enjoy more discounts",
+
+  "latestProducts": "Latest products",
+
+  "scannerComingSoon": "Scanner is not available yet",
+  "searchComingSoon": "Search is not available yet",
+
+  "soldCount": "Sold {count}",
+  "@soldCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "soldAndStock": "Sold {sold} · Stock {stock}",
+  "@soldAndStock": {
+    "placeholders": {
+      "sold": {
+        "type": "int"
+      },
+      "stock": {
+        "type": "int"
+      }
+    }
+  },
+  "cartTitle": "Cart ({count})",
+"@cartTitle": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+
+"clear": "Clear",
+"cartEmpty": "Your cart is empty",
+"cartLoadFailed": "Failed to load cart",
+"reload": "Reload",
+"total": "Total",
+
+"checkoutCount": "Checkout ({count})",
+"@checkoutCount": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+
+"clearCart": "Clear cart",
+"clearCartConfirmation": "Remove all items from your cart?",
+"cancel": "Cancel",
+"cartActionFailed": "Cart operation failed",
+
+"cartItemSubtotal": "Subtotal: RM {amount}",
+"@cartItemSubtotal": {
+  "placeholders": {
+    "amount": {
+      "type": "String"
+    }
+  }
+},
+
+"delete": "Delete",
+
+"confirmOrder": "Confirm order",
+"shippingAddress": "Shipping address",
+"add": "Add",
+"addShippingAddress": "Add shipping address",
+"shippingAddressRequired": "A shipping address is required before checkout",
+
+"products": "Products",
+
+"shippingMethod": "Shipping method",
+"standardShipping": "Standard shipping",
+"expressShipping": "Express shipping",
+"standardShippingDescription": "Estimated delivery in 3 to 5 days",
+"expressShippingDescription": "Estimated delivery in 1 to 2 days",
+
+"paymentMethod": "Payment method",
+"onlineBanking": "Online banking",
+"creditDebitCard": "Credit / debit card",
+"cashOnDelivery": "Cash on delivery",
+
+"amountDetails": "Amount details",
+"productSubtotal": "Product subtotal",
+"shippingFee": "Shipping fee",
+"amountDue": "Amount due",
+
+"placeOrder": "Place order",
+
+"saveAddressFailed": "Failed to save address",
+"createOrderFailed": "Failed to create order",
+
+"defaultAddress": "Default",
+"recipientName": "Recipient name",
+"phoneNumber": "Phone number",
+"detailedAddress": "Address",
+"city": "City",
+"stateRegion": "State",
+"postcode": "Postcode",
+"country": "Country",
+"setAsDefaultAddress": "Set as default address",
+"saveAddress": "Save address",
+
+"requiredField": "Please enter {field}",
+"@requiredField": {
+  "placeholders": {
+    "field": {
+      "type": "String"
+    }
+  }
+},
+"all": "All",
+"pendingPayment": "Pending payment",
+"processing": "Processing",
+"awaitingDelivery": "To receive",
+"completed": "Completed",
+"cancelled": "Cancelled",
+
+"orderStatusPaid": "Paid",
+"orderStatusShipped": "Shipped",
+"orderStatusDelivered": "Delivered",
+"orderStatusRefunded": "Refunded",
+
+"noOrders": "No orders yet",
+"orderLoadFailed": "Failed to load orders",
+
+"orderNumber": "Order {number}",
+"@orderNumber": {
+  "placeholders": {
+    "number": {
+      "type": "String"
+    }
+  }
+},
+
+"orderItemQuantity": "{count} items",
+"@orderItemQuantity": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+
+"orderProductTypes": "{count} product types",
+"@orderProductTypes": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+
+"orderTotal": "Total:",
+"orderDetails": "Order details",
+
+"cancelOrder": "Cancel order",
+"goToPayment": "Pay now · RM {amount}",
+"@goToPayment": {
+  "placeholders": {
+    "amount": {
+      "type": "String"
+    }
+  }
+},
+
+"cancelOrderConfirmation": "Cancelling this order will automatically restore the reserved stock. Are you sure you want to cancel it?",
+"back": "Back",
+"confirmCancellation": "Confirm cancellation",
+
+"orderCancelledStockRestored": "Order cancelled and product stock restored",
+"cancelOrderFailed": "Failed to cancel order",
+
+"statusPendingPaymentDescription": "Complete payment to continue processing your order",
+"statusPaidDescription": "Payment successful. Waiting for the seller to process your order",
+"statusProcessingDescription": "The seller is preparing your products",
+"statusShippedDescription": "Your products have been handed to the delivery service",
+"statusDeliveredDescription": "Your products have been delivered. Please confirm receipt",
+"statusCompletedDescription": "This order has been completed",
+"statusCancelledDescription": "This order has been cancelled",
+"statusRefundedDescription": "This order has been refunded",
+
+"deliveryAndPayment": "Delivery & payment",
+"discount": "Discount",
+"orderGrandTotal": "Order total",
+
+"orderInformation": "Order information",
+"orderNumberLabel": "Order number",
+"createdAt": "Created at",
+
+"orderNotFound": "Order not found",
+"orderPayment": "Order payment",
+"paymentAutoUpdateNote": "After payment, the order will be verified and updated automatically. You do not need to pay again.",
+
+"confirmPayment": "Pay RM {amount}",
+"@confirmPayment": {
+  "placeholders": {
+    "amount": {
+      "type": "String"
+    }
+  }
+},
+
+"orderDoesNotNeedPayment": "This order does not currently require payment",
+"paymentSuccessOrderUpdated": "Payment successful. Order updated",
+"paymentSubmittedAutoUpdate": "Payment submitted. The order status will update automatically",
+"orderCreatedSuccessfully": "Order created successfully",
+"orderCreated": "Order created",
+
+"orderNumberValue": "Order number: {number}",
+"@orderNumberValue": {
+  "placeholders": {
+    "number": {
+      "type": "String"
+    }
+  }
+},
+
+"paymentAmount": "Payment amount: RM {amount}",
+"@paymentAmount": {
+  "placeholders": {
+    "amount": {
+      "type": "String"
+    }
+  }
+},
+
+"cartClearFailedAfterOrder": "The order was created, but the cart could not be cleared.",
+
+"payNow": "Pay now",
+"viewThisOrder": "View this order",
+"viewAllOrders": "View all orders",
+"continueShopping": "Continue shopping",
+"addToCart": "Add to cart",
+
+"addToCartWithQuantity": "Add to cart ({count})",
+"@addToCartWithQuantity": {
+  "placeholders": {
+    "count": {
+      "type": "int"
+    }
+  }
+},
+
+"buyNow": "Buy now",
+
+"productAddedToCart": "{product} added to cart",
+"@productAddedToCart": {
+  "placeholders": {
+    "product": {
+      "type": "String"
+    }
+  }
+},
+
+"viewCart": "View cart",
+"addToCartFailed": "Failed to add to cart",
+"categoryNoProducts": "No products in {category} yet",
+"@categoryNoProducts": {
+  "placeholders": {
+    "category": {
+      "type": "String"
+    }
+  }
+},
+"cart": "Cart",
+"productLoadFailed": "Failed to load products",
+"clearCartFailed": "Failed to clear cart",
+"cartUpdateFailed": "Failed to update cart",
+"checkoutLoadFailed": "Failed to load checkout information",
+"checkoutNoItems": "There are no items to check out",
+"checkoutSelectAddress": "Please select a shipping address",
+"onlyPendingPaymentCanBeCancelled": "Only pending-payment orders can be cancelled",
+"paymentCredentialMissing": "Unable to initialize payment",
+"paymentFailedTryAnotherMethod": "Payment failed. Please try another payment method",
+"paymentConnectionFailed": "Unable to connect to the payment service",
+"paymentSessionExpired": "Your session has expired. Please sign in again",
+"paymentInvalidResponse": "The payment service returned an invalid response",
+"paymentCreationFailed": "Unable to create payment",
+"paymentConfirmationFailed": "Unable to confirm the payment result",
+"paymentUnknownError": "Payment failed. Please try again",
+"authConnectionFailed": "Unable to connect to the server. Please check your connection",
+"authSessionExpired": "Your session has expired. Please sign in again",
+"authInvalidResponse": "The server returned an invalid response"
+}
