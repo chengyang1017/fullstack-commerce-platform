@@ -1,87 +1,134 @@
-# Miscellaneous
+# =========================================================
+# General
+# =========================================================
+
 *.class
 *.log
 *.pyc
 *.swp
+
 .DS_Store
+Thumbs.db
+desktop.ini
+
 .atom/
 .build/
 .buildlog/
-.history
+.history/
 .svn/
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+
+# =========================================================
+# IDE / Editor
+# =========================================================
+
 *.iml
 *.ipr
 *.iws
+
 .idea/
 
-# VS Code
-# 若你希望上傳 VS Code 設定，保持註釋即可
-#.vscode/
+# Uncomment this if VS Code settings should not be committed.
+# .vscode/
 
-# Flutter / Dart / Pub related
+
+# =========================================================
+# Flutter / Dart
+# =========================================================
+
+**/.dart_tool/
+**/.flutter-plugins-dependencies
+**/.pub/
+**/.pub-cache/
+
 **/doc/api/
+**/coverage/
+**/build/
+
 **/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
 
-# Symbolication related
+# Flutter symbolication / obfuscation output
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
 
-# Android build artifacts
-/android/app/debug
-/android/app/profile
-/android/app/release
 
-# Node.js dependencies
-node_modules/
-functions/node_modules/
+# =========================================================
+# Android
+# =========================================================
 
-# Firebase local cache
-.firebase/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
 
-# Firebase emulator data
-firebase-debug.log
-firestore-debug.log
-ui-debug.log
-*-debug.log
+# Signing credentials
+*.jks
+*.keystore
+**/key.properties
 
-# Environment files and secrets
+
+# =========================================================
+# iOS / macOS signing
+# =========================================================
+
+*.p12
+*.mobileprovision
+
+
+# =========================================================
+# Node.js / React / Vite
+# =========================================================
+
+**/node_modules/
+**/dist/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# =========================================================
+# Environment variables / secrets
+# =========================================================
+
 .env
 .env.*
 **/.env
 **/.env.*
 
-# Firebase Functions local secrets
+# Environment templates are safe to commit.
+!.env.example
+!**/.env.example
+
+
+# =========================================================
+# Firebase
+# =========================================================
+
+.firebase/
+
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*-debug.log
+
 functions/.secret.local
 functions/.runtimeconfig.json
 
-# Service account private keys
+
+# =========================================================
+# Service account credentials
+# =========================================================
+
 service-account.json
 service-account*.json
 *serviceAccount*.json
 *-firebase-adminsdk-*.json
 
-# Android signing secrets
-*.jks
-*.keystore
-key.properties
-/android/key.properties
-
-# iOS signing files
-*.p12
-*.mobileprovision
-
-# Local operating-system files
-Thumbs.db
-desktop.ini
+# Local AI / development tooling
+.agents/
+.claude/
+.ai-code-tutor/
+skills-lock.json

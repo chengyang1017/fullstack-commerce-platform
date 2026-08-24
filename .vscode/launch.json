@@ -2,9 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Shopping App",
+      "name": "Commerce Mobile",
       "request": "launch",
       "type": "dart",
+      "cwd": "${workspaceFolder}/apps/mobile",
       "toolArgs": [
         "--dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_51Tz2KdPhztpSF0lTwvklpwbXoEMwMwxZg4qLOPeQiBzBNWrIMfiAjpHknUO1vbaCnKEqBMznPy9GFR8RfRqR87vm00mirOnqj5",
         "--dart-define=API_BASE_URL=http://10.0.2.2:3000"
