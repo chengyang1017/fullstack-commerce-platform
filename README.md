@@ -1,52 +1,69 @@
 # Commerce Platform
 
-A full-stack e-commerce platform consisting of a Flutter customer application, a React administration dashboard, and a Node.js backend API.
+**English | [简体中文](README.zh-CN.md)**
 
-The project is organized as a monorepo so that the customer application, administration tools, and backend can evolve together while remaining clearly separated.
+A full-stack e-commerce platform with a **Flutter customer app**, **React admin dashboard**, and **Node.js / Express backend** backed by **Prisma, PostgreSQL, and Stripe**.
+
+This project is built as a monorepo to demonstrate a complete commerce workflow rather than a standalone UI demo: customers can browse products, manage a cart, check out, pay, and track orders, while administrators manage products, categories, inventory, and orders through a separate dashboard.
 
 ---
 
-## Applications
+## Screenshots
+
+> Screenshot placeholders are intentionally kept here. Add the images under `docs/screenshots/` and replace each placeholder when ready.
+
+### Mobile Storefront
+
+📸 **Screenshot placeholder:** `docs/screenshots/home.png`
+
+### Product Detail
+
+📸 **Screenshot placeholder:** `docs/screenshots/product-detail.png`
+
+### Cart & Checkout
+
+📸 **Screenshot placeholder:** `docs/screenshots/checkout.png`
+
+### Orders
+
+📸 **Screenshot placeholder:** `docs/screenshots/orders.png`
+
+### Admin Dashboard
+
+📸 **Screenshot placeholder:** `docs/screenshots/admin-dashboard.png`
+
+### Inventory Management
+
+📸 **Screenshot placeholder:** `docs/screenshots/inventory.png`
+
+### Dark Mode
+
+📸 **Screenshot placeholder:** `docs/screenshots/dark-mode.png`
+
+---
+
+## What It Includes
 
 ### Flutter Customer App
 
-Located in:
-
-```text
-apps/mobile
-```
-
-The customer-facing application provides the shopping experience.
-
-Main features include:
+Located in `apps/mobile`.
 
 - Customer authentication
-- Product browsing
-- Product categories
+- Product browsing and categories
 - Product details
 - Shopping cart
 - Checkout
 - Address management
-- Order management
-- Stripe payment integration
-- Light and dark themes
-- English and Chinese localization
+- Stripe payment flow
+- Order history and details
+- Light / dark / system theme
+- English and Simplified Chinese localization
 
-The application uses Flutter with BLoC / Cubit for state management.
-
----
+The Flutter app uses **BLoC / Cubit** for state management and separates presentation from repositories and services.
 
 ### React Admin Dashboard
 
-Located in:
-
-```text
-apps/admin
-```
-
-The administration dashboard provides tools for managing the commerce system.
-
-Main features include:
+Located in `apps/admin`.
 
 - Admin authentication
 - Protected routes
@@ -55,170 +72,75 @@ Main features include:
 - Order management
 - Inventory management
 - Inventory movement history
-- Automatic access-token refresh
+- Access-token refresh flow
 
-The dashboard is built with React, TypeScript, Vite, React Router, and Axios.
-
----
+Built with **React, TypeScript, Vite, React Router, and Axios**.
 
 ### Node.js Backend
 
-Located in:
-
-```text
-server
-```
-
-The backend provides the REST API shared by both the Flutter application and React administration dashboard.
-
-Main responsibilities include:
+Located in `server`.
 
 - Authentication
-- Product management
-- Category management
-- Customer orders
-- Admin orders
-- Inventory management
-- Payment integration
-- Database access
+- Product and category APIs
+- Customer and admin order APIs
+- Inventory operations
+- Stripe integration
 - Business logic
+- Prisma database access
 
-The backend uses:
-
-- Node.js
-- TypeScript
-- Express
-- Prisma ORM
-- PostgreSQL
-- Stripe
+Built with **Node.js, TypeScript, Express, Prisma ORM, PostgreSQL, Argon2, JOSE, and Stripe**.
 
 ---
 
 ## Architecture
 
 ```text
-┌─────────────────────────┐
-│ Flutter Customer App    │
-│ apps/mobile             │
-└────────────┬────────────┘
-             │
-             │ REST API
-             │
-             ▼
-┌─────────────────────────┐
-│ Node.js / Express API   │
-│ server                  │
-└────────────┬────────────┘
-             │
-      ┌──────┴──────┐
-      │             │
-      ▼             ▼
-┌───────────┐   ┌───────────┐
-│  Prisma   │   │  Stripe   │
-└─────┬─────┘   └───────────┘
-      │
-      ▼
-┌───────────────┐
-│  PostgreSQL   │
-└───────────────┘
-      ▲
-      │
-      │ REST API
-      │
-┌─────┴───────────────────┐
-│ React Admin Dashboard   │
-│ apps/admin              │
-└─────────────────────────┘
+Flutter Customer App
+        │
+        │ REST API
+        ▼
+Node.js / Express API
+        │
+   ┌────┴────┐
+   │         │
+   ▼         ▼
+Prisma     Stripe
+   │
+   ▼
+PostgreSQL
+   ▲
+   │ REST API
+   │
+React Admin Dashboard
 ```
 
-Both frontend applications communicate with the same backend and business data.
+Both frontend applications communicate with the same backend and business domain.
 
----
-
-## Monorepo Structure
+A typical customer product flow is:
 
 ```text
-.
-├── apps/
-│   ├── mobile/
-│   │   ├── android/
-│   │   ├── ios/
-│   │   ├── lib/
-│   │   ├── linux/
-│   │   ├── macos/
-│   │   ├── test/
-│   │   ├── web/
-│   │   ├── windows/
-│   │   ├── analysis_options.yaml
-│   │   ├── l10n.yaml
-│   │   ├── pubspec.lock
-│   │   └── pubspec.yaml
-│   │
-│   └── admin/
-│       ├── public/
-│       ├── src/
-│       ├── .env.example
-│       ├── package.json
-│       ├── package-lock.json
-│       ├── tsconfig.json
-│       └── vite.config.ts
-│
-├── server/
-│   ├── prisma/
-│   ├── src/
-│   ├── package.json
-│   └── ...
-│
-├── .firebaserc
-├── firebase.json
-├── .gitignore
-└── README.md
+Flutter UI
+   ↓
+ProductCubit
+   ↓
+Repository
+   ↓
+Service
+   ↓
+REST API
+   ↓
+Express
+   ↓
+Prisma
+   ↓
+PostgreSQL
 ```
 
 ---
 
-## Technology Stack
+## Flutter State Management
 
-### Mobile
-
-- Flutter
-- Dart
-- flutter_bloc
-- Firebase
-- Stripe
-- SharedPreferences
-- Flutter Secure Storage
-
-### Admin
-
-- React
-- TypeScript
-- Vite
-- React Router
-- Axios
-- CSS
-
-### Backend
-
-- Node.js
-- TypeScript
-- Express
-- Prisma ORM
-- PostgreSQL
-- Stripe
-
-### Supporting Services
-
-- Firebase
-- REST APIs
-
----
-
-## State Management
-
-The Flutter application uses BLoC / Cubit for application state.
-
-Major state modules include:
+Major Cubits include:
 
 ```text
 CustomerAuthCubit
@@ -231,111 +153,23 @@ LocaleCubit
 ThemeModeCubit
 ```
 
-Business logic is separated from presentation code through repositories, services, and Cubits.
-
-Example:
-
-```text
-UI
- ↓
-Cubit
- ↓
-Repository
- ↓
-Service
- ↓
-REST API
- ↓
-Node.js
- ↓
-Prisma
- ↓
-PostgreSQL
-```
+Derived state such as totals is kept separate from UI widgets, while mutations notify the appropriate state layer and cause the UI to rebuild from current state.
 
 ---
 
-## Authentication
+## Payments
 
-### Customer Authentication
+Stripe is integrated through the backend.
 
-The Flutter application communicates with the backend authentication system and maintains customer session state through `CustomerAuthCubit`.
-
-### Administrator Authentication
-
-The React administration dashboard uses a separate protected administrator authentication flow.
-
-The admin client:
-
-- Stores access tokens in memory
-- Sends Bearer tokens with authenticated requests
-- Uses refresh sessions when access tokens expire
-- Automatically retries requests after successful token refresh
-- Clears authentication state when the session expires
-
----
-
-## Product Flow
-
-Customer product data follows this flow:
-
-```text
-Flutter UI
-    ↓
-ProductCubit
-    ↓
-ProductRepository
-    ↓
-ProductService
-    ↓
-GET /api/products
-    ↓
-Express
-    ↓
-Prisma
-    ↓
-PostgreSQL
-```
-
-Administration operations use protected endpoints such as:
-
-```text
-GET    /api/admin/products
-POST   /api/admin/products
-PATCH  /api/admin/products/:id
-DELETE /api/admin/products/:id
-```
-
----
-
-## Orders
-
-The commerce platform supports customer order creation and administration-side order inspection.
-
-The Flutter application handles:
-
-- Checkout
-- Order creation
-- Order history
-- Order details
-- Order cancellation where allowed
-- Payment status synchronization
-
-The administration dashboard provides order listing, filtering, searching, and order details.
+The client can initiate the payment flow, but the backend remains the authoritative source for payment state. This avoids treating a client-side submission as final confirmation before server-side verification.
 
 ---
 
 ## Inventory
 
-Inventory is managed through the administration dashboard and backend API.
+The administration side includes inventory tracking and movement history, allowing stock changes to be recorded rather than only overwriting a single quantity value.
 
-Administration endpoints support:
-
-- Inventory movement history
-- Stock adjustments
-- Product inventory tracking
-
-Example routes:
+Example administration routes include:
 
 ```text
 GET  /api/admin/inventory/movements
@@ -344,110 +178,78 @@ POST /api/admin/inventory/movements
 
 ---
 
-## Payments
+## Authentication
 
-Stripe is integrated through the backend.
+The project separates customer and administrator authentication concerns.
 
-Payment submission on the client does not by itself determine the final payment result.
-
-The backend remains the authoritative source for final payment status.
-
-This prevents the client application from treating a submitted payment request as a confirmed successful payment before backend verification.
+The admin dashboard uses protected routes and an access-token refresh flow, while the backend handles credential verification and authorization-related business logic.
 
 ---
 
-## Localization
+## Tech Stack
 
-The Flutter application currently supports:
+### Mobile
 
-- English
-- Simplified Chinese
+- Flutter
+- Dart
+- flutter_bloc
+- Firebase services
+- Flutter Stripe
+- SharedPreferences
+- Flutter Secure Storage
+- Flutter Localizations / Intl
 
-Localization files are stored under:
+### Admin
+
+- React
+- TypeScript
+- Vite
+- React Router
+- Axios
+
+### Backend
+
+- Node.js
+- TypeScript
+- Express
+- Prisma ORM
+- PostgreSQL
+- Stripe
+- Argon2
+- JOSE
+
+---
+
+## Monorepo Structure
 
 ```text
-apps/mobile/lib/l10n
+fullstack-commerce-platform/
+├── apps/
+│   ├── mobile/        # Flutter customer application
+│   └── admin/         # React administration dashboard
+├── server/            # Node.js / Express API
+├── firebase.json
+└── README.md
 ```
 
 ---
 
-## Themes
+## Getting Started
 
-The Flutter application supports:
-
-- Light mode
-- Dark mode
-- System theme
-
-The selected theme is persisted locally.
-
----
-
-# Development
-
-## Flutter Customer App
-
-**Working directory:**
-
-```text
-apps/mobile
-```
-
-Install dependencies:
+### Flutter customer app
 
 ```bash
+cd apps/mobile
 flutter pub get
-```
-
-Analyze the project:
-
-```bash
 flutter analyze
-```
-
-Run the application:
-
-```bash
 flutter run
 ```
 
----
-
-## React Admin Dashboard
-
-**Working directory:**
-
-```text
-apps/admin
-```
-
-Install dependencies:
+### React admin dashboard
 
 ```bash
+cd apps/admin
 npm install
-```
-
-Create the environment file:
-
-```bash
-cp .env.example .env
-```
-
-Windows PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Example:
-
-```env
-VITE_API_BASE_URL=http://localhost:3000
-```
-
-Start development:
-
-```bash
 npm run dev
 ```
 
@@ -457,104 +259,49 @@ Build:
 npm run build
 ```
 
-Lint:
+### Backend
 
 ```bash
-npm run lint
-```
-
----
-
-## Backend
-
-**Working directory:**
-
-```text
-server
-```
-
-Install dependencies:
-
-```bash
+cd server
 npm install
+npm run typecheck
+npm run dev
 ```
 
-Configure the backend environment variables according to the server configuration.
-
-Prisma is used for database access and migrations.
+The backend requires environment configuration for services such as PostgreSQL and Stripe. Real secrets should never be committed.
 
 ---
 
-## Environment Files
+## Why This Project Exists
 
-Real environment files must not be committed.
-
-The repository ignores:
+This repository is intended to demonstrate a complete product flow across multiple layers:
 
 ```text
-.env
-.env.*
-**/.env
-**/.env.*
+Mobile UI
+  +
+State Management
+  +
+REST API
+  +
+Authentication
+  +
+Payments
+  +
+Orders
+  +
+Inventory
+  +
+Admin Dashboard
+  +
+Database
 ```
 
-Safe example files may be committed:
-
-```text
-.env.example
-```
-
-Never commit database credentials, Stripe secret keys, private service-account credentials, or signing keys.
-
----
-
-## Repository Goals
-
-This repository demonstrates a complete commerce application rather than a standalone UI project.
-
-It includes:
-
-- Mobile application development
-- Web administration
-- REST API design
-- Authentication
-- State management
-- Database integration
-- Payment processing
-- Inventory management
-- Order management
-- Localization
-- Theme management
-- Monorepo organization
-
-The goal is to keep each application independently maintainable while sharing the same backend and business domain.
-
----
-
-## Current Structure
-
-```text
-Commerce Platform
-│
-├── Customer Experience
-│   └── Flutter App
-│
-├── Administration
-│   └── React Admin Dashboard
-│
-└── Backend
-    ├── Node.js / Express
-    ├── Prisma
-    ├── PostgreSQL
-    └── Stripe
-```
+It is designed as a practical full-stack commerce project rather than a collection of disconnected demo screens.
 
 ---
 
 ## Status
 
-Active development.
+**Active development.**
 
-The core customer shopping flow, administration modules, backend API, authentication, orders, inventory, and payment integration are implemented.
-
-Ongoing work focuses on product polish, architecture refinement, and production readiness.
+The core customer shopping flow, administration modules, backend API, authentication, orders, inventory, localization, themes, and payment integration are implemented. Current work focuses on UI polish, architecture refinement, testing, deployment, and production readiness.
