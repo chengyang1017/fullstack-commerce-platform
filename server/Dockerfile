@@ -7,6 +7,12 @@ RUN npm ci
 
 COPY prisma ./prisma
 COPY prisma.config.ts tsconfig.json ./
+
+# Prisma 7 loads prisma.config.ts even for `prisma generate` and therefore
+# expects DATABASE_URL to exist at build time. Client generation does not
+# connect to the database, so a harmless placeholder is sufficient here.
+# Railway injects the real DATABASE_URL at runtime and overrides this value.
+ENV DATABASE_URL=postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder
 RUN npx prisma generate
 
 COPY src ./src
