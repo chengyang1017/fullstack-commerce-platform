@@ -38,7 +38,7 @@ interface ToolExecutionResult {
 }
 
 const DEFAULT_MODEL = "gpt-5.4-mini";
-const MAX_TOOL_ROUNDS = 8;
+const MAX_TOOL_ROUNDS = 16;
 
 const tools = [
   {
