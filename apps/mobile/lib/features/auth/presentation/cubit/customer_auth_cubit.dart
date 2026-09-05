@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/services/customer_auth_service.dart';
@@ -15,22 +17,18 @@ class CustomerAuthCubit
   Future<void> restoreSession() async {
     emit(
       CustomerAuthState(
-        status:
-            CustomerAuthStatus.checking,
+        status: CustomerAuthStatus.checking,
         user: state.user,
       ),
     );
 
-    final user =
-        await _authService.restoreSession();
+    final user = await _authService.restoreSession();
 
     emit(
       CustomerAuthState(
         status: user == null
-            ? CustomerAuthStatus
-                .unauthenticated
-            : CustomerAuthStatus
-                .authenticated,
+            ? CustomerAuthStatus.unauthenticated
+            : CustomerAuthStatus.authenticated,
         user: user,
       ),
     );
@@ -40,16 +38,14 @@ class CustomerAuthCubit
     required String email,
     required String password,
   }) async {
-    final user =
-        await _authService.login(
+    final user = await _authService.login(
       email: email,
       password: password,
     );
 
     emit(
       CustomerAuthState(
-        status:
-            CustomerAuthStatus.authenticated,
+        status: CustomerAuthStatus.authenticated,
         user: user,
       ),
     );
@@ -60,8 +56,7 @@ class CustomerAuthCubit
     required String email,
     required String password,
   }) async {
-    final user =
-        await _authService.register(
+    final user = await _authService.register(
       name: name,
       email: email,
       password: password,
@@ -69,8 +64,35 @@ class CustomerAuthCubit
 
     emit(
       CustomerAuthState(
-        status:
-            CustomerAuthStatus.authenticated,
+        status: CustomerAuthStatus.authenticated,
+        user: user,
+      ),
+    );
+  }
+
+  Future<void> uploadAvatar({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    final user = await _authService.uploadAvatar(
+      bytes: bytes,
+      fileName: fileName,
+    );
+
+    emit(
+      CustomerAuthState(
+        status: CustomerAuthStatus.authenticated,
+        user: user,
+      ),
+    );
+  }
+
+  Future<void> removeAvatar() async {
+    final user = await _authService.removeAvatar();
+
+    emit(
+      CustomerAuthState(
+        status: CustomerAuthStatus.authenticated,
         user: user,
       ),
     );
@@ -79,8 +101,7 @@ class CustomerAuthCubit
   Future<void> logout() async {
     emit(
       CustomerAuthState(
-        status:
-            CustomerAuthStatus.checking,
+        status: CustomerAuthStatus.checking,
         user: state.user,
       ),
     );
@@ -89,8 +110,7 @@ class CustomerAuthCubit
 
     emit(
       const CustomerAuthState(
-        status:
-            CustomerAuthStatus.unauthenticated,
+        status: CustomerAuthStatus.unauthenticated,
       ),
     );
   }
