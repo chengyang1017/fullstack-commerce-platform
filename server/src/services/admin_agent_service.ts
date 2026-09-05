@@ -58,12 +58,14 @@ function resolveIntent(message: string): AdminAgentIntent {
 
   if (
     containsAny(normalized, [
-      "销售额",
-      "营收",
-      "营业额",
       "revenue",
       "overview",
       "summary",
+      "business overview",
+      "sales overview",
+      "销售额",
+      "营收",
+      "营业额",
       "概况",
       "总览",
       "整体",
@@ -75,12 +77,14 @@ function resolveIntent(message: string): AdminAgentIntent {
 
   if (
     containsAny(normalized, [
-      "库存",
-      "缺货",
-      "补货",
       "stock",
       "low stock",
       "inventory",
+      "restock",
+      "out of stock",
+      "库存",
+      "缺货",
+      "补货",
     ])
   ) {
     return "low_stock";
@@ -88,9 +92,11 @@ function resolveIntent(message: string): AdminAgentIntent {
 
   if (
     containsAny(normalized, [
+      "payment",
+      "failed payment",
+      "payment issue",
       "付款",
       "支付",
-      "payment",
       "失败付款",
       "支付失败",
     ])
@@ -100,13 +106,16 @@ function resolveIntent(message: string): AdminAgentIntent {
 
   if (
     containsAny(normalized, [
+      "top product",
+      "top-selling",
+      "top selling",
+      "best seller",
+      "best-selling",
+      "sales ranking",
       "热销",
       "销量",
       "卖得最好",
       "畅销",
-      "top product",
-      "best seller",
-      "best-selling",
     ])
   ) {
     return "top_products";
@@ -114,13 +123,16 @@ function resolveIntent(message: string): AdminAgentIntent {
 
   if (
     containsAny(normalized, [
+      "order",
+      "pending order",
+      "processing",
+      "ship",
+      "fulfilment",
+      "fulfillment",
       "订单",
       "待处理",
       "出货",
       "发货",
-      "order",
-      "processing",
-      "ship",
     ])
   ) {
     return "pending_orders";
@@ -188,36 +200,36 @@ async function buildOverview(): Promise<AdminAgentResult> {
     intent: "overview",
     reply:
       pendingOrderCount > 0 || lowStockCount > 0
-        ? `当前有 ${pendingOrderCount} 笔待处理订单，${lowStockCount} 个商品处于低库存状态。建议先处理订单，再检查补货。`
-        : "当前订单和库存没有明显风险，可以继续关注热销商品和付款状态。",
+        ? `There are ${pendingOrderCount} orders waiting for fulfilment and ${lowStockCount} low-stock products. Handle fulfilment first, then review restocking.`
+        : "No obvious order or inventory risks right now. Keep an eye on top-selling products and payment status.",
     cards: [
       {
-        label: "在售商品",
+        label: "Active products",
         value: String(activeProductCount),
-        description: "当前处于上架状态的商品",
+        description: "Products currently available for sale",
       },
       {
-        label: "全部订单",
+        label: "All orders",
         value: String(totalOrderCount),
-        description: "系统累计订单数",
+        description: "Total orders in the system",
       },
       {
-        label: "待处理订单",
+        label: "Pending fulfilment",
         value: String(pendingOrderCount),
         description: "PAID + PROCESSING",
         tone:
           pendingOrderCount > 0 ? "warning" : "success",
       },
       {
-        label: "低库存商品",
+        label: "Low-stock products",
         value: String(lowStockCount),
-        description: "可用库存 ≤ 5",
+        description: "Available stock ≤ 5",
         tone: lowStockCount > 0 ? "danger" : "success",
       },
       {
-        label: "已付款订单金额",
+        label: "Paid order value",
         value: formatMoney(paidRevenue._sum.totalMinor ?? 0),
-        description: "按 paymentStatus=PAID 汇总",
+        description: "Sum where paymentStatus=PAID",
         tone: "success",
       },
     ],
@@ -264,33 +276,33 @@ async function buildLowStockReport(): Promise<AdminAgentResult> {
     intent: "low_stock",
     reply:
       lowStockProducts.length === 0
-        ? "目前没有低库存商品，可用库存都高于 5。"
-        : `发现 ${lowStockProducts.length} 个低库存商品，其中 ${outOfStockCount} 个已经没有可用库存。`,
+        ? "No low-stock products were found. Every active product has more than 5 units available."
+        : `Found ${lowStockProducts.length} low-stock products. ${outOfStockCount} are currently out of available stock.`,
     cards: [
       {
-        label: "低库存",
+        label: "Low stock",
         value: String(lowStockProducts.length),
-        description: "可用库存 ≤ 5",
+        description: "Available stock ≤ 5",
         tone:
           lowStockProducts.length > 0 ? "warning" : "success",
       },
       {
-        label: "缺货",
+        label: "Out of stock",
         value: String(outOfStockCount),
-        description: "可用库存 = 0",
+        description: "Available stock = 0",
         tone: outOfStockCount > 0 ? "danger" : "success",
       },
     ],
     items: lowStockProducts.map((product) => ({
       title: product.title,
-      subtitle: `可用 ${product.availableStock} · 总库存 ${product.stock} · 预留 ${product.reservedStock}`,
-      meta: `累计售出 ${product.sold}`,
+      subtitle: `Available ${product.availableStock} · Total ${product.stock} · Reserved ${product.reservedStock}`,
+      meta: `${product.sold} sold to date`,
       href: "/inventory",
     })),
     suggestions: [
-      "查看待处理订单",
-      "看看热销商品",
-      "给我后台总览",
+      "Show pending orders",
+      "Show top-selling products",
+      "Give me an overview",
     ],
     generatedAt: new Date().toISOString(),
   };
@@ -332,17 +344,17 @@ async function buildPendingOrderReport(): Promise<AdminAgentResult> {
     intent: "pending_orders",
     reply:
       orders.length === 0
-        ? "目前没有需要处理的已付款或处理中订单。"
-        : `目前有 ${paidOrders + processingOrders} 笔待处理订单，列表按最早下单时间优先排列。`,
+        ? "There are no paid or processing orders waiting for fulfilment."
+        : `There are ${paidOrders + processingOrders} orders waiting for fulfilment. The list is sorted by oldest order first.`,
     cards: [
       {
-        label: "已付款待处理",
+        label: "Paid, awaiting fulfilment",
         value: String(paidOrders),
         description: "status=PAID",
         tone: paidOrders > 0 ? "warning" : "success",
       },
       {
-        label: "处理中",
+        label: "Processing",
         value: String(processingOrders),
         description: "status=PROCESSING",
         tone:
@@ -356,9 +368,9 @@ async function buildPendingOrderReport(): Promise<AdminAgentResult> {
       href: "/orders",
     })),
     suggestions: [
-      "检查库存风险",
-      "检查付款异常",
-      "给我后台总览",
+      "Check low-stock products",
+      "Check payment issues",
+      "Give me an overview",
     ],
     generatedAt: new Date().toISOString(),
   };
@@ -390,31 +402,31 @@ async function buildTopProductsReport(): Promise<AdminAgentResult> {
     intent: "top_products",
     reply:
       products.length === 0
-        ? "目前没有上架商品数据。"
-        : `当前热销榜第一是「${products[0]?.title ?? "—"}」。前 ${products.length} 个商品累计售出 ${totalSold} 件。`,
+        ? "There are no active products to rank yet."
+        : `The current top-selling product is “${products[0]?.title ?? "—"}”. The top ${products.length} products have sold ${totalSold} units in total.`,
     cards: [
       {
-        label: "榜首销量",
+        label: "Top product sales",
         value: String(products[0]?.sold ?? 0),
-        description: products[0]?.title ?? "暂无商品",
+        description: products[0]?.title ?? "No product",
         tone: "success",
       },
       {
-        label: "前十累计销量",
+        label: "Top 10 units sold",
         value: String(totalSold),
-        description: "按 sold 字段排序",
+        description: "Sorted by sold",
       },
     ],
     items: products.map((product, index) => ({
       title: `#${index + 1} ${product.title}`,
-      subtitle: `已售 ${product.sold} · ${formatMoney(product.priceMinor)}`,
-      meta: `可用库存 ${Math.max(0, product.stock - product.reservedStock)}`,
+      subtitle: `${product.sold} sold · ${formatMoney(product.priceMinor)}`,
+      meta: `Available stock ${Math.max(0, product.stock - product.reservedStock)}`,
       href: "/products",
     })),
     suggestions: [
-      "检查库存风险",
-      "查看待处理订单",
-      "给我后台总览",
+      "Check low-stock products",
+      "Show pending orders",
+      "Give me an overview",
     ],
     generatedAt: new Date().toISOString(),
   };
@@ -454,23 +466,23 @@ async function buildPaymentRiskReport(): Promise<AdminAgentResult> {
     intent: "payment_risk",
     reply:
       failed === 0 && processing === 0
-        ? "没有发现失败或处理中付款。"
-        : `发现 ${failed} 笔失败付款、${processing} 笔处理中付款；建议优先查看失败订单。`,
+        ? "No failed or processing payments were found."
+        : `Found ${failed} failed payments and ${processing} payments still processing. Review failed orders first.`,
     cards: [
       {
-        label: "付款失败",
+        label: "Failed payments",
         value: String(failed),
         description: "paymentStatus=FAILED",
         tone: failed > 0 ? "danger" : "success",
       },
       {
-        label: "付款处理中",
+        label: "Processing payments",
         value: String(processing),
         description: "paymentStatus=PROCESSING",
         tone: processing > 0 ? "warning" : "success",
       },
       {
-        label: "待付款",
+        label: "Awaiting payment",
         value: String(unpaidPending),
         description: "PENDING_PAYMENT + UNPAID",
       },
@@ -478,13 +490,13 @@ async function buildPaymentRiskReport(): Promise<AdminAgentResult> {
     items: recentFailed.map((order) => ({
       title: order.orderNumber,
       subtitle: `${order.user.name} · ${formatMoney(order.totalMinor)}`,
-      meta: `最近更新 ${formatDate(order.updatedAt)}`,
+      meta: `Last updated ${formatDate(order.updatedAt)}`,
       href: "/orders",
     })),
     suggestions: [
-      "查看待处理订单",
-      "检查库存风险",
-      "给我后台总览",
+      "Show pending orders",
+      "Check low-stock products",
+      "Give me an overview",
     ],
     generatedAt: new Date().toISOString(),
   };
@@ -494,7 +506,7 @@ function buildHelpResult(): AdminAgentResult {
   return {
     intent: "help",
     reply:
-      "我现在可以读取商城实时数据，帮你检查后台总览、低库存、待处理订单、付款异常和热销商品。当前版本不会自动修改订单或库存，避免误操作。",
+      "I can read live commerce data and help with overview, low-stock checks, pending orders, payment issues, and top-selling products. This version is read-only and will not change orders or inventory.",
     cards: [],
     items: [],
     suggestions: defaultSuggestions(),
@@ -504,11 +516,11 @@ function buildHelpResult(): AdminAgentResult {
 
 function defaultSuggestions(): string[] {
   return [
-    "给我后台总览",
-    "检查库存风险",
-    "查看待处理订单",
-    "检查付款异常",
-    "看看热销商品",
+    "Give me an overview",
+    "Check low-stock products",
+    "Show pending orders",
+    "Check payment issues",
+    "Show top-selling products",
   ];
 }
 
@@ -524,7 +536,7 @@ function formatMoney(minor: number): string {
 }
 
 function formatDate(value: Date): string {
-  return value.toLocaleString("zh-CN", {
+  return value.toLocaleString("en-MY", {
     timeZone: "Asia/Kuala_Lumpur",
     year: "numeric",
     month: "2-digit",
