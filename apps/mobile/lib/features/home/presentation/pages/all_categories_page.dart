@@ -119,25 +119,30 @@ class _CategoryCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                category.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
+              SizedBox(
+                width: double.infinity,
+                child: Text(
+                  category.name,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-              const Spacer(),
-              Align(
-                alignment: Alignment.bottomRight,
-                child: CategoryIconBadge(
-                  category: category,
-                  iconSize: 25,
+              const SizedBox(height: 8),
+              Expanded(
+                child: Center(
+                  child: CategoryIconBadge(
+                    category: category,
+                    size: 74,
+                    iconSize: 40,
+                  ),
                 ),
               ),
             ],
