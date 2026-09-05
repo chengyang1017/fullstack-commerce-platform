@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Indigo background -->
+    <path
+        android:fillColor="#4F46E5"
+        android:pathData="M0,0H24V24H0Z" />
+
+    <!-- Shopping bag mark (Material-style, Apache 2.0 compatible) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18,6h-2c0,-2.21 -1.79,-4 -4,-4S8,3.79 8,6H6c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V8c0,-1.1 -0.9,-2 -2,-2zM12,4c1.1,0 2,0.9 2,2h-4c0,-1.1 0.9,-2 2,-2zM12,15c-2.21,0 -4,-1.79 -4,-4h2c0,1.1 0.9,2 2,2s2,-0.9 2,-2h2c0,2.21 -1.79,4 -4,4z" />
+
+    <!-- Small cyan accent -->
+    <path
+        android:fillColor="#22D3EE"
+        android:pathData="M18.2,3.2a1.8,1.8 0,1 0,0 3.6a1.8,1.8 0,1 0,0 -3.6" />
+</vector>
