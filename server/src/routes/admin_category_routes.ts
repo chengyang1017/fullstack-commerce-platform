@@ -9,8 +9,32 @@ import {
 import { AppError } from "../lib/app_error.ts";
 import { prisma } from "../lib/prisma.ts";
 
-export const adminCategoryRouter =
-  Router();
+export const adminCategoryRouter = Router();
+
+const allowedIconNames = new Set([
+  "category",
+  "devices",
+  "cable",
+  "home",
+  "gaming",
+  "shopping_bag",
+  "phone",
+  "laptop",
+  "headphones",
+  "watch",
+  "chair",
+  "kitchen",
+  "book",
+  "sports",
+  "spa",
+  "pets",
+  "gift",
+  "camera",
+  "car",
+  "restaurant",
+]);
+
+const hexColorPattern = /^#[0-9A-Fa-f]{6}$/;
 
 adminCategoryRouter.get(
   "/",
@@ -18,38 +42,31 @@ adminCategoryRouter.get(
     _request: Request,
     response: Response,
   ) => {
-    const categories =
-      await prisma.category.findMany({
-        orderBy: [
-          {
-            sortOrder: "asc",
-          },
-          {
-            createdAt: "asc",
-          },
-        ],
-        include: {
-          _count: {
-            select: {
-              products: true,
-            },
-          },
+    const categories = await prisma.category.findMany({
+      orderBy: [
+        { sortOrder: "asc" },
+        { createdAt: "asc" },
+      ],
+      include: {
+        _count: {
+          select: { products: true },
         },
-      });
+      },
+    });
 
     response.json(
-      categories.map((category) => {
-        return {
-          id: category.id,
-          name: category.name,
-          isActive: category.isActive,
-          sortOrder: category.sortOrder,
-          productCount:
-            category._count.products,
-          createdAt: category.createdAt,
-          updatedAt: category.updatedAt,
-        };
-      }),
+      categories.map((category) => ({
+        id: category.id,
+        name: category.name,
+        isActive: category.isActive,
+        sortOrder: category.sortOrder,
+        iconName: category.iconName,
+        iconColorStart: category.iconColorStart,
+        iconColorEnd: category.iconColorEnd,
+        productCount: category._count.products,
+        createdAt: category.createdAt,
+        updatedAt: category.updatedAt,
+      })),
     );
   },
 );
@@ -60,11 +77,7 @@ adminCategoryRouter.post(
     request: Request,
     response: Response,
   ) => {
-    const body =
-      request.body as Record<
-        string,
-        unknown
-      >;
+    const body = request.body as Record<string, unknown>;
 
     const name =
       typeof body.name === "string"
@@ -76,6 +89,21 @@ adminCategoryRouter.post(
         ? 0
         : Number(body.sortOrder);
 
+    const iconName = readIconName(
+      body.iconName,
+      "category",
+    );
+    const iconColorStart = readHexColor(
+      body.iconColorStart,
+      "#7C3AED",
+      "iconColorStart",
+    );
+    const iconColorEnd = readHexColor(
+      body.iconColorEnd,
+      "#06B6D4",
+      "iconColorEnd",
+    );
+
     if (name.length === 0) {
       throw new AppError(
         400,
@@ -84,10 +112,7 @@ adminCategoryRouter.post(
       );
     }
 
-    if (
-      !Number.isInteger(sortOrder) ||
-      sortOrder < 0
-    ) {
+    if (!Number.isInteger(sortOrder) || sortOrder < 0) {
       throw new AppError(
         400,
         "排序值必须是非负整数",
@@ -95,18 +120,15 @@ adminCategoryRouter.post(
       );
     }
 
-    const duplicateCategory =
-      await prisma.category.findFirst({
-        where: {
-          name: {
-            equals: name,
-            mode: "insensitive",
-          },
+    const duplicateCategory = await prisma.category.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: "insensitive",
         },
-        select: {
-          id: true,
-        },
-      });
+      },
+      select: { id: true },
+    });
 
     if (duplicateCategory) {
       throw new AppError(
@@ -116,15 +138,17 @@ adminCategoryRouter.post(
       );
     }
 
-    const category =
-      await prisma.category.create({
-        data: {
-          id: randomUUID(),
-          name,
-          sortOrder,
-          isActive: true,
-        },
-      });
+    const category = await prisma.category.create({
+      data: {
+        id: randomUUID(),
+        name,
+        sortOrder,
+        iconName,
+        iconColorStart,
+        iconColorEnd,
+        isActive: true,
+      },
+    });
 
     response.status(201).json({
       success: true,
@@ -133,6 +157,9 @@ adminCategoryRouter.post(
         name: category.name,
         isActive: category.isActive,
         sortOrder: category.sortOrder,
+        iconName: category.iconName,
+        iconColorStart: category.iconColorStart,
+        iconColorEnd: category.iconColorEnd,
         productCount: 0,
         createdAt: category.createdAt,
         updatedAt: category.updatedAt,
@@ -147,21 +174,12 @@ adminCategoryRouter.patch(
     request: Request<{ id: string }>,
     response: Response,
   ) => {
-    const categoryId =
-      request.params.id;
+    const categoryId = request.params.id;
+    const body = request.body as Record<string, unknown>;
 
-    const body =
-      request.body as Record<
-        string,
-        unknown
-      >;
-
-    const existingCategory =
-      await prisma.category.findUnique({
-        where: {
-          id: categoryId,
-        },
-      });
+    const existingCategory = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
 
     if (!existingCategory) {
       throw new AppError(
@@ -174,6 +192,9 @@ adminCategoryRouter.patch(
     const data: {
       name?: string;
       sortOrder?: number;
+      iconName?: string;
+      iconColorStart?: string;
+      iconColorEnd?: string;
       isActive?: boolean;
     } = {};
 
@@ -191,21 +212,16 @@ adminCategoryRouter.patch(
 
       const name = body.name.trim();
 
-      const duplicateCategory =
-        await prisma.category.findFirst({
-          where: {
-            id: {
-              not: categoryId,
-            },
-            name: {
-              equals: name,
-              mode: "insensitive",
-            },
+      const duplicateCategory = await prisma.category.findFirst({
+        where: {
+          id: { not: categoryId },
+          name: {
+            equals: name,
+            mode: "insensitive",
           },
-          select: {
-            id: true,
-          },
-        });
+        },
+        select: { id: true },
+      });
 
       if (duplicateCategory) {
         throw new AppError(
@@ -219,13 +235,9 @@ adminCategoryRouter.patch(
     }
 
     if (body.sortOrder !== undefined) {
-      const sortOrder =
-        Number(body.sortOrder);
+      const sortOrder = Number(body.sortOrder);
 
-      if (
-        !Number.isInteger(sortOrder) ||
-        sortOrder < 0
-      ) {
+      if (!Number.isInteger(sortOrder) || sortOrder < 0) {
         throw new AppError(
           400,
           "排序值必须是非负整数",
@@ -236,11 +248,28 @@ adminCategoryRouter.patch(
       data.sortOrder = sortOrder;
     }
 
+    if (body.iconName !== undefined) {
+      data.iconName = readIconName(body.iconName);
+    }
+
+    if (body.iconColorStart !== undefined) {
+      data.iconColorStart = readHexColor(
+        body.iconColorStart,
+        undefined,
+        "iconColorStart",
+      );
+    }
+
+    if (body.iconColorEnd !== undefined) {
+      data.iconColorEnd = readHexColor(
+        body.iconColorEnd,
+        undefined,
+        "iconColorEnd",
+      );
+    }
+
     if (body.isActive !== undefined) {
-      if (
-        typeof body.isActive !==
-        "boolean"
-      ) {
+      if (typeof body.isActive !== "boolean") {
         throw new AppError(
           400,
           "isActive 必须是布尔值",
@@ -249,9 +278,7 @@ adminCategoryRouter.patch(
       }
 
       if (!body.isActive) {
-        await ensureCategoryCanDeactivate(
-          categoryId,
-        );
+        await ensureCategoryCanDeactivate(categoryId);
       }
 
       data.isActive = body.isActive;
@@ -265,20 +292,15 @@ adminCategoryRouter.patch(
       );
     }
 
-    const category =
-  await prisma.category.update({
-    where: {
-      id: categoryId,
-    },
-    data,
-    include: {
-      _count: {
-        select: {
-          products: true,
+    const category = await prisma.category.update({
+      where: { id: categoryId },
+      data,
+      include: {
+        _count: {
+          select: { products: true },
         },
       },
-    },
-  });
+    });
 
     response.json({
       success: true,
@@ -287,8 +309,10 @@ adminCategoryRouter.patch(
         name: category.name,
         isActive: category.isActive,
         sortOrder: category.sortOrder,
-        productCount:
-          category._count.products,
+        iconName: category.iconName,
+        iconColorStart: category.iconColorStart,
+        iconColorEnd: category.iconColorEnd,
+        productCount: category._count.products,
         createdAt: category.createdAt,
         updatedAt: category.updatedAt,
       },
@@ -302,15 +326,11 @@ adminCategoryRouter.delete(
     request: Request<{ id: string }>,
     response: Response,
   ) => {
-    const categoryId =
-      request.params.id;
+    const categoryId = request.params.id;
 
-    const category =
-      await prisma.category.findUnique({
-        where: {
-          id: categoryId,
-        },
-      });
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
 
     if (!category) {
       throw new AppError(
@@ -328,17 +348,11 @@ adminCategoryRouter.delete(
       );
     }
 
-    await ensureCategoryCanDeactivate(
-      categoryId,
-    );
+    await ensureCategoryCanDeactivate(categoryId);
 
     await prisma.category.update({
-      where: {
-        id: categoryId,
-      },
-      data: {
-        isActive: false,
-      },
+      where: { id: categoryId },
+      data: { isActive: false },
     });
 
     response.json({
@@ -348,16 +362,60 @@ adminCategoryRouter.delete(
   },
 );
 
+function readIconName(
+  value: unknown,
+  fallback?: string,
+): string {
+  if (value === undefined && fallback) {
+    return fallback;
+  }
+
+  if (
+    typeof value !== "string" ||
+    !allowedIconNames.has(value)
+  ) {
+    throw new AppError(
+      400,
+      "不支持的分类图标",
+      "INVALID_CATEGORY_ICON",
+    );
+  }
+
+  return value;
+}
+
+function readHexColor(
+  value: unknown,
+  fallback: string | undefined,
+  field: string,
+): string {
+  if (value === undefined && fallback) {
+    return fallback;
+  }
+
+  if (
+    typeof value !== "string" ||
+    !hexColorPattern.test(value)
+  ) {
+    throw new AppError(
+      400,
+      `${field} 必须是 #RRGGBB 颜色`,
+      "INVALID_CATEGORY_ICON_COLOR",
+    );
+  }
+
+  return value.toUpperCase();
+}
+
 async function ensureCategoryCanDeactivate(
   categoryId: string,
 ): Promise<void> {
-  const activeProductCount =
-    await prisma.product.count({
-      where: {
-        categoryId,
-        isActive: true,
-      },
-    });
+  const activeProductCount = await prisma.product.count({
+    where: {
+      categoryId,
+      isActive: true,
+    },
+  });
 
   if (activeProductCount > 0) {
     throw new AppError(
