@@ -15,67 +15,62 @@ import {
 
 import type {
   AdminCategory,
+  CreateCategoryInput,
 } from "../features/categories/category";
 
 interface ErrorResponse {
   message?: string;
 }
 
+const ICON_OPTIONS = [
+  ["category", "Category"],
+  ["devices", "Electronics / Devices"],
+  ["cable", "Accessories / Cable"],
+  ["home", "Home"],
+  ["gaming", "Gaming"],
+  ["shopping_bag", "Shopping bag"],
+  ["phone", "Phone"],
+  ["laptop", "Laptop"],
+  ["headphones", "Headphones"],
+  ["watch", "Watch"],
+  ["chair", "Furniture"],
+  ["kitchen", "Kitchen"],
+  ["book", "Books"],
+  ["sports", "Sports"],
+  ["spa", "Beauty"],
+  ["pets", "Pets"],
+  ["gift", "Gift"],
+  ["camera", "Camera"],
+  ["car", "Car"],
+  ["restaurant", "Food"],
+] as const;
+
 export function AdminCategoriesPage() {
-  const [categories, setCategories] =
-    useState<AdminCategory[]>([]);
-
-  const [isLoading, setIsLoading] =
-    useState(true);
-
-  const [errorMessage, setErrorMessage] =
-    useState<string | null>(null);
-
-  const [
-    editingCategory,
-    setEditingCategory,
-  ] = useState<AdminCategory | null>(null);
-
-  const [formOpen, setFormOpen] =
-    useState(false);
-
-  const [isSaving, setIsSaving] =
-    useState(false);
-
-  const [busyCategoryId, setBusyCategoryId] =
-    useState<string | null>(null);
-
-  const [reloadKey, setReloadKey] =
-    useState(0);
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [editingCategory, setEditingCategory] = useState<AdminCategory | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [busyCategoryId, setBusyCategoryId] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isCancelled = false;
 
-    async function loadCategories():
-        Promise<void> {
+    async function loadCategories(): Promise<void> {
       setIsLoading(true);
       setErrorMessage(null);
 
       try {
-        const result =
-          await getAdminCategories();
-
-        if (isCancelled) {
-          return;
+        const result = await getAdminCategories();
+        if (!isCancelled) {
+          setCategories(result);
         }
-
-        setCategories(result);
       } catch (error) {
-        if (isCancelled) {
-          return;
+        if (!isCancelled) {
+          setErrorMessage(readErrorMessage(error, "Failed to load categories."));
         }
-
-        setErrorMessage(
-          readErrorMessage(
-            error,
-            "Failed to load categories.",
-          ),
-        );
       } finally {
         if (!isCancelled) {
           setIsLoading(false);
@@ -84,16 +79,13 @@ export function AdminCategoriesPage() {
     }
 
     void loadCategories();
-
     return () => {
       isCancelled = true;
     };
   }, [reloadKey]);
 
   function refreshCategories(): void {
-    setReloadKey(
-      (currentValue) => currentValue + 1,
-    );
+    setReloadKey((value) => value + 1);
   }
 
   function openCreateForm(): void {
@@ -102,9 +94,7 @@ export function AdminCategoriesPage() {
     setErrorMessage(null);
   }
 
-  function openEditForm(
-    category: AdminCategory,
-  ): void {
+  function openEditForm(category: AdminCategory): void {
     setEditingCategory(category);
     setFormOpen(true);
     setErrorMessage(null);
@@ -114,15 +104,11 @@ export function AdminCategoriesPage() {
     if (isSaving) {
       return;
     }
-
     setFormOpen(false);
     setEditingCategory(null);
   }
 
-  async function saveCategory(
-    name: string,
-    sortOrder: number,
-  ): Promise<void> {
+  async function saveCategory(input: CreateCategoryInput): Promise<void> {
     if (isSaving) {
       return;
     }
@@ -132,39 +118,22 @@ export function AdminCategoriesPage() {
 
     try {
       if (editingCategory) {
-        const updatedCategory =
-          await updateAdminCategory(
-            editingCategory.id,
-            {
-              name,
-              sortOrder,
-            },
-          );
+        const updatedCategory = await updateAdminCategory(
+          editingCategory.id,
+          input,
+        );
 
-        setCategories(
-          (currentCategories) =>
-            currentCategories
-              .map((category) =>
-                category.id ===
-                updatedCategory.id
-                  ? updatedCategory
-                  : category,
-              )
-              .sort(compareCategories),
+        setCategories((current) =>
+          current
+            .map((category) =>
+              category.id === updatedCategory.id ? updatedCategory : category,
+            )
+            .sort(compareCategories),
         );
       } else {
-        const createdCategory =
-          await createAdminCategory({
-            name,
-            sortOrder,
-          });
-
-        setCategories(
-          (currentCategories) =>
-            [
-              ...currentCategories,
-              createdCategory,
-            ].sort(compareCategories),
+        const createdCategory = await createAdminCategory(input);
+        setCategories((current) =>
+          [...current, createdCategory].sort(compareCategories),
         );
       }
 
@@ -184,18 +153,14 @@ export function AdminCategoriesPage() {
     }
   }
 
-  async function toggleCategoryStatus(
-    category: AdminCategory,
-  ): Promise<void> {
+  async function toggleCategoryStatus(category: AdminCategory): Promise<void> {
     if (busyCategoryId !== null) {
       return;
     }
 
     if (
       category.isActive &&
-      !window.confirm(
-        `Deactivate the “${category.name}” category?`,
-      )
+      !window.confirm(`Deactivate the “${category.name}” category?`)
     ) {
       return;
     }
@@ -205,38 +170,18 @@ export function AdminCategoriesPage() {
 
     try {
       if (category.isActive) {
-        await deactivateAdminCategory(
-          category.id,
-        );
-
-        setCategories(
-          (currentCategories) =>
-            currentCategories.map(
-              (currentCategory) =>
-                currentCategory.id ===
-                category.id
-                  ? {
-                      ...currentCategory,
-                      isActive: false,
-                    }
-                  : currentCategory,
-            ),
+        await deactivateAdminCategory(category.id);
+        setCategories((current) =>
+          current.map((item) =>
+            item.id === category.id ? { ...item, isActive: false } : item,
+          ),
         );
       } else {
-        const updatedCategory =
-          await activateAdminCategory(
-            category.id,
-          );
-
-        setCategories(
-          (currentCategories) =>
-            currentCategories.map(
-              (currentCategory) =>
-                currentCategory.id ===
-                updatedCategory.id
-                  ? updatedCategory
-                  : currentCategory,
-            ),
+        const updatedCategory = await activateAdminCategory(category.id);
+        setCategories((current) =>
+          current.map((item) =>
+            item.id === updatedCategory.id ? updatedCategory : item,
+          ),
         );
       }
     } catch (error) {
@@ -253,30 +198,20 @@ export function AdminCategoriesPage() {
     }
   }
 
-  const activeCount = categories.filter(
-    (category) => category.isActive,
-  ).length;
+  const activeCount = categories.filter((category) => category.isActive).length;
 
   return (
     <>
       <header className="page-header page-header-row">
         <div>
-          <p className="page-eyebrow">
-            CATEGORIES
-          </p>
-
+          <p className="page-eyebrow">CATEGORIES</p>
           <h1>Category management</h1>
-
           <p className="page-description">
-            Manage product categories, display order, and availability.
+            Manage category icons, colors, display order, and availability.
           </p>
         </div>
 
-        <button
-          className="primary-button"
-          type="button"
-          onClick={openCreateForm}
-        >
+        <button className="primary-button" type="button" onClick={openCreateForm}>
           Add category
         </button>
       </header>
@@ -286,49 +221,33 @@ export function AdminCategoriesPage() {
           <span>All categories</span>
           <strong>{categories.length}</strong>
         </article>
-
         <article className="summary-card">
           <span>Active</span>
           <strong>{activeCount}</strong>
         </article>
-
         <article className="summary-card">
           <span>Inactive</span>
-          <strong>
-            {categories.length - activeCount}
-          </strong>
+          <strong>{categories.length - activeCount}</strong>
         </article>
       </section>
 
       <section className="content-card products-card">
         <div className="products-toolbar">
           <strong>Category list</strong>
-
           <button
             className="secondary-button"
             type="button"
             disabled={isLoading}
             onClick={refreshCategories}
           >
-            {isLoading
-              ? "Refreshing..."
-              : "Refresh"}
+            {isLoading ? "Refreshing..." : "Refresh"}
           </button>
         </div>
 
         {errorMessage && (
-          <div
-            className="products-error"
-            role="alert"
-          >
+          <div className="products-error" role="alert">
             <span>{errorMessage}</span>
-
-            <button
-              type="button"
-              onClick={() => {
-                setErrorMessage(null);
-              }}
-            >
+            <button type="button" onClick={() => setErrorMessage(null)}>
               Close
             </button>
           </div>
@@ -349,99 +268,72 @@ export function AdminCategoriesPage() {
             <table className="product-table">
               <thead>
                 <tr>
+                  <th>Icon</th>
                   <th>Category name</th>
-                  <th>Category ID</th>
                   <th>Sort order</th>
                   <th>Products</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-
               <tbody>
-                {categories.map(
-                  (category) => {
-                    const isBusy =
-                      busyCategoryId ===
-                      category.id;
-
-                    return (
-                      <tr key={category.id}>
-                        <td>
-                          <strong>
-                            {category.name}
-                          </strong>
-                        </td>
-
-                        <td>
-                          <code>
-                            {category.id}
-                          </code>
-                        </td>
-
-                        <td>
-                          {category.sortOrder}
-                        </td>
-
-                        <td>
-                          {category.productCount}
-                        </td>
-
-                        <td>
-                          <span
+                {categories.map((category) => {
+                  const isBusy = busyCategoryId === category.id;
+                  return (
+                    <tr key={category.id}>
+                      <td>
+                        <CategoryIconPreview category={category} />
+                      </td>
+                      <td>
+                        <strong>{category.name}</strong>
+                        <div style={{ marginTop: 4, fontSize: 12, opacity: 0.62 }}>
+                          {category.iconName}
+                        </div>
+                      </td>
+                      <td>{category.sortOrder}</td>
+                      <td>{category.productCount}</td>
+                      <td>
+                        <span
+                          className={
+                            category.isActive
+                              ? "status-badge active"
+                              : "status-badge inactive"
+                          }
+                        >
+                          {category.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="product-actions">
+                          <button
+                            className="table-action-button"
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => openEditForm(category)}
+                          >
+                            Edit
+                          </button>
+                          <button
                             className={
                               category.isActive
-                                ? "status-badge active"
-                                : "status-badge inactive"
+                                ? "table-action-button danger"
+                                : "table-action-button success"
                             }
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => void toggleCategoryStatus(category)}
                           >
-                            {category.isActive
-                              ? "Active"
-                              : "Inactive"}
-                          </span>
-                        </td>
-
-                        <td>
-                          <div className="product-actions">
-                            <button
-                              className="table-action-button"
-                              type="button"
-                              disabled={isBusy}
-                              onClick={() => {
-                                openEditForm(
-                                  category,
-                                );
-                              }}
-                            >
-                              Edit
-                            </button>
-
-                            <button
-                              className={
-                                category.isActive
-                                  ? "table-action-button danger"
-                                  : "table-action-button success"
-                              }
-                              type="button"
-                              disabled={isBusy}
-                              onClick={() => {
-                                void toggleCategoryStatus(
-                                  category,
-                                );
-                              }}
-                            >
-                              {isBusy
-                                ? "Processing..."
-                                : category.isActive
-                                  ? "Deactivate"
-                                  : "Activate"}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  },
-                )}
+                            {isBusy
+                              ? "Processing..."
+                              : category.isActive
+                                ? "Deactivate"
+                                : "Activate"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -450,11 +342,7 @@ export function AdminCategoriesPage() {
 
       {formOpen && (
         <CategoryFormDialog
-          key={
-            editingCategory
-              ? editingCategory.id
-              : "create"
-          }
+          key={editingCategory ? editingCategory.id : "create"}
           category={editingCategory}
           isSubmitting={isSaving}
           onClose={closeForm}
@@ -465,16 +353,41 @@ export function AdminCategoriesPage() {
   );
 }
 
+function CategoryIconPreview({ category }: { category: Pick<AdminCategory, "iconName" | "iconColorStart" | "iconColorEnd"> }) {
+  return (
+    <div
+      title={category.iconName}
+      style={{
+        width: 46,
+        height: 46,
+        borderRadius: 14,
+        display: "grid",
+        placeItems: "center",
+        background: `linear-gradient(135deg, ${category.iconColorStart}22, ${category.iconColorEnd}35)`,
+        border: `1px solid ${category.iconColorStart}33`,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 23,
+          fontWeight: 900,
+          lineHeight: 1,
+          background: `linear-gradient(135deg, ${category.iconColorStart}, ${category.iconColorEnd})`,
+          WebkitBackgroundClip: "text",
+          color: "transparent",
+        }}
+      >
+        ◆
+      </span>
+    </div>
+  );
+}
+
 interface CategoryFormDialogProps {
   category: AdminCategory | null;
   isSubmitting: boolean;
-
   onClose(): void;
-
-  onSubmit(
-    name: string,
-    sortOrder: number,
-  ): Promise<void>;
+  onSubmit(input: CreateCategoryInput): Promise<void>;
 }
 
 function CategoryFormDialog({
@@ -483,65 +396,57 @@ function CategoryFormDialog({
   onClose,
   onSubmit,
 }: CategoryFormDialogProps) {
-  const [name, setName] =
-    useState(category?.name ?? "");
+  const [name, setName] = useState(category?.name ?? "");
+  const [sortOrder, setSortOrder] = useState(
+    category ? category.sortOrder.toString() : "0",
+  );
+  const [iconName, setIconName] = useState(category?.iconName ?? "category");
+  const [iconColorStart, setIconColorStart] = useState(
+    category?.iconColorStart ?? "#7C3AED",
+  );
+  const [iconColorEnd, setIconColorEnd] = useState(
+    category?.iconColorEnd ?? "#06B6D4",
+  );
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
-  const [sortOrder, setSortOrder] =
-    useState(
-      category
-        ? category.sortOrder.toString()
-        : "0",
-    );
-
-  const [
-    validationMessage,
-    setValidationMessage,
-  ] = useState<string | null>(null);
-
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
 
     const normalizedName = name.trim();
-    const parsedSortOrder =
-      Number(sortOrder);
+    const parsedSortOrder = Number(sortOrder);
 
     if (normalizedName.length === 0) {
-      setValidationMessage(
-        "Enter a category name.",
-      );
+      setValidationMessage("Enter a category name.");
       return;
     }
 
-    if (
-      !Number.isInteger(parsedSortOrder) ||
-      parsedSortOrder < 0
-    ) {
-      setValidationMessage(
-        "Sort order must be a non-negative integer.",
-      );
+    if (!Number.isInteger(parsedSortOrder) || parsedSortOrder < 0) {
+      setValidationMessage("Sort order must be a non-negative integer.");
       return;
     }
 
     setValidationMessage(null);
-
-    await onSubmit(
-      normalizedName,
-      parsedSortOrder,
-    );
+    await onSubmit({
+      name: normalizedName,
+      sortOrder: parsedSortOrder,
+      iconName,
+      iconColorStart,
+      iconColorEnd,
+    });
   }
+
+  const previewCategory = {
+    iconName,
+    iconColorStart,
+    iconColorEnd,
+  };
 
   return (
     <div
       className="dialog-backdrop"
       role="presentation"
       onMouseDown={(event) => {
-        if (
-          event.target ===
-            event.currentTarget &&
-          !isSubmitting
-        ) {
+        if (event.target === event.currentTarget && !isSubmitting) {
           onClose();
         }
       }}
@@ -555,18 +460,12 @@ function CategoryFormDialog({
         <header className="dialog-header">
           <div>
             <p className="page-eyebrow">
-              {category
-                ? "EDIT CATEGORY"
-                : "CREATE CATEGORY"}
+              {category ? "EDIT CATEGORY" : "CREATE CATEGORY"}
             </p>
-
             <h2 id="category-dialog-title">
-              {category
-                ? "Edit category"
-                : "Add category"}
+              {category ? "Edit category" : "Add category"}
             </h2>
           </div>
-
           <button
             className="dialog-close-button"
             type="button"
@@ -578,45 +477,77 @@ function CategoryFormDialog({
           </button>
         </header>
 
-        <form
-          className="product-form"
-          onSubmit={handleSubmit}
-        >
+        <form className="product-form" onSubmit={handleSubmit}>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <CategoryIconPreview category={previewCategory} />
+            <div>
+              <strong>Icon preview</strong>
+              <div style={{ marginTop: 3, fontSize: 12, opacity: 0.66 }}>
+                The Flutter app renders the selected Material icon with this two-color gradient.
+              </div>
+            </div>
+          </div>
+
           <label className="form-field">
             <span>Category name</span>
-
             <input
               value={name}
               disabled={isSubmitting}
-              placeholder="e.g. Phones"
-              onChange={(event) => {
-                setName(event.target.value);
-              }}
+              placeholder="e.g. Electronics"
+              onChange={(event) => setName(event.target.value)}
             />
           </label>
 
           <label className="form-field">
-            <span>Display order</span>
+            <span>Icon</span>
+            <select
+              value={iconName}
+              disabled={isSubmitting}
+              onChange={(event) => setIconName(event.target.value)}
+            >
+              {ICON_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
 
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <label className="form-field">
+              <span>Gradient color 1</span>
+              <input
+                type="color"
+                value={iconColorStart}
+                disabled={isSubmitting}
+                onChange={(event) => setIconColorStart(event.target.value.toUpperCase())}
+              />
+            </label>
+            <label className="form-field">
+              <span>Gradient color 2</span>
+              <input
+                type="color"
+                value={iconColorEnd}
+                disabled={isSubmitting}
+                onChange={(event) => setIconColorEnd(event.target.value.toUpperCase())}
+              />
+            </label>
+          </div>
+
+          <label className="form-field">
+            <span>Display order</span>
             <input
               type="number"
               min="0"
               step="1"
               value={sortOrder}
               disabled={isSubmitting}
-              onChange={(event) => {
-                setSortOrder(
-                  event.target.value,
-                );
-              }}
+              onChange={(event) => setSortOrder(event.target.value)}
             />
           </label>
 
           {validationMessage && (
-            <div
-              className="login-error"
-              role="alert"
-            >
+            <div className="login-error" role="alert">
               {validationMessage}
             </div>
           )}
@@ -630,7 +561,6 @@ function CategoryFormDialog({
             >
               Cancel
             </button>
-
             <button
               className="primary-button"
               type="submit"
@@ -649,36 +579,16 @@ function CategoryFormDialog({
   );
 }
 
-function compareCategories(
-  first: AdminCategory,
-  second: AdminCategory,
-): number {
-  if (
-    first.sortOrder !==
-    second.sortOrder
-  ) {
-    return (
-      first.sortOrder -
-      second.sortOrder
-    );
+function compareCategories(first: AdminCategory, second: AdminCategory): number {
+  if (first.sortOrder !== second.sortOrder) {
+    return first.sortOrder - second.sortOrder;
   }
-
-  return first.createdAt.localeCompare(
-    second.createdAt,
-  );
+  return first.createdAt.localeCompare(second.createdAt);
 }
 
-function readErrorMessage(
-  error: unknown,
-  fallback: string,
-): string {
-  if (
-    axios.isAxiosError<ErrorResponse>(
-      error,
-    )
-  ) {
-    return fallback;
+function readErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError<ErrorResponse>(error)) {
+    return error.response?.data?.message ?? fallback;
   }
-
   return fallback;
 }
