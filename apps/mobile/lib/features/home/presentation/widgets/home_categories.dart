@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../category/domain/models/product_category.dart';
+import '../../../category/presentation/cubit/category_cubit.dart';
+import '../../../category/presentation/cubit/category_state.dart';
 
 class HomeCategories extends StatelessWidget {
   const HomeCategories({
@@ -9,8 +13,10 @@ class HomeCategories extends StatelessWidget {
     required this.onViewAll,
   });
 
-  final void Function(String categoryId, String categoryTitle)
-  onCategorySelected;
+  final void Function(
+    String categoryId,
+    String categoryTitle,
+  ) onCategorySelected;
 
   final VoidCallback onViewAll;
 
@@ -18,40 +24,26 @@ class HomeCategories extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    final categories = [
-      _CategoryItem(
-        id: 'phone',
-        title: l10n.categoryPhone,
-        icon: Icons.phone_iphone_rounded,
-      ),
-      _CategoryItem(
-        id: 'computer',
-        title: l10n.categoryComputer,
-        icon: Icons.laptop_mac_rounded,
-      ),
-      _CategoryItem(
-        id: 'gaming',
-        title: l10n.categoryGaming,
-        icon: Icons.sports_esports_rounded,
-      ),
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+          ),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   l10n.productCategories,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                 ),
               ),
-
               TextButton(
                 onPressed: onViewAll,
                 child: Row(
@@ -59,7 +51,10 @@ class HomeCategories extends StatelessWidget {
                   children: [
                     Text(l10n.viewAll),
                     const SizedBox(width: 2),
-                    const Icon(Icons.chevron_right_rounded, size: 18),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                    ),
                   ],
                 ),
               ),
@@ -69,27 +64,77 @@ class HomeCategories extends StatelessWidget {
 
         const SizedBox(height: 10),
 
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              for (var index = 0; index < categories.length; index++) ...[
-                Expanded(
-                  child: _CategoryCard(
-                    category: categories[index],
-                    onTap: () {
-                      onCategorySelected(
-                        categories[index].id,
-                        categories[index].title,
-                      );
+        BlocBuilder<CategoryCubit, CategoryState>(
+          builder: (context, state) {
+            if (state is CategoryInitial ||
+                state is CategoryLoading) {
+              return const SizedBox(
+                height: 118,
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+
+            if (state is CategoryError) {
+              return SizedBox(
+                height: 118,
+                child: Center(
+                  child: IconButton(
+                    onPressed: () {
+                      context
+                          .read<CategoryCubit>()
+                          .refreshCategories();
                     },
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                    ),
                   ),
                 ),
+              );
+            }
 
-                if (index != categories.length - 1) const SizedBox(width: 10),
-              ],
-            ],
-          ),
+            final categories =
+                (state as CategoryReady)
+                    .categories
+                    .take(3)
+                    .toList(growable: false);
+
+            if (categories.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+              ),
+              child: Row(
+                children: [
+                  for (
+                    var index = 0;
+                    index < categories.length;
+                    index++
+                  ) ...[
+                    Expanded(
+                      child: _CategoryCard(
+                        category: categories[index],
+                        onTap: () {
+                          onCategorySelected(
+                            categories[index].id,
+                            categories[index].name,
+                          );
+                        },
+                      ),
+                    ),
+
+                    if (index !=
+                        categories.length - 1)
+                      const SizedBox(width: 10),
+                  ],
+                ],
+              ),
+            );
+          },
         ),
       ],
     );
@@ -97,14 +142,18 @@ class HomeCategories extends StatelessWidget {
 }
 
 class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({required this.category, required this.onTap});
+  const _CategoryCard({
+    required this.category,
+    required this.onTap,
+  });
 
-  final _CategoryItem category;
+  final ProductCategory category;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme =
+        Theme.of(context).colorScheme;
 
     return Material(
       color: colorScheme.surfaceContainerLow,
@@ -117,10 +166,11 @@ class _CategoryCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
-                  category.title,
+                  category.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -138,13 +188,16 @@ class _CategoryCard extends StatelessWidget {
                     height: 52,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(16),
+                      color:
+                          colorScheme.primaryContainer,
+                      borderRadius:
+                          BorderRadius.circular(16),
                     ),
                     child: Icon(
-                      category.icon,
+                      Icons.category_rounded,
                       size: 27,
-                      color: colorScheme.onPrimaryContainer,
+                      color:
+                          colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ),
@@ -155,16 +208,4 @@ class _CategoryCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _CategoryItem {
-  const _CategoryItem({
-    required this.id,
-    required this.title,
-    required this.icon,
-  });
-
-  final String id;
-  final String title;
-  final IconData icon;
 }

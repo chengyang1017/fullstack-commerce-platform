@@ -217,31 +217,40 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   Future<void> _buyNow() async {
-    final addressRepository = context.read<AddressRepository>();
+  final addressRepository =
+      context.read<AddressRepository>();
 
-    final orderRepository = context.read<OrderRepository>();
+  final orderRepository =
+      context.read<OrderRepository>();
 
-    final request = CheckoutRequest.buyNow(
-      items: [CartItem(product: product, quantity: 1)],
-    );
-
-    await Navigator.push<void>(
-      context,
-      MaterialPageRoute(
-        builder: (context) {
-          return BlocProvider<CheckoutCubit>(
-            create: (_) {
-              return CheckoutCubit(
-                addressRepository: addressRepository,
-                orderRepository: orderRepository,
-              )..initialize();
-            },
-            child: CheckoutPage(request: request),
-          );
-        },
+  final request = CheckoutRequest.buyNow(
+    items: [
+      CartItem(
+        product: product,
+        quantity: 1,
       ),
-    );
-  }
+    ],
+  );
+
+  await Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      builder: (context) {
+        return BlocProvider<CheckoutCubit>(
+          create: (_) {
+  return CheckoutCubit(
+    addressRepository: addressRepository,
+    orderRepository: orderRepository,
+  )..initialize();
+},
+          child: CheckoutPage(
+            request: request,
+          ),
+        );
+      },
+    ),
+  );
+}
 
   void _openCart() {
     if (!mounted) {

@@ -50,24 +50,23 @@ class CheckoutPage extends StatelessWidget {
             ),
           ),
           body: loading
-              ? const Center(
-                  child:
-                      CircularProgressIndicator(),
-                )
-              : _buildBody(
-                  context,
-                  state,
-                  checkout,
-                ),
-          bottomNavigationBar:
-              loading ||
-                      request.items.isEmpty
-                  ? null
-                  : _buildBottomBar(
-                      context,
-                      state,
-                      checkout,
-                    ),
+    ? const Center(
+        child: CircularProgressIndicator(),
+      )
+    : _buildBody(
+        context,
+        state,
+        checkout,
+      ),
+
+bottomNavigationBar:
+    loading || request.items.isEmpty
+        ? null
+        : _buildBottomBar(
+            context,
+            state,
+            checkout,
+          ),
         );
       },
     );
@@ -449,83 +448,89 @@ class CheckoutPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomBar(
-    BuildContext context,
-    CheckoutState state,
-    CheckoutCubit checkout,
-  ) {
-    final colorScheme =
-        Theme.of(context).colorScheme;
+Widget _buildBottomBar(
+  BuildContext context,
+  CheckoutState state,
+  CheckoutCubit checkout,
+) {
+  final colorScheme =
+      Theme.of(context).colorScheme;
 
-    final l10n =
-        AppLocalizations.of(context);
+  final l10n =
+      AppLocalizations.of(context);
 
-    return SafeArea(
-      child: Container(
-        padding:
-            const EdgeInsets.all(
+  final total =
+      checkout.total(request);
+
+  return SafeArea(
+    top: false,
+    child: ColoredBox(
+      color: colorScheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          16,
+          10,
+          16,
           12,
         ),
-        decoration: BoxDecoration(
-          color:
-              colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow
-                  .withValues(
-                alpha: 0.12,
-              ),
-              blurRadius: 8,
-              offset:
-                  const Offset(
-                0,
-                -2,
-              ),
-            ),
-          ],
-        ),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment:
+              CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Text(
-                'RM ${checkout.total(request).toStringAsFixed(2)}',
-                style: TextStyle(
-                  color:
-                      colorScheme.primary,
-                  fontSize: 22,
-                  fontWeight:
-                      FontWeight.bold,
-                ),
+            Text(
+              l10n.amountDue,
+              style: TextStyle(
+                fontSize: 12,
+                color:
+                    colorScheme.onSurfaceVariant,
               ),
             ),
 
-            FilledButton(
-              onPressed:
-                  state.isSubmitting
-                      ? null
-                      : () {
-                          _placeOrder(
-                            context,
-                          );
-                        },
-              child: state.isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child:
-                          CircularProgressIndicator(
-                        strokeWidth: 2,
+            const SizedBox(height: 2),
+
+            Text(
+              'RM ${total.toStringAsFixed(2)}',
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed:
+                    state.isSubmitting
+                        ? null
+                        : () {
+                            _placeOrder(
+                              context,
+                            );
+                          },
+                child: state.isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child:
+                            CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        l10n.placeOrder,
                       ),
-                    )
-                  : Text(
-                      l10n.placeOrder,
-                    ),
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Future<void> _addAddress(
     BuildContext context,

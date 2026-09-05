@@ -29,11 +29,8 @@ class PaymentFailedException implements Exception {
   });
 
   final PaymentFailureType type;
-
   final Object? cause;
-
   final int? statusCode;
-
   final String? serverMessage;
 
   @override
@@ -48,7 +45,9 @@ class PaymentFailedException implements Exception {
 }
 
 abstract class PaymentService {
-  Future<void> pay({required String orderId});
+  Future<void> pay({
+    required String orderId,
+  });
 }
 
 class StripePaymentService implements PaymentService {
@@ -60,15 +59,17 @@ class StripePaymentService implements PaymentService {
        _ownsClient = client == null;
 
   final CustomerAuthService _authService;
-
   final http.Client _client;
-
   final bool _ownsClient;
 
   @override
-  Future<void> pay({required String orderId}) async {
+  Future<void> pay({
+    required String orderId,
+  }) async {
     try {
-      final data = await _createPaymentIntent(orderId);
+      final data = await _createPaymentIntent(
+        orderId,
+      );
 
       if (data['alreadyPaid'] == true) {
         return;
@@ -76,72 +77,64 @@ class StripePaymentService implements PaymentService {
 
       final clientSecret = data['clientSecret'];
 
-      if (clientSecret is! String || clientSecret.isEmpty) {
+      if (clientSecret is! String ||
+          clientSecret.isEmpty) {
         throw const PaymentFailedException(
           type: PaymentFailureType.missingCredential,
         );
       }
 
       await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: clientSecret,
-          merchantDisplayName: 'Flutter Shopping',
-          returnURL: 'flutterstripe://redirect',
-
-          // 不在 Service 寫死中文 UI。
-          // Stripe PaymentSheet 使用其原生 UI。
+        paymentSheetParameters:
+            SetupPaymentSheetParameters(
+          paymentIntentClientSecret:
+              clientSecret,
+          merchantDisplayName:
+              'Flutter Shopping',
           style: ThemeMode.system,
-
-          googlePay: const PaymentSheetGooglePay(
-            merchantCountryCode: 'MY',
-            currencyCode: 'MYR',
-            testEnv: true,
-          ),
-
-          billingDetailsCollectionConfiguration:
-              const BillingDetailsCollectionConfiguration(
-                name: CollectionMode.always,
-                email: CollectionMode.always,
-                phone: CollectionMode.automatic,
-                address: AddressCollectionMode.automatic,
-              ),
         ),
       );
 
       await Stripe.instance.presentPaymentSheet();
 
       /*
-       * PaymentSheet 成功關閉後，
-       * 客戶端主動要求 Node 向 Stripe
-       * 查詢 PaymentIntent，
-       * 並同步 PostgreSQL。
+       * PaymentSheet 成功完成後，
+       * 客戶端主動要求後端向 Stripe
+       * 查詢 PaymentIntent 的最新狀態。
        *
-       * 最終付款狀態仍然由後端決定。
+       * 最終付款結果仍然由後端決定，
+       * webhook 仍然是可靠的最終來源。
        */
-      await _waitForPaymentConfirmation(orderId);
+      await _waitForPaymentConfirmation(
+        orderId,
+      );
     } on PaymentCancelledException {
       rethrow;
     } on PaymentFailedException {
       rethrow;
     } on StripeException catch (error) {
-      if (error.error.code == FailureCode.Canceled) {
+      if (error.error.code ==
+          FailureCode.Canceled) {
         throw const PaymentCancelledException();
       }
 
       throw PaymentFailedException(
         type: PaymentFailureType.paymentFailed,
         cause: error,
-        serverMessage: error.error.localizedMessage,
+        serverMessage:
+            error.error.localizedMessage,
       );
     } catch (error) {
       throw PaymentFailedException(
-        type: PaymentFailureType.createPaymentFailed,
+        type:
+            PaymentFailureType.createPaymentFailed,
         cause: error,
       );
     }
   }
 
-  Future<Map<String, dynamic>> _createPaymentIntent(
+  Future<Map<String, dynamic>>
+      _createPaymentIntent(
     String orderId, {
     bool allowRefresh = true,
   }) {
@@ -149,45 +142,64 @@ class StripePaymentService implements PaymentService {
       orderId: orderId,
       endpoint: 'payment-intent',
       allowRefresh: allowRefresh,
-      fallbackType: PaymentFailureType.createPaymentFailed,
+      fallbackType:
+          PaymentFailureType.createPaymentFailed,
     );
   }
 
-  Future<void> _waitForPaymentConfirmation(String orderId) async {
+  Future<void>
+      _waitForPaymentConfirmation(
+    String orderId,
+  ) async {
     const maxAttempts = 12;
 
-    for (var attempt = 0; attempt < maxAttempts; attempt++) {
-      final data = await _syncPaymentStatus(orderId);
+    for (
+      var attempt = 0;
+      attempt < maxAttempts;
+      attempt++
+    ) {
+      final data = await _syncPaymentStatus(
+        orderId,
+      );
 
       if (data['paid'] == true) {
         return;
       }
 
-      final paymentIntentStatus = data['paymentIntentStatus'];
+      final paymentIntentStatus =
+          data['paymentIntentStatus'];
 
-      if (paymentIntentStatus == 'canceled') {
+      if (paymentIntentStatus ==
+          'canceled') {
         throw const PaymentCancelledException();
       }
 
-      if (paymentIntentStatus == 'requires_payment_method') {
+      if (paymentIntentStatus ==
+          'requires_payment_method') {
         throw const PaymentFailedException(
           type: PaymentFailureType.paymentFailed,
         );
       }
 
       if (attempt < maxAttempts - 1) {
-        await Future<void>.delayed(const Duration(milliseconds: 750));
+        await Future<void>.delayed(
+          const Duration(
+            milliseconds: 750,
+          ),
+        );
       }
     }
 
     /*
      * 部分付款方式可能需要較長處理時間。
-     * 此時不把已提交的付款當成失敗，
-     * 後續仍由 webhook 完成更新。
+     * 超過輪詢時間不代表付款失敗，
+     * 後續仍由 Stripe webhook
+     * 更新後端訂單狀態。
      */
   }
 
-  Future<Map<String, dynamic>> _syncPaymentStatus(
+  Future<Map<String, dynamic>>
+      _syncPaymentStatus(
     String orderId, {
     bool allowRefresh = true,
   }) {
@@ -195,23 +207,30 @@ class StripePaymentService implements PaymentService {
       orderId: orderId,
       endpoint: 'payment-sync',
       allowRefresh: allowRefresh,
-      fallbackType: PaymentFailureType.confirmationFailed,
+      fallbackType:
+          PaymentFailureType.confirmationFailed,
     );
   }
 
-  Future<Map<String, dynamic>> _postOrderPaymentEndpoint({
+  Future<Map<String, dynamic>>
+      _postOrderPaymentEndpoint({
     required String orderId,
     required String endpoint,
     required bool allowRefresh,
-    required PaymentFailureType fallbackType,
+    required PaymentFailureType
+        fallbackType,
   }) async {
     late final String accessToken;
 
     try {
-      accessToken = await _authService.requireAccessToken();
+      accessToken =
+          await _authService
+              .requireAccessToken();
     } catch (error) {
       throw PaymentFailedException(
-        type: PaymentFailureType.authenticationExpired,
+        type:
+            PaymentFailureType
+                .authenticationExpired,
         cause: error,
       );
     }
@@ -227,14 +246,20 @@ class StripePaymentService implements PaymentService {
         ),
         headers: {
           'Accept': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization':
+              'Bearer $accessToken',
+          'Content-Type':
+              'application/json; charset=utf-8',
         },
-        body: jsonEncode(const <String, dynamic>{}),
+        body: jsonEncode(
+          const <String, dynamic>{},
+        ),
       );
     } catch (error) {
       throw PaymentFailedException(
-        type: PaymentFailureType.connectionFailed,
+        type:
+            PaymentFailureType
+                .connectionFailed,
         cause: error,
       );
     }
@@ -242,27 +267,39 @@ class StripePaymentService implements PaymentService {
     if (response.statusCode == 401) {
       if (!allowRefresh) {
         throw PaymentFailedException(
-          type: PaymentFailureType.authenticationExpired,
-          statusCode: response.statusCode,
+          type:
+              PaymentFailureType
+                  .authenticationExpired,
+          statusCode:
+              response.statusCode,
         );
       }
 
       String? refreshedToken;
 
       try {
-        refreshedToken = await _authService.refreshAccessToken();
+        refreshedToken =
+            await _authService
+                .refreshAccessToken();
       } catch (error) {
         throw PaymentFailedException(
-          type: PaymentFailureType.authenticationExpired,
+          type:
+              PaymentFailureType
+                  .authenticationExpired,
           cause: error,
-          statusCode: response.statusCode,
+          statusCode:
+              response.statusCode,
         );
       }
 
-      if (refreshedToken == null || refreshedToken.isEmpty) {
+      if (refreshedToken == null ||
+          refreshedToken.isEmpty) {
         throw PaymentFailedException(
-          type: PaymentFailureType.authenticationExpired,
-          statusCode: response.statusCode,
+          type:
+              PaymentFailureType
+                  .authenticationExpired,
+          statusCode:
+              response.statusCode,
         );
       }
 
@@ -274,43 +311,60 @@ class StripePaymentService implements PaymentService {
       );
     }
 
-    final decoded = _decodeResponse(response);
+    final decoded = _decodeResponse(
+      response,
+    );
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      final rawMessage = decoded['message'];
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300) {
+      final rawMessage =
+          decoded['message'];
 
       throw PaymentFailedException(
         type: fallbackType,
-        statusCode: response.statusCode,
-        serverMessage: rawMessage is String && rawMessage.isNotEmpty
-            ? rawMessage
-            : null,
+        statusCode:
+            response.statusCode,
+        serverMessage:
+            rawMessage is String &&
+                    rawMessage.isNotEmpty
+                ? rawMessage
+                : null,
       );
     }
 
     return decoded;
   }
 
-  Map<String, dynamic> _decodeResponse(http.Response response) {
+  Map<String, dynamic> _decodeResponse(
+    http.Response response,
+  ) {
     if (response.bodyBytes.isEmpty) {
       return <String, dynamic>{};
     }
 
     try {
-      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      final decoded = jsonDecode(
+        utf8.decode(
+          response.bodyBytes,
+        ),
+      );
 
       if (decoded is Map) {
-        return Map<String, dynamic>.from(decoded);
+        return Map<String, dynamic>.from(
+          decoded,
+        );
       }
     } catch (error) {
       throw PaymentFailedException(
-        type: PaymentFailureType.invalidResponse,
+        type:
+            PaymentFailureType.invalidResponse,
         cause: error,
       );
     }
 
     throw const PaymentFailedException(
-      type: PaymentFailureType.invalidResponse,
+      type:
+          PaymentFailureType.invalidResponse,
     );
   }
 

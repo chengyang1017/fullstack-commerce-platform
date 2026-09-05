@@ -7,8 +7,8 @@
       "type": "dart",
       "cwd": "${workspaceFolder}/apps/mobile",
       "toolArgs": [
-        "--dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_51Tz2KdPhztpSF0lTwvklpwbXoEMwMwxZg4qLOPeQiBzBNWrIMfiAjpHknUO1vbaCnKEqBMznPy9GFR8RfRqR87vm00mirOnqj5",
-        "--dart-define=API_BASE_URL=http://10.0.2.2:3000"
+        "--dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_51Tz2KRBPMexIW1eklTqbpByg0qcwveNh6qQ8e2DA3uPTFGzuhT2SwAsJ7E9HnH64Up6FCT36MhxSmyDRgkHBC8vt00FepmJKdO",
+        "--dart-define=API_BASE_URL=https://api-production-6a25.up.railway.app"
       ]
     }
   ]

@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../features/auth/presentation/cubit/customer_auth_cubit.dart';
 import '../features/cart/presentation/cubit/cart_cubit.dart';
+import '../features/category/data/repositories/category_repository.dart';
+import '../features/category/presentation/cubit/category_cubit.dart';
 import '../core/settings/locale/locale_cubit.dart';
 import '../features/order/presentation/cubit/order_cubit.dart';
 import '../features/product/presentation/cubit/product_cubit.dart';
@@ -30,8 +32,7 @@ class ShoppingApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider<
-            CustomerAuthService>(
+        RepositoryProvider<CustomerAuthService>(
           create: (_) {
             return CustomerAuthService();
           },
@@ -40,34 +41,28 @@ class ShoppingApp extends StatelessWidget {
           },
         ),
 
-        RepositoryProvider<
-            CartRepository>(
+        RepositoryProvider<CartRepository>(
           create: (_) {
             return CartRepository(
-              service:
-                  LocalCartService(),
+              service: LocalCartService(),
             );
           },
         ),
 
-        RepositoryProvider<
-            AddressRepository>(
+        RepositoryProvider<AddressRepository>(
           create: (_) {
             return AddressRepository(
-              service:
-                  LocalAddressService(),
+              service: LocalAddressService(),
             );
           },
         ),
 
-        RepositoryProvider<
-            OrderRepository>(
+        RepositoryProvider<OrderRepository>(
           create: (context) {
             return OrderRepository(
               ApiOrderService(
                 authService:
-                    context.read<
-                        CustomerAuthService>(),
+                    context.read<CustomerAuthService>(),
               ),
             );
           },
@@ -76,41 +71,44 @@ class ShoppingApp extends StatelessWidget {
           },
         ),
 
-        RepositoryProvider<
-            PaymentRepository>(
+        RepositoryProvider<PaymentRepository>(
           create: (context) {
             return PaymentRepository(
               StripePaymentService(
                 authService:
-                    context.read<
-                        CustomerAuthService>(),
+                    context.read<CustomerAuthService>(),
               ),
             );
           },
         ),
 
-        RepositoryProvider<
-            ProductRepository>(
+        RepositoryProvider<CategoryRepository>(
+          create: (_) {
+            return CategoryRepository();
+          },
+          dispose: (repository) {
+            repository.dispose();
+          },
+        ),
+
+        RepositoryProvider<ProductRepository>(
           create: (_) {
             return ApiProductRepository();
           },
           dispose: (repository) {
-            if (repository
-                is ApiProductRepository) {
+            if (repository is ApiProductRepository) {
               repository.dispose();
             }
           },
         ),
 
-        RepositoryProvider<
-            ThemePreferencesRepository>(
+        RepositoryProvider<ThemePreferencesRepository>(
           create: (_) {
             return ThemePreferencesRepository();
           },
         ),
 
-        RepositoryProvider<
-            LocalePreferencesRepository>(
+        RepositoryProvider<LocalePreferencesRepository>(
           create: (_) {
             return LocalePreferencesRepository();
           },
@@ -122,8 +120,7 @@ class ShoppingApp extends StatelessWidget {
             create: (context) {
               return ThemeModeCubit(
                 repository:
-                    context.read<
-                        ThemePreferencesRepository>(),
+                    context.read<ThemePreferencesRepository>(),
               )..loadThemeMode();
             },
           ),
@@ -132,19 +129,16 @@ class ShoppingApp extends StatelessWidget {
             create: (context) {
               return LocaleCubit(
                 repository:
-                    context.read<
-                        LocalePreferencesRepository>(),
+                    context.read<LocalePreferencesRepository>(),
               )..loadLocale();
             },
           ),
 
-          BlocProvider<
-              CustomerAuthCubit>(
+          BlocProvider<CustomerAuthCubit>(
             create: (context) {
               return CustomerAuthCubit(
                 authService:
-                    context.read<
-                        CustomerAuthService>(),
+                    context.read<CustomerAuthService>(),
               )..restoreSession();
             },
           ),
@@ -153,11 +147,9 @@ class ShoppingApp extends StatelessWidget {
             create: (context) {
               return OrderCubit(
                 repository:
-                    context.read<
-                        OrderRepository>(),
+                    context.read<OrderRepository>(),
                 authCubit:
-                    context.read<
-                        CustomerAuthCubit>(),
+                    context.read<CustomerAuthCubit>(),
               )..start();
             },
           ),
@@ -166,9 +158,17 @@ class ShoppingApp extends StatelessWidget {
             create: (context) {
               return CartCubit(
                 repository:
-                    context.read<
-                        CartRepository>(),
+                    context.read<CartRepository>(),
               )..loadCart();
+            },
+          ),
+
+          BlocProvider<CategoryCubit>(
+            create: (context) {
+              return CategoryCubit(
+                repository:
+                    context.read<CategoryRepository>(),
+              )..loadCategories();
             },
           ),
 
@@ -176,8 +176,7 @@ class ShoppingApp extends StatelessWidget {
             create: (context) {
               return ProductCubit(
                 productRepository:
-                    context.read<
-                        ProductRepository>(),
+                    context.read<ProductRepository>(),
               )..loadProducts();
             },
           ),

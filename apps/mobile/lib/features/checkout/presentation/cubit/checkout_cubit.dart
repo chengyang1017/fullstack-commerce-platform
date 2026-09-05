@@ -21,39 +21,54 @@ class CheckoutCubit extends Cubit<CheckoutState> {
   final AddressRepository _addressRepository;
   final OrderRepository _orderRepository;
 
-  Future<void> initialize() async {
-    emit(state.copyWith(status: CheckoutStatus.loading, clearError: true));
+Future<void> initialize() async {
+  emit(
+    state.copyWith(
+      status: CheckoutStatus.loading,
+      clearError: true,
+    ),
+  );
 
-    try {
-      final addresses = await _addressRepository.loadAddresses();
+  try {
+    final addresses =
+        await _addressRepository
+            .loadAddresses()
+            .timeout(
+              const Duration(seconds: 5),
+            );
 
-      final selectedAddressId = _initialAddressId(addresses);
+    final selectedAddressId =
+        _initialAddressId(addresses);
 
-      emit(
-        state.copyWith(
-          status: CheckoutStatus.ready,
-          addresses: List.unmodifiable(addresses),
-          selectedAddressId: selectedAddressId,
-          clearSelectedAddress: selectedAddressId == null,
-          clearError: true,
-        ),
-      );
-    } catch (error, stackTrace) {
-      developer.log(
-        'Failed to initialize checkout',
-        name: 'CheckoutCubit',
-        error: error,
-        stackTrace: stackTrace,
-      );
+    emit(
+      state.copyWith(
+        status: CheckoutStatus.ready,
+        addresses:
+            List.unmodifiable(addresses),
+        selectedAddressId:
+            selectedAddressId,
+        clearSelectedAddress:
+            selectedAddressId == null,
+        clearError: true,
+      ),
+    );
+  } catch (error, stackTrace) {
+    developer.log(
+      'Failed to initialize checkout',
+      name: 'CheckoutCubit',
+      error: error,
+      stackTrace: stackTrace,
+    );
 
-      emit(
-        state.copyWith(
-          status: CheckoutStatus.error,
-          errorType: CheckoutErrorType.loadFailed,
-        ),
-      );
-    }
+    emit(
+      state.copyWith(
+        status: CheckoutStatus.error,
+        errorType:
+            CheckoutErrorType.loadFailed,
+      ),
+    );
   }
+}
 
   Future<void> addAddress(Address address) async {
     final isFirstAddress = state.addresses.isEmpty;

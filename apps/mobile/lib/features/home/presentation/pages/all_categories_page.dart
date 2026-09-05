@@ -1,74 +1,97 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../category/domain/models/product_category.dart';
+import '../../../category/presentation/cubit/category_cubit.dart';
+import '../../../category/presentation/cubit/category_state.dart';
 
 class AllCategoriesPage extends StatelessWidget {
-  const AllCategoriesPage({super.key, required this.onCategorySelected});
+  const AllCategoriesPage({
+    super.key,
+    required this.onCategorySelected,
+  });
 
-  final void Function(String categoryId, String categoryTitle)
-  onCategorySelected;
+  final void Function(
+    String categoryId,
+    String categoryTitle,
+  ) onCategorySelected;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    final categories = [
-      _CategoryItem(
-        id: 'phone',
-        title: l10n.categoryPhone,
-        icon: Icons.phone_iphone_rounded,
-      ),
-      _CategoryItem(
-        id: 'computer',
-        title: l10n.categoryComputer,
-        icon: Icons.laptop_mac_rounded,
-      ),
-      _CategoryItem(
-        id: 'camera',
-        title: l10n.categoryCamera,
-        icon: Icons.photo_camera_rounded,
-      ),
-      _CategoryItem(
-        id: 'audio',
-        title: l10n.categoryAudio,
-        icon: Icons.headphones_rounded,
-      ),
-      _CategoryItem(
-        id: 'gaming',
-        title: l10n.categoryGaming,
-        icon: Icons.sports_esports_rounded,
-      ),
-      _CategoryItem(
-        id: 'accessory',
-        title: l10n.categoryAccessory,
-        icon: Icons.watch_rounded,
-      ),
-      _CategoryItem(
-        id: 'home',
-        title: l10n.categoryHomeAppliance,
-        icon: Icons.home_rounded,
-      ),
-    ];
-
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.productCategories)),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: categories.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.45,
-        ),
-        itemBuilder: (context, index) {
-          final category = categories[index];
+      appBar: AppBar(
+        title: Text(l10n.productCategories),
+      ),
+      body: BlocBuilder<CategoryCubit, CategoryState>(
+        builder: (context, state) {
+          if (state is CategoryInitial ||
+              state is CategoryLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-          return _CategoryCard(
-            category: category,
-            onTap: () {
-              onCategorySelected(category.id, category.title);
-            },
+          if (state is CategoryError) {
+            return Center(
+              child: FilledButton.icon(
+                onPressed: () {
+                  context
+                      .read<CategoryCubit>()
+                      .refreshCategories();
+                },
+                icon: const Icon(
+                  Icons.refresh_rounded,
+                ),
+                label: Text(l10n.reload),
+              ),
+            );
+          }
+
+          final categories =
+              (state as CategoryReady).categories;
+
+          if (categories.isEmpty) {
+            return Center(
+              child: Text(
+                l10n.noProductsAvailable,
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: context
+                .read<CategoryCubit>()
+                .refreshCategories,
+            child: GridView.builder(
+              physics:
+                  const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: categories.length,
+              gridDelegate:
+                  const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.45,
+              ),
+              itemBuilder: (context, index) {
+                final category =
+                    categories[index];
+
+                return _CategoryCard(
+                  category: category,
+                  onTap: () {
+                    onCategorySelected(
+                      category.id,
+                      category.name,
+                    );
+                  },
+                );
+              },
+            ),
           );
         },
       ),
@@ -77,14 +100,18 @@ class AllCategoriesPage extends StatelessWidget {
 }
 
 class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({required this.category, required this.onTap});
+  const _CategoryCard({
+    required this.category,
+    required this.onTap,
+  });
 
-  final _CategoryItem category;
+  final ProductCategory category;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme =
+        Theme.of(context).colorScheme;
 
     return Material(
       color: colorScheme.surfaceContainerLow,
@@ -95,10 +122,11 @@ class _CategoryCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
               Text(
-                category.title,
+                category.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -116,13 +144,16 @@ class _CategoryCard extends StatelessWidget {
                   height: 52,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(16),
+                    color:
+                        colorScheme.primaryContainer,
+                    borderRadius:
+                        BorderRadius.circular(16),
                   ),
                   child: Icon(
-                    category.icon,
+                    Icons.category_rounded,
                     size: 25,
-                    color: colorScheme.onPrimaryContainer,
+                    color:
+                        colorScheme.onPrimaryContainer,
                   ),
                 ),
               ),
@@ -132,16 +163,4 @@ class _CategoryCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _CategoryItem {
-  const _CategoryItem({
-    required this.id,
-    required this.title,
-    required this.icon,
-  });
-
-  final String id;
-  final String title;
-  final IconData icon;
 }
