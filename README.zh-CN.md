@@ -10,11 +10,7 @@
 
 ## 截图
 
-> 这里特意保留截图占位说明。准备好后，将图片添加到 `docs/screenshots/` 下并替换相应占位内容。
-
 ### 移动商店
-
-### 移动应用
 
 <p align="center">
   <img src="docs/screenshots/home.jpeg" alt="首页" width="240">
