@@ -1,65 +1,67 @@
-# 商城平台 / Commerce Platform
+# 商城平台
 
 **[English](README.md) | 简体中文**
 
-一个完整的全栈电商项目，由 **Flutter 客户端**、**React 管理后台** 和 **Node.js / Express 后端** 组成，并使用 **Prisma、PostgreSQL 和 Stripe**。
+一个全栈电商平台，包含 **Flutter 客户端应用**、**React 管理后台** 和 **Node.js / Express 后端**，并由 **Prisma、PostgreSQL 和 Stripe** 提供支持。
 
-这个项目不是单纯的商城 UI Demo，而是一个完整的商业流程：用户可以浏览商品、加入购物车、结账、支付并查看订单；管理员可以通过独立后台管理商品、分类、库存和订单。
+该项目以 monorepo 形式构建，用于展示完整的电商业务流程，而不是一个独立的 UI Demo：客户可以浏览商品、管理购物车、结账、支付和跟踪订单，而管理员则可以通过独立的后台管理商品、分类、库存和订单。
 
 ---
 
 ## 截图
 
-> 这里先保留截图占位。之后把图片放进 `docs/screenshots/`，再把占位替换成真正图片即可。
+> 这里特意保留截图占位说明。准备好后，将图片添加到 `docs/screenshots/` 下并替换相应占位内容。
 
-### 商城首页
+### 移动商店
 
-📸 **截图占位：** `docs/screenshots/home.png`
+### 移动应用
 
-### 商品详情
+<p align="center">
+  <img src="docs/screenshots/home.jpeg" alt="首页" width="240">
+  <img src="docs/screenshots/product-detail.jpeg" alt="商品详情" width="240">
+  <img src="docs/screenshots/checkout.jpeg" alt="结账" width="240">
+</p>
 
-📸 **截图占位：** `docs/screenshots/product-detail.png`
+### 订单
 
-### 购物车与结账
-
-📸 **截图占位：** `docs/screenshots/checkout.png`
-
-### 订单页面
-
-📸 **截图占位：** `docs/screenshots/orders.png`
+<p align="center">
+  <img src="docs/screenshots/payment.jpeg" alt="订单" width="240">
+  <img src="docs/screenshots/orders.jpeg" alt="订单" width="240">
+  <img src="docs/screenshots/profile.jpeg" alt="订单" width="240">
+</p>
 
 ### 管理后台
 
-📸 **截图占位：** `docs/screenshots/admin-dashboard.png`
+<p align="center">
+  <img src="docs/screenshots/admin-dashboard.png" alt="管理后台" width="800">
+</p>
 
 ### 库存管理
 
-📸 **截图占位：** `docs/screenshots/inventory.png`
-
-### 深色模式
-
-📸 **截图占位：** `docs/screenshots/dark-mode.png`
+<p align="center">
+  <img src="docs/screenshots/inventory.png" alt="库存管理" width="800">
+</p>
 
 ---
 
-## 项目组成
+## 包含内容
 
-### Flutter 客户端
+### Flutter 客户端应用
 
 位于 `apps/mobile`。
 
-- 用户认证
-- 商品浏览与分类
+- 客户认证
+- 商品浏览和分类
 - 商品详情
 - 购物车
 - 结账
 - 地址管理
 - Stripe 支付流程
-- 订单历史与订单详情
+- 订单历史和订单详情
 - 浅色 / 深色 / 跟随系统主题
-- 英文与简体中文本地化
+- 英文和简体中文本地化
 
-Flutter 客户端使用 **BLoC / Cubit** 管理状态，并把 UI、Repository 和 Service 分开。
+Flutter 应用使用 **BLoC / Cubit** 进行状态管理，并将表现层与 Repository 和 Service 分离。
 
 ### React 管理后台
 
@@ -71,40 +73,40 @@ Flutter 客户端使用 **BLoC / Cubit** 管理状态，并把 UI、Repository �
 - 分类管理
 - 订单管理
 - 库存管理
-- 库存变动记录
-- Access Token 自动刷新
+- 库存变动历史
+- Access Token 刷新流程
 
-使用 **React、TypeScript、Vite、React Router 和 Axios**。
+使用 **React、TypeScript、Vite、React Router 和 Axios** 构建。
 
 ### Node.js 后端
 
 位于 `server`。
 
-- 用户与管理员认证
-- 商品与分类 API
-- 用户订单与管理员订单 API
-- 库存业务
+- 认证
+- 商品和分类 API
+- 客户和管理员订单 API
+- 库存操作
 - Stripe 集成
-- 服务器端业务逻辑
+- 业务逻辑
 - Prisma 数据库访问
 
-使用 **Node.js、TypeScript、Express、Prisma ORM、PostgreSQL、Argon2、JOSE 和 Stripe**。
+使用 **Node.js、TypeScript、Express、Prisma ORM、PostgreSQL、Argon2、JOSE 和 Stripe** 构建。
 
 ---
 
 ## 架构
 
 ```text
-Flutter 客户端
-      │
-      │ REST API
-      ▼
+Flutter 客户端应用
+        │
+        │ REST API
+        ▼
 Node.js / Express API
-      │
-   ┌──┴───┐
-   │      │
-   ▼      ▼
-Prisma  Stripe
+        │
+   ┌────┴────┐
+   │         │
+   ▼         ▼
+Prisma     Stripe
    │
    ▼
 PostgreSQL
@@ -114,9 +116,9 @@ PostgreSQL
 React 管理后台
 ```
 
-两个前端应用共同连接同一个后端和业务数据。
+两个前端应用都与同一个后端和业务领域通信。
 
-一个典型的商品数据流程：
+一个典型的客户商品流程如下：
 
 ```text
 Flutter UI
@@ -153,23 +155,23 @@ LocaleCubit
 ThemeModeCubit
 ```
 
-价格总计等派生状态不会直接堆在 UI Widget 中，而是根据当前业务状态计算，并由状态变化触发界面重新构建。
+总价等派生状态与 UI Widget 分离，而数据变更会通知对应的状态层，并使 UI 根据当前状态重新构建。
 
 ---
 
 ## 支付
 
-项目通过后端集成 Stripe。
+Stripe 通过后端集成。
 
-客户端负责发起支付流程，但最终支付状态由后端作为权威来源确认，避免客户端一提交请求就错误地把支付视为成功。
+客户端可以发起支付流程，但后端仍然是支付状态的权威来源。这样可以避免在服务器端验证完成之前，仅因为客户端提交了请求就将支付视为最终确认。
 
 ---
 
 ## 库存
 
-管理后台不仅维护商品数量，也包含库存变动记录，使库存修改拥有可追踪的历史。
+管理端包含库存跟踪和变动历史，使库存变化能够被记录，而不是仅仅覆盖单一的库存数量值。
 
-示例接口：
+管理端示例路由包括：
 
 ```text
 GET  /api/admin/inventory/movements
@@ -180,9 +182,9 @@ POST /api/admin/inventory/movements
 
 ## 认证
 
-项目区分普通用户认证和管理员认证。
+项目将客户认证和管理员认证的职责分离。
 
-管理员后台包含受保护页面和 Access Token 刷新机制，后端负责凭证校验与授权相关业务逻辑。
+管理后台使用受保护路由和 Access Token 刷新流程，而后端负责凭证验证以及与授权相关的业务逻辑。
 
 ---
 
@@ -225,7 +227,7 @@ POST /api/admin/inventory/movements
 ```text
 fullstack-commerce-platform/
 ├── apps/
-│   ├── mobile/        # Flutter 客户端
+│   ├── mobile/        # Flutter 客户端应用
 │   └── admin/         # React 管理后台
 ├── server/            # Node.js / Express API
 ├── firebase.json
@@ -234,9 +236,9 @@ fullstack-commerce-platform/
 
 ---
 
-## 本地运行
+## 开始使用
 
-### Flutter 客户端
+### Flutter 客户端应用
 
 ```bash
 cd apps/mobile
@@ -268,13 +270,13 @@ npm run typecheck
 npm run dev
 ```
 
-后端需要配置 PostgreSQL、Stripe 等环境变量。真实密钥不应提交到仓库。
+后端需要为 PostgreSQL 和 Stripe 等服务配置环境变量。真实密钥绝不应该提交到仓库中。
 
 ---
 
-## 这个项目展示什么
+## 为什么存在这个项目
 
-这个仓库的重点是展示完整的全栈商业系统，而不是几个互不连接的页面：
+这个仓库旨在展示跨多个层级的完整产品流程：
 
 ```text
 移动端 UI
@@ -296,10 +298,12 @@ REST API
 数据库
 ```
 
+它被设计为一个实用的全栈电商项目，而不是一组彼此断开的 Demo 页面。
+
 ---
 
 ## 状态
 
-**持续开发中。**
+**积极开发中。**
 
-目前已经实现核心购物流程、管理后台模块、后端 API、认证、订单、库存、本地化、主题和支付集成。后续重点是 UI 打磨、架构优化、测试、部署和生产环境准备。
+核心客户购物流程、管理模块、后端 API、认证、订单、库存、本地化、主题和支付集成都已经实现。目前的工作重点是 UI 打磨、架构改进、测试、部署和生产环境就绪准备。
