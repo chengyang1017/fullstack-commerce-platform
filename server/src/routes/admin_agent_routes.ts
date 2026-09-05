@@ -40,10 +40,10 @@ adminAgentRouter.post(
       );
     }
 
-    if (message.length > 500) {
+    if (message.length > 4000) {
       throw new AppError(
         400,
-        "Agent messages cannot exceed 500 characters.",
+        "Agent messages cannot exceed 4000 characters.",
         "ADMIN_AGENT_MESSAGE_TOO_LONG",
       );
     }
