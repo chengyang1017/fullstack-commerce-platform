@@ -125,12 +125,9 @@ app.get("/api/products", async (_request, response) => {
         categoryId: product.categoryId,
         title: product.title,
         description: product.description,
-
-        // 对应当前 Flutter Product 的字段
         image: product.imageUrl,
         price: product.priceMinor / 100,
         sold: product.sold,
-
         stock: Math.max(
           0,
           product.stock -
@@ -162,6 +159,9 @@ app.get("/api/categories", async (_request, response) => {
         id: category.id,
         name: category.name,
         sortOrder: category.sortOrder,
+        iconName: category.iconName,
+        iconColorStart: category.iconColorStart,
+        iconColorEnd: category.iconColorEnd,
       };
     }),
   );
@@ -261,9 +261,7 @@ app.post("/api/admin/products", async (request, response) => {
     return;
   }
 
-  await ensureActiveCategory(
-    categoryId,
-  );
+  await ensureActiveCategory(categoryId);
 
   const product = await prisma.product.create({
     data: {
@@ -289,12 +287,10 @@ app.post("/api/admin/products", async (request, response) => {
       image: product.imageUrl,
       price: product.priceMinor / 100,
       stock: product.stock,
-      reservedStock:
-        product.reservedStock,
+      reservedStock: product.reservedStock,
       availableStock: Math.max(
         0,
-        product.stock -
-          product.reservedStock,
+        product.stock - product.reservedStock,
       ),
       sold: product.sold,
       isActive: product.isActive,
@@ -308,8 +304,7 @@ app.patch(
     const productId = request.params.id;
     const body = request.body as Record<string, unknown>;
 
-    const existingProduct =
-        await prisma.product.findUnique({
+    const existingProduct = await prisma.product.findUnique({
       where: {
         id: productId,
       },
@@ -344,13 +339,8 @@ app.patch(
         );
       }
 
-      const categoryId =
-        body.categoryId.trim();
-
-      await ensureActiveCategory(
-        categoryId,
-      );
-
+      const categoryId = body.categoryId.trim();
+      await ensureActiveCategory(categoryId);
       data.categoryId = categoryId;
     }
 
@@ -378,8 +368,7 @@ app.patch(
         return;
       }
 
-      data.description =
-          body.description.trim();
+      data.description = body.description.trim();
     }
 
     if (body.imageUrl !== undefined) {
@@ -412,9 +401,7 @@ app.patch(
     }
 
     if (body.isActive !== undefined) {
-      if (
-        typeof body.isActive !== "boolean"
-      ) {
+      if (typeof body.isActive !== "boolean") {
         throw new AppError(
           400,
           "isActive 必须是布尔值",
@@ -424,12 +411,8 @@ app.patch(
 
       if (body.isActive) {
         const nextCategoryId =
-          data.categoryId ??
-          existingProduct.categoryId;
-
-        await ensureActiveCategory(
-          nextCategoryId,
-        );
+          data.categoryId ?? existingProduct.categoryId;
+        await ensureActiveCategory(nextCategoryId);
       }
 
       data.isActive = body.isActive;
@@ -444,9 +427,7 @@ app.patch(
     }
 
     const product = await prisma.product.update({
-      where: {
-        id: productId,
-      },
+      where: { id: productId },
       data,
     });
 
@@ -460,12 +441,10 @@ app.patch(
         image: product.imageUrl,
         price: product.priceMinor / 100,
         stock: product.stock,
-        reservedStock:
-          product.reservedStock,
+        reservedStock: product.reservedStock,
         availableStock: Math.max(
           0,
-          product.stock -
-            product.reservedStock,
+          product.stock - product.reservedStock,
         ),
         sold: product.sold,
         isActive: product.isActive,
@@ -479,8 +458,7 @@ app.delete(
   async (request, response) => {
     const productId = request.params.id;
 
-    const existingProduct =
-        await prisma.product.findUnique({
+    const existingProduct = await prisma.product.findUnique({
       where: {
         id: productId,
       },
@@ -503,12 +481,8 @@ app.delete(
     }
 
     await prisma.product.update({
-      where: {
-        id: productId,
-      },
-      data: {
-        isActive: false,
-      },
+      where: { id: productId },
+      data: { isActive: false },
     });
 
     response.json({
@@ -537,12 +511,10 @@ app.get(
           image: product.imageUrl,
           price: product.priceMinor / 100,
           stock: product.stock,
-          reservedStock:
-            product.reservedStock,
+          reservedStock: product.reservedStock,
           availableStock: Math.max(
             0,
-            product.stock -
-              product.reservedStock,
+            product.stock - product.reservedStock,
           ),
           sold: product.sold,
           isActive: product.isActive,
@@ -563,16 +535,15 @@ app.get("/", (_request, response) => {
 async function ensureActiveCategory(
   categoryId: string,
 ): Promise<void> {
-  const category =
-    await prisma.category.findUnique({
-      where: {
-        id: categoryId,
-      },
-      select: {
-        id: true,
-        isActive: true,
-      },
-    });
+  const category = await prisma.category.findUnique({
+    where: {
+      id: categoryId,
+    },
+    select: {
+      id: true,
+      isActive: true,
+    },
+  });
 
   if (!category) {
     throw new AppError(
