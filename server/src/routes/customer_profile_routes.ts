@@ -241,7 +241,18 @@ customerAvatarAssetRouter.get(
     request: Request,
     response: Response,
   ) => {
-    const fileName = request.params.fileName;
+    const rawFileName = request.params.fileName;
+    const fileName = Array.isArray(rawFileName)
+      ? rawFileName[0]
+      : rawFileName;
+
+    if (!fileName) {
+      response.status(404).json({
+        success: false,
+        message: "头像不存在",
+      });
+      return;
+    }
 
     const avatar = await readStoredAvatar(fileName);
 
