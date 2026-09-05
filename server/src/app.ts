@@ -127,6 +127,32 @@ app.get("/api/products", async (_request, response) => {
   );
 });
 
+app.get("/api/categories", async (_request, response) => {
+  const categories = await prisma.category.findMany({
+    where: {
+      isActive: true,
+    },
+    orderBy: [
+      {
+        sortOrder: "asc",
+      },
+      {
+        createdAt: "asc",
+      },
+    ],
+  });
+
+  response.json(
+    categories.map((category) => {
+      return {
+        id: category.id,
+        name: category.name,
+        sortOrder: category.sortOrder,
+      };
+    }),
+  );
+});
+
 app.use(
   "/api/customer/orders",
   requireCustomer,
