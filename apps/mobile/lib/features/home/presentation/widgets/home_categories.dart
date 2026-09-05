@@ -160,24 +160,30 @@ class _CategoryCard extends StatelessWidget {
         child: SizedBox(
           height: 118,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  category.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    category.name,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-                const Spacer(),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: CategoryIconBadge(
-                    category: category,
+                const SizedBox(height: 4),
+                Expanded(
+                  child: Center(
+                    child: CategoryIconBadge(
+                      category: category,
+                      size: 64,
+                      iconSize: 35,
+                    ),
                   ),
                 ),
               ],
