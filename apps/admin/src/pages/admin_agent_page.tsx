@@ -38,6 +38,8 @@ interface AgentResponse {
   items: AgentItem[];
   suggestions: string[];
   generatedAt: string;
+  responseId: string | null;
+  mode: "openai" | "fallback";
 }
 
 interface ChatMessage {
@@ -50,8 +52,8 @@ interface ChatMessage {
 const initialSuggestions = [
   "Give me an overview",
   "Check low-stock products",
-  "Show pending orders",
-  "Check payment issues",
+  "Set Test Product stock to 20",
+  "Change Test Product price to RM 9.90",
   "Show top-selling products",
 ];
 
@@ -59,12 +61,16 @@ export function AdminAgentDrawer() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [previousResponseId, setPreviousResponseId] =
+    useState<string | null>(null);
+  const [mode, setMode] =
+    useState<"openai" | "fallback" | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "agent",
       text:
-        "I’m your commerce operations agent. Ask me about orders, inventory, payments, or product performance. This version is read-only and will not change business data.",
+        "I’m your AI commerce operations agent. I can inspect live business data and, when you explicitly ask, edit products, categories, and inventory. Payment and account changes remain protected.",
     },
   ]);
 
@@ -110,8 +116,14 @@ export function AdminAgentDrawer() {
     try {
       const response = await httpClient.post<AgentResponse>(
         "/api/admin/agent",
-        { message },
+        {
+          message,
+          previousResponseId,
+        },
       );
+
+      setPreviousResponseId(response.data.responseId);
+      setMode(response.data.mode);
 
       setMessages((current) => [
         ...current,
@@ -131,7 +143,7 @@ export function AdminAgentDrawer() {
           id: createMessageId(),
           role: "agent",
           text:
-            "I couldn’t read the admin data right now. Please try again in a moment.",
+            "I couldn’t complete that admin request right now. No change should be assumed unless I explicitly confirm it succeeded.",
         },
       ]);
     } finally {
@@ -157,6 +169,11 @@ export function AdminAgentDrawer() {
     }
   }
 
+  const statusText =
+    mode === "fallback"
+      ? "Fallback analytics · add OPENAI_API_KEY to enable AI edits"
+      : "AI write mode · explicit admin changes only";
+
   return (
     <>
       {open && (
@@ -177,7 +194,7 @@ export function AdminAgentDrawer() {
             <div className="agent-drawer-mark">✦</div>
             <div>
               <strong>Operations Agent</strong>
-              <span>Live commerce insights</span>
+              <span>OpenAI-powered commerce tools</span>
             </div>
           </div>
 
@@ -193,7 +210,7 @@ export function AdminAgentDrawer() {
 
         <div className="agent-drawer-status">
           <span className="agent-status-dot" />
-          Read-only mode · connected to live admin data
+          {statusText}
         </div>
 
         <div className="agent-chat-history">
@@ -256,7 +273,7 @@ export function AdminAgentDrawer() {
             value={input}
             maxLength={500}
             rows={2}
-            placeholder="Ask about orders, stock, payments..."
+            placeholder="Ask or edit: set stock, change price, deactivate a product..."
             disabled={loading}
             onChange={(event) => {
               setInput(event.target.value);
@@ -269,7 +286,7 @@ export function AdminAgentDrawer() {
             type="submit"
             disabled={loading || input.trim().length === 0}
           >
-            {loading ? "Analyzing..." : "Send"}
+            {loading ? "Working..." : "Send"}
           </button>
         </form>
       </aside>
@@ -347,7 +364,9 @@ function AgentResult({
       )}
 
       <div className="agent-result-time">
-        Data time: {formatGeneratedAt(result.generatedAt)}
+        {result.mode === "openai" ? "AI response" : "Fallback response"}
+        {" · "}
+        {formatGeneratedAt(result.generatedAt)}
       </div>
     </div>
   );
