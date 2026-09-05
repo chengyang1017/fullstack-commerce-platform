@@ -47,6 +47,11 @@ import {
 import {
   startOrderExpirationWorker,
 } from "./services/order_expiration_service.ts";
+
+import {
+  customerProfileRouter,
+} from "./routes/customer_profile_routes.ts";
+
 const app = express();
 const adminOrigin =
     process.env.ADMIN_ORIGIN ??
@@ -74,6 +79,11 @@ app.post(
 
 app.use(express.json());
 app.use(cookieParser());
+
+app.use(
+  "/uploads/avatars",
+  customerProfileRouter,
+);
 
 app.use(
   "/api/auth/customer",
@@ -157,6 +167,12 @@ app.use(
   "/api/customer/orders",
   requireCustomer,
   customerOrderRouter,
+);
+
+app.use(
+  "/api/customer/profile",
+  requireCustomer,
+  customerProfileRouter,
 );
 
 app.use(

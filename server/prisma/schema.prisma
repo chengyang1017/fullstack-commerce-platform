@@ -93,6 +93,7 @@ model User {
   email        String     @unique
   passwordHash String
   name         String
+  avatarUrl    String?
   role         UserRole   @default(CUSTOMER)
   status       UserStatus @default(ACTIVE)
   lastLoginAt  DateTime?

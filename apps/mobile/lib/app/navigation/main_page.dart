@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../features/account/presentation/pages/account_page.dart';
+import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  const MainPage({
+    super.key,
+  });
 
   @override
   State<MainPage> createState() {
@@ -16,7 +19,11 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [HomePage(), AccountPage()];
+  final List<Widget> _pages = const [
+    HomePage(),
+    CartPage(),
+    AccountPage(),
+  ];
 
   void _changePage(int index) {
     setState(() {
@@ -26,16 +33,48 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n =
+        AppLocalizations.of(context);
 
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: _changePage,
+        onDestinationSelected:
+            _changePage,
         destinations: [
-          NavigationDestination(icon: const Icon(Icons.home), label: l10n.home),
-          NavigationDestination(icon: const Icon(Icons.person), label: l10n.me),
+          NavigationDestination(
+            icon: const Icon(
+              Icons.home_outlined,
+            ),
+            selectedIcon: const Icon(
+              Icons.home,
+            ),
+            label: l10n.home,
+          ),
+
+          NavigationDestination(
+            icon: const Icon(
+              Icons.shopping_cart_outlined,
+            ),
+            selectedIcon: const Icon(
+              Icons.shopping_cart,
+            ),
+            label: l10n.cart,
+          ),
+
+          NavigationDestination(
+            icon: const Icon(
+              Icons.person_outline,
+            ),
+            selectedIcon: const Icon(
+              Icons.person,
+            ),
+            label: l10n.me,
+          ),
         ],
       ),
     );

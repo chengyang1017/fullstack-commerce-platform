@@ -5,25 +5,40 @@ import {
   createRefreshToken,
   hashRefreshToken,
 } from "../lib/auth.ts";
-import { AppError } from "../lib/app_error.ts";
-import { prisma } from "../lib/prisma.ts";
+
+import {
+  AppError,
+} from "../lib/app_error.ts";
+
+import {
+  prisma,
+} from "../lib/prisma.ts";
 
 interface CustomerSessionResult {
   accessToken: string;
+
   refreshToken: string;
+
   refreshTokenExpiresAt: Date;
 
   user: {
     id: string;
+
     email: string;
+
     name: string;
+
+    avatarUrl: string | null;
+
     role: "CUSTOMER";
   };
 }
 
 interface RegisterCustomerInput {
   email: string;
+
   password: string;
+
   name: string;
 }
 
@@ -31,19 +46,27 @@ export async function registerCustomer(
   input: RegisterCustomerInput,
 ): Promise<CustomerSessionResult> {
   const email =
-    normalizeEmail(input.email);
+    normalizeEmail(
+      input.email,
+    );
 
   const name =
-    normalizeName(input.name);
+    normalizeName(
+      input.name,
+    );
 
   validateEmail(email);
-  validatePassword(input.password);
+
+  validatePassword(
+    input.password,
+  );
 
   const existingUser =
     await prisma.user.findUnique({
       where: {
         email,
       },
+
       select: {
         id: true,
       },
@@ -68,21 +91,35 @@ export async function registerCustomer(
   try {
     const user =
       await prisma.$transaction(
-        async (transaction) => {
+        async (
+          transaction,
+        ) => {
           const createdUser =
             await transaction.user.create({
               data: {
                 email,
+
                 passwordHash,
+
                 name,
+
                 role: "CUSTOMER",
+
                 status: "ACTIVE",
-                lastLoginAt: new Date(),
+
+                lastLoginAt:
+                  new Date(),
               },
+
               select: {
                 id: true,
+
                 email: true,
+
                 name: true,
+
+                avatarUrl: true,
+
                 role: true,
               },
             });
@@ -93,8 +130,10 @@ export async function registerCustomer(
               data: {
                 tokenHash:
                   refresh.tokenHash,
+
                 userId:
                   createdUser.id,
+
                 expiresAt:
                   refresh.expiresAt,
               },
@@ -107,26 +146,45 @@ export async function registerCustomer(
     const accessToken =
       await createCustomerAccessToken({
         id: user.id,
+
         email: user.email,
+
         name: user.name,
+
         role: "CUSTOMER",
       });
 
     return {
       accessToken,
-      refreshToken: refresh.token,
+
+      refreshToken:
+        refresh.token,
+
       refreshTokenExpiresAt:
         refresh.expiresAt,
 
       user: {
         id: user.id,
-        email: user.email,
-        name: user.name,
-        role: "CUSTOMER",
+
+        email:
+          user.email,
+
+        name:
+          user.name,
+
+        avatarUrl:
+          user.avatarUrl,
+
+        role:
+          "CUSTOMER",
       },
     };
   } catch (error) {
-    if (isUniqueConstraintError(error)) {
+    if (
+      isUniqueConstraintError(
+        error,
+      )
+    ) {
       throw new AppError(
         409,
         "该邮箱已经注册",
@@ -143,7 +201,9 @@ export async function loginCustomer(
   password: string,
 ): Promise<CustomerSessionResult> {
   const email =
-    normalizeEmail(emailInput);
+    normalizeEmail(
+      emailInput,
+    );
 
   if (
     email.length === 0 ||
@@ -165,8 +225,10 @@ export async function loginCustomer(
 
   if (
     !user ||
-    user.role !== "CUSTOMER" ||
-    user.status !== "ACTIVE"
+    user.role !==
+      "CUSTOMER" ||
+    user.status !==
+      "ACTIVE"
   ) {
     throw new AppError(
       401,
@@ -192,9 +254,15 @@ export async function loginCustomer(
   const accessToken =
     await createCustomerAccessToken({
       id: user.id,
-      email: user.email,
-      name: user.name,
-      role: "CUSTOMER",
+
+      email:
+        user.email,
+
+      name:
+        user.name,
+
+      role:
+        "CUSTOMER",
     });
 
   const refresh =
@@ -205,7 +273,10 @@ export async function loginCustomer(
       data: {
         tokenHash:
           refresh.tokenHash,
-        userId: user.id,
+
+        userId:
+          user.id,
+
         expiresAt:
           refresh.expiresAt,
       },
@@ -215,23 +286,38 @@ export async function loginCustomer(
       where: {
         id: user.id,
       },
+
       data: {
-        lastLoginAt: new Date(),
+        lastLoginAt:
+          new Date(),
       },
     }),
   ]);
 
   return {
     accessToken,
-    refreshToken: refresh.token,
+
+    refreshToken:
+      refresh.token,
+
     refreshTokenExpiresAt:
       refresh.expiresAt,
 
     user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: "CUSTOMER",
+      id:
+        user.id,
+
+      email:
+        user.email,
+
+      name:
+        user.name,
+
+      avatarUrl:
+        user.avatarUrl,
+
+      role:
+        "CUSTOMER",
     },
   };
 }
@@ -239,7 +325,9 @@ export async function loginCustomer(
 export async function refreshCustomerSession(
   refreshToken: string,
 ): Promise<CustomerSessionResult> {
-  if (refreshToken.length === 0) {
+  if (
+    refreshToken.length === 0
+  ) {
     throw new AppError(
       401,
       "缺少刷新令牌",
@@ -248,7 +336,9 @@ export async function refreshCustomerSession(
   }
 
   const tokenHash =
-    hashRefreshToken(refreshToken);
+    hashRefreshToken(
+      refreshToken,
+    );
 
   const storedToken =
     await prisma.refreshToken
@@ -259,27 +349,38 @@ export async function refreshCustomerSession(
 
         select: {
           id: true,
+
           expiresAt: true,
+
           revokedAt: true,
 
           user: {
             select: {
               id: true,
+
               email: true,
+
               name: true,
+
+              avatarUrl: true,
+
               role: true,
+
               status: true,
             },
           },
         },
       });
 
-  const now = new Date();
+  const now =
+    new Date();
 
   if (
     !storedToken ||
-    storedToken.revokedAt !== null ||
-    storedToken.expiresAt <= now ||
+    storedToken.revokedAt !==
+      null ||
+    storedToken.expiresAt <=
+      now ||
     storedToken.user.role !==
       "CUSTOMER" ||
     storedToken.user.status !==
@@ -297,30 +398,45 @@ export async function refreshCustomerSession(
 
   const accessToken =
     await createCustomerAccessToken({
-      id: storedToken.user.id,
+      id:
+        storedToken.user.id,
+
       email:
         storedToken.user.email,
+
       name:
         storedToken.user.name,
-      role: "CUSTOMER",
+
+      role:
+        "CUSTOMER",
     });
 
   await prisma.$transaction(
-    async (transaction) => {
+    async (
+      transaction,
+    ) => {
       const revokeResult =
         await transaction
           .refreshToken
           .updateMany({
             where: {
-              id: storedToken.id,
-              revokedAt: null,
+              id:
+                storedToken.id,
+
+              revokedAt:
+                null,
             },
+
             data: {
-              revokedAt: now,
+              revokedAt:
+                now,
             },
           });
 
-      if (revokeResult.count !== 1) {
+      if (
+        revokeResult.count !==
+        1
+      ) {
         throw new AppError(
           401,
           "刷新令牌已被使用",
@@ -333,13 +449,16 @@ export async function refreshCustomerSession(
         .create({
           data: {
             tokenHash:
-              nextRefreshToken.tokenHash,
+              nextRefreshToken
+                .tokenHash,
 
             userId:
-              storedToken.user.id,
+              storedToken.user
+                .id,
 
             expiresAt:
-              nextRefreshToken.expiresAt,
+              nextRefreshToken
+                .expiresAt,
           },
         });
     },
@@ -355,12 +474,21 @@ export async function refreshCustomerSession(
       nextRefreshToken.expiresAt,
 
     user: {
-      id: storedToken.user.id,
+      id:
+        storedToken.user.id,
+
       email:
         storedToken.user.email,
+
       name:
         storedToken.user.name,
-      role: "CUSTOMER",
+
+      avatarUrl:
+        storedToken.user
+          .avatarUrl,
+
+      role:
+        "CUSTOMER",
     },
   };
 }
@@ -368,21 +496,29 @@ export async function refreshCustomerSession(
 export async function logoutCustomer(
   refreshToken: string,
 ): Promise<void> {
-  if (refreshToken.length === 0) {
+  if (
+    refreshToken.length === 0
+  ) {
     return;
   }
 
   const tokenHash =
-    hashRefreshToken(refreshToken);
+    hashRefreshToken(
+      refreshToken,
+    );
 
   await prisma.refreshToken
     .updateMany({
       where: {
         tokenHash,
-        revokedAt: null,
+
+        revokedAt:
+          null,
       },
+
       data: {
-        revokedAt: new Date(),
+        revokedAt:
+          new Date(),
       },
     });
 }
@@ -402,8 +538,10 @@ function normalizeName(
     name.trim();
 
   if (
-    normalizedName.length < 2 ||
-    normalizedName.length > 60
+    normalizedName.length <
+      2 ||
+    normalizedName.length >
+      60
   ) {
     throw new AppError(
       400,
@@ -423,7 +561,9 @@ function validateEmail(
 
   if (
     email.length > 254 ||
-    !emailPattern.test(email)
+    !emailPattern.test(
+      email,
+    )
   ) {
     throw new AppError(
       400,
@@ -452,16 +592,21 @@ function isUniqueConstraintError(
   error: unknown,
 ): boolean {
   if (
-    typeof error !== "object" ||
+    typeof error !==
+      "object" ||
     error === null ||
-    !("code" in error)
+    !(
+      "code" in error
+    )
   ) {
     return false;
   }
 
   return (
-    (error as {
-      code?: unknown;
-    }).code === "P2002"
+    (
+      error as {
+        code?: unknown;
+      }
+    ).code === "P2002"
   );
 }
