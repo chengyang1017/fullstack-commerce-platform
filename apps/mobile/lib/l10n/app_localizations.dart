@@ -230,6 +230,48 @@ abstract class AppLocalizations {
   /// **'Unknown user'**
   String get unknownUser;
 
+  /// No description provided for @profilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo'**
+  String get profilePhoto;
+
+  /// No description provided for @changePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change profile photo'**
+  String get changePhoto;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get chooseFromGallery;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhoto;
+
+  /// No description provided for @avatarUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo updated'**
+  String get avatarUpdated;
+
+  /// No description provided for @avatarRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo removed'**
+  String get avatarRemoved;
+
+  /// No description provided for @avatarUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update profile photo'**
+  String get avatarUpdateFailed;
+
   /// No description provided for @myOrders.
   ///
   /// In en, this message translates to:

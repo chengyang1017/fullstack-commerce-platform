@@ -75,6 +75,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unknownUser => '未知用户';
 
   @override
+  String get profilePhoto => '个人头像';
+
+  @override
+  String get changePhoto => '更换头像';
+
+  @override
+  String get chooseFromGallery => '从相册选择';
+
+  @override
+  String get removePhoto => '移除头像';
+
+  @override
+  String get avatarUpdated => '头像已更新';
+
+  @override
+  String get avatarRemoved => '头像已移除';
+
+  @override
+  String get avatarUpdateFailed => '头像更新失败';
+
+  @override
   String get myOrders => '我的订单';
 
   @override

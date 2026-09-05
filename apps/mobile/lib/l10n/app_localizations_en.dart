@@ -77,6 +77,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownUser => 'Unknown user';
 
   @override
+  String get profilePhoto => 'Profile photo';
+
+  @override
+  String get changePhoto => 'Change profile photo';
+
+  @override
+  String get chooseFromGallery => 'Choose from gallery';
+
+  @override
+  String get removePhoto => 'Remove photo';
+
+  @override
+  String get avatarUpdated => 'Profile photo updated';
+
+  @override
+  String get avatarRemoved => 'Profile photo removed';
+
+  @override
+  String get avatarUpdateFailed => 'Could not update profile photo';
+
+  @override
   String get myOrders => 'My orders';
 
   @override
