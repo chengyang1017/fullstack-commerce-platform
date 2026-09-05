@@ -26,6 +26,13 @@
 
   "account": "Account",
   "unknownUser": "Unknown user",
+  "profilePhoto": "Profile photo",
+  "changePhoto": "Change profile photo",
+  "chooseFromGallery": "Choose from gallery",
+  "removePhoto": "Remove photo",
+  "avatarUpdated": "Profile photo updated",
+  "avatarRemoved": "Profile photo removed",
+  "avatarUpdateFailed": "Could not update profile photo",
   "myOrders": "My orders",
   "viewOrderHistory": "View order history",
 
@@ -116,276 +123,276 @@
     }
   },
   "cartTitle": "Cart ({count})",
-"@cartTitle": {
-  "placeholders": {
-    "count": {
-      "type": "int"
+  "@cartTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
     }
-  }
-},
+  },
 
-"clear": "Clear",
-"cartEmpty": "Your cart is empty",
-"cartLoadFailed": "Failed to load cart",
-"reload": "Reload",
-"total": "Total",
+  "clear": "Clear",
+  "cartEmpty": "Your cart is empty",
+  "cartLoadFailed": "Failed to load cart",
+  "reload": "Reload",
+  "total": "Total",
 
-"checkoutCount": "Checkout ({count})",
-"@checkoutCount": {
-  "placeholders": {
-    "count": {
-      "type": "int"
+  "checkoutCount": "Checkout ({count})",
+  "@checkoutCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
     }
-  }
-},
+  },
 
-"clearCart": "Clear cart",
-"clearCartConfirmation": "Remove all items from your cart?",
-"cancel": "Cancel",
-"cartActionFailed": "Cart operation failed",
+  "clearCart": "Clear cart",
+  "clearCartConfirmation": "Remove all items from your cart?",
+  "cancel": "Cancel",
+  "cartActionFailed": "Cart operation failed",
 
-"cartItemSubtotal": "Subtotal: RM {amount}",
-"@cartItemSubtotal": {
-  "placeholders": {
-    "amount": {
-      "type": "String"
+  "cartItemSubtotal": "Subtotal: RM {amount}",
+  "@cartItemSubtotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
     }
-  }
-},
+  },
 
-"delete": "Delete",
+  "delete": "Delete",
 
-"confirmOrder": "Confirm order",
-"shippingAddress": "Shipping address",
-"add": "Add",
-"addShippingAddress": "Add shipping address",
-"shippingAddressRequired": "A shipping address is required before checkout",
+  "confirmOrder": "Confirm order",
+  "shippingAddress": "Shipping address",
+  "add": "Add",
+  "addShippingAddress": "Add shipping address",
+  "shippingAddressRequired": "A shipping address is required before checkout",
 
-"products": "Products",
+  "products": "Products",
 
-"shippingMethod": "Shipping method",
-"standardShipping": "Standard shipping",
-"expressShipping": "Express shipping",
-"standardShippingDescription": "Estimated delivery in 3 to 5 days",
-"expressShippingDescription": "Estimated delivery in 1 to 2 days",
+  "shippingMethod": "Shipping method",
+  "standardShipping": "Standard shipping",
+  "expressShipping": "Express shipping",
+  "standardShippingDescription": "Estimated delivery in 3 to 5 days",
+  "expressShippingDescription": "Estimated delivery in 1 to 2 days",
 
-"paymentMethod": "Payment method",
-"onlineBanking": "Online banking",
-"creditDebitCard": "Credit / debit card",
-"cashOnDelivery": "Cash on delivery",
+  "paymentMethod": "Payment method",
+  "onlineBanking": "Online banking",
+  "creditDebitCard": "Credit / debit card",
+  "cashOnDelivery": "Cash on delivery",
 
-"amountDetails": "Amount details",
-"productSubtotal": "Product subtotal",
-"shippingFee": "Shipping fee",
-"amountDue": "Amount due",
+  "amountDetails": "Amount details",
+  "productSubtotal": "Product subtotal",
+  "shippingFee": "Shipping fee",
+  "amountDue": "Amount due",
 
-"placeOrder": "Place order",
+  "placeOrder": "Place order",
 
-"saveAddressFailed": "Failed to save address",
-"createOrderFailed": "Failed to create order",
+  "saveAddressFailed": "Failed to save address",
+  "createOrderFailed": "Failed to create order",
 
-"defaultAddress": "Default",
-"recipientName": "Recipient name",
-"phoneNumber": "Phone number",
-"detailedAddress": "Address",
-"city": "City",
-"stateRegion": "State",
-"postcode": "Postcode",
-"country": "Country",
-"setAsDefaultAddress": "Set as default address",
-"saveAddress": "Save address",
+  "defaultAddress": "Default",
+  "recipientName": "Recipient name",
+  "phoneNumber": "Phone number",
+  "detailedAddress": "Address",
+  "city": "City",
+  "stateRegion": "State",
+  "postcode": "Postcode",
+  "country": "Country",
+  "setAsDefaultAddress": "Set as default address",
+  "saveAddress": "Save address",
 
-"requiredField": "Please enter {field}",
-"@requiredField": {
-  "placeholders": {
-    "field": {
-      "type": "String"
+  "requiredField": "Please enter {field}",
+  "@requiredField": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
     }
-  }
-},
-"all": "All",
-"pendingPayment": "Pending payment",
-"processing": "Processing",
-"awaitingDelivery": "To receive",
-"completed": "Completed",
-"cancelled": "Cancelled",
+  },
+  "all": "All",
+  "pendingPayment": "Pending payment",
+  "processing": "Processing",
+  "awaitingDelivery": "To receive",
+  "completed": "Completed",
+  "cancelled": "Cancelled",
 
-"orderStatusPaid": "Paid",
-"orderStatusShipped": "Shipped",
-"orderStatusDelivered": "Delivered",
-"orderStatusRefunded": "Refunded",
+  "orderStatusPaid": "Paid",
+  "orderStatusShipped": "Shipped",
+  "orderStatusDelivered": "Delivered",
+  "orderStatusRefunded": "Refunded",
 
-"noOrders": "No orders yet",
-"orderLoadFailed": "Failed to load orders",
+  "noOrders": "No orders yet",
+  "orderLoadFailed": "Failed to load orders",
 
-"orderNumber": "Order {number}",
-"@orderNumber": {
-  "placeholders": {
-    "number": {
-      "type": "String"
+  "orderNumber": "Order {number}",
+  "@orderNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
     }
-  }
-},
+  },
 
-"orderItemQuantity": "{count} items",
-"@orderItemQuantity": {
-  "placeholders": {
-    "count": {
-      "type": "int"
+  "orderItemQuantity": "{count} items",
+  "@orderItemQuantity": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
     }
-  }
-},
+  },
 
-"orderProductTypes": "{count} product types",
-"@orderProductTypes": {
-  "placeholders": {
-    "count": {
-      "type": "int"
+  "orderProductTypes": "{count} product types",
+  "@orderProductTypes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
     }
-  }
-},
+  },
 
-"orderTotal": "Total:",
-"orderDetails": "Order details",
+  "orderTotal": "Total:",
+  "orderDetails": "Order details",
 
-"cancelOrder": "Cancel order",
-"goToPayment": "Pay now · RM {amount}",
-"@goToPayment": {
-  "placeholders": {
-    "amount": {
-      "type": "String"
+  "cancelOrder": "Cancel order",
+  "goToPayment": "Pay now · RM {amount}",
+  "@goToPayment": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
     }
-  }
-},
+  },
 
-"cancelOrderConfirmation": "Cancelling this order will automatically restore the reserved stock. Are you sure you want to cancel it?",
-"back": "Back",
-"confirmCancellation": "Confirm cancellation",
+  "cancelOrderConfirmation": "Cancelling this order will automatically restore the reserved stock. Are you sure you want to cancel it?",
+  "back": "Back",
+  "confirmCancellation": "Confirm cancellation",
 
-"orderCancelledStockRestored": "Order cancelled and product stock restored",
-"cancelOrderFailed": "Failed to cancel order",
+  "orderCancelledStockRestored": "Order cancelled and product stock restored",
+  "cancelOrderFailed": "Failed to cancel order",
 
-"statusPendingPaymentDescription": "Complete payment to continue processing your order",
-"statusPaidDescription": "Payment successful. Waiting for the seller to process your order",
-"statusProcessingDescription": "The seller is preparing your products",
-"statusShippedDescription": "Your products have been handed to the delivery service",
-"statusDeliveredDescription": "Your products have been delivered. Please confirm receipt",
-"statusCompletedDescription": "This order has been completed",
-"statusCancelledDescription": "This order has been cancelled",
-"statusRefundedDescription": "This order has been refunded",
+  "statusPendingPaymentDescription": "Complete payment to continue processing your order",
+  "statusPaidDescription": "Payment successful. Waiting for the seller to process your order",
+  "statusProcessingDescription": "The seller is preparing your products",
+  "statusShippedDescription": "Your products have been handed to the delivery service",
+  "statusDeliveredDescription": "Your products have been delivered. Please confirm receipt",
+  "statusCompletedDescription": "This order has been completed",
+  "statusCancelledDescription": "This order has been cancelled",
+  "statusRefundedDescription": "This order has been refunded",
 
-"deliveryAndPayment": "Delivery & payment",
-"discount": "Discount",
-"orderGrandTotal": "Order total",
+  "deliveryAndPayment": "Delivery & payment",
+  "discount": "Discount",
+  "orderGrandTotal": "Order total",
 
-"orderInformation": "Order information",
-"orderNumberLabel": "Order number",
-"createdAt": "Created at",
+  "orderInformation": "Order information",
+  "orderNumberLabel": "Order number",
+  "createdAt": "Created at",
 
-"orderNotFound": "Order not found",
-"orderPayment": "Order payment",
-"paymentAutoUpdateNote": "After payment, the order will be verified and updated automatically. You do not need to pay again.",
+  "orderNotFound": "Order not found",
+  "orderPayment": "Order payment",
+  "paymentAutoUpdateNote": "After payment, the order will be verified and updated automatically. You do not need to pay again.",
 
-"confirmPayment": "Pay RM {amount}",
-"@confirmPayment": {
-  "placeholders": {
-    "amount": {
-      "type": "String"
+  "confirmPayment": "Pay RM {amount}",
+  "@confirmPayment": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
     }
-  }
-},
+  },
 
-"orderDoesNotNeedPayment": "This order does not currently require payment",
-"paymentSuccessOrderUpdated": "Payment successful. Order updated",
-"paymentSubmittedAutoUpdate": "Payment submitted. The order status will update automatically",
-"orderCreatedSuccessfully": "Order created successfully",
-"orderCreated": "Order created",
+  "orderDoesNotNeedPayment": "This order does not currently require payment",
+  "paymentSuccessOrderUpdated": "Payment successful. Order updated",
+  "paymentSubmittedAutoUpdate": "Payment submitted. The order status will update automatically",
+  "orderCreatedSuccessfully": "Order created successfully",
+  "orderCreated": "Order created",
 
-"orderNumberValue": "Order number: {number}",
-"@orderNumberValue": {
-  "placeholders": {
-    "number": {
-      "type": "String"
+  "orderNumberValue": "Order number: {number}",
+  "@orderNumberValue": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
     }
-  }
-},
+  },
 
-"paymentAmount": "Payment amount: RM {amount}",
-"@paymentAmount": {
-  "placeholders": {
-    "amount": {
-      "type": "String"
+  "paymentAmount": "Payment amount: RM {amount}",
+  "@paymentAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
     }
-  }
-},
+  },
 
-"cartClearFailedAfterOrder": "The order was created, but the cart could not be cleared.",
+  "cartClearFailedAfterOrder": "The order was created, but the cart could not be cleared.",
 
-"payNow": "Pay now",
-"viewThisOrder": "View this order",
-"viewAllOrders": "View all orders",
-"continueShopping": "Continue shopping",
-"addToCart": "Add to cart",
+  "payNow": "Pay now",
+  "viewThisOrder": "View this order",
+  "viewAllOrders": "View all orders",
+  "continueShopping": "Continue shopping",
+  "addToCart": "Add to cart",
 
-"addToCartWithQuantity": "Add to cart ({count})",
-"@addToCartWithQuantity": {
-  "placeholders": {
-    "count": {
-      "type": "int"
+  "addToCartWithQuantity": "Add to cart ({count})",
+  "@addToCartWithQuantity": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
     }
-  }
-},
+  },
 
-"buyNow": "Buy now",
+  "buyNow": "Buy now",
 
-"productAddedToCart": "{product} added to cart",
-"@productAddedToCart": {
-  "placeholders": {
-    "product": {
-      "type": "String"
+  "productAddedToCart": "{product} added to cart",
+  "@productAddedToCart": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
     }
-  }
-},
+  },
 
-"viewCart": "View cart",
-"addToCartFailed": "Failed to add to cart",
-"categoryNoProducts": "No products in {category} yet",
-"@categoryNoProducts": {
-  "placeholders": {
-    "category": {
-      "type": "String"
+  "viewCart": "View cart",
+  "addToCartFailed": "Failed to add to cart",
+  "categoryNoProducts": "No products in {category} yet",
+  "@categoryNoProducts": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
     }
-  }
-},
-"cart": "Cart",
-"productLoadFailed": "Failed to load products",
-"clearCartFailed": "Failed to clear cart",
-"cartUpdateFailed": "Failed to update cart",
-"checkoutLoadFailed": "Failed to load checkout information",
-"checkoutNoItems": "There are no items to check out",
-"checkoutSelectAddress": "Please select a shipping address",
-"onlyPendingPaymentCanBeCancelled": "Only pending-payment orders can be cancelled",
-"paymentCredentialMissing": "Unable to initialize payment",
-"paymentFailedTryAnotherMethod": "Payment failed. Please try another payment method",
-"paymentConnectionFailed": "Unable to connect to the payment service",
-"paymentSessionExpired": "Your session has expired. Please sign in again",
-"paymentInvalidResponse": "The payment service returned an invalid response",
-"paymentCreationFailed": "Unable to create payment",
-"paymentConfirmationFailed": "Unable to confirm the payment result",
-"paymentUnknownError": "Payment failed. Please try again",
-"authConnectionFailed": "Unable to connect to the server. Please check your connection",
-"authSessionExpired": "Your session has expired. Please sign in again",
-"authInvalidResponse": "The server returned an invalid response",
-"noProductsAvailable": "No products are available right now",
-"dailyDealsComingSoon": "Daily deals are coming soon",
-"couponsComingSoon": "Coupons are coming soon",
-"heroLaptopKicker": "WORK & CREATE",
-"heroLaptopTitle": "Power up your workspace",
-"heroLaptopSubtitle": "Discover laptops built for study, work and creativity",
-"heroMobileKicker": "MOBILE WEEK",
-"heroMobileTitle": "Your next phone is here",
-"heroMobileSubtitle": "Explore the latest smartphones and everyday essentials",
-"heroGamingKicker": "LEVEL UP",
-"heroGamingTitle": "Built for your next game",
-"heroGamingSubtitle": "Gaming gear, audio and accessories in one place"
+  },
+  "cart": "Cart",
+  "productLoadFailed": "Failed to load products",
+  "clearCartFailed": "Failed to clear cart",
+  "cartUpdateFailed": "Failed to update cart",
+  "checkoutLoadFailed": "Failed to load checkout information",
+  "checkoutNoItems": "There are no items to check out",
+  "checkoutSelectAddress": "Please select a shipping address",
+  "onlyPendingPaymentCanBeCancelled": "Only pending-payment orders can be cancelled",
+  "paymentCredentialMissing": "Unable to initialize payment",
+  "paymentFailedTryAnotherMethod": "Payment failed. Please try another payment method",
+  "paymentConnectionFailed": "Unable to connect to the payment service",
+  "paymentSessionExpired": "Your session has expired. Please sign in again",
+  "paymentInvalidResponse": "The payment service returned an invalid response",
+  "paymentCreationFailed": "Unable to create payment",
+  "paymentConfirmationFailed": "Unable to confirm the payment result",
+  "paymentUnknownError": "Payment failed. Please try again",
+  "authConnectionFailed": "Unable to connect to the server. Please check your connection",
+  "authSessionExpired": "Your session has expired. Please sign in again",
+  "authInvalidResponse": "The server returned an invalid response",
+  "noProductsAvailable": "No products are available right now",
+  "dailyDealsComingSoon": "Daily deals are coming soon",
+  "couponsComingSoon": "Coupons are coming soon",
+  "heroLaptopKicker": "WORK & CREATE",
+  "heroLaptopTitle": "Power up your workspace",
+  "heroLaptopSubtitle": "Discover laptops built for study, work and creativity",
+  "heroMobileKicker": "MOBILE WEEK",
+  "heroMobileTitle": "Your next phone is here",
+  "heroMobileSubtitle": "Explore the latest smartphones and everyday essentials",
+  "heroGamingKicker": "LEVEL UP",
+  "heroGamingTitle": "Built for your next game",
+  "heroGamingSubtitle": "Gaming gear, audio and accessories in one place"
 }
