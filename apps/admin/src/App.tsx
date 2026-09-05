@@ -14,23 +14,27 @@ import {
   AdminLayout,
 } from "./layouts/admin_layout";
 import {
-  AdminDashboardPage,
-} from "./pages/admin_dashboard_page";
-import {
-  AdminLoginPage,
-} from "./pages/admin_login_page";
-import {
-  AdminProductsPage,
-} from "./pages/admin_products_page";
+  AdminAgentPage,
+} from "./pages/admin_agent_page";
 import {
   AdminCategoriesPage,
 } from "./pages/admin_categories_page";
 import {
+  AdminDashboardPage,
+} from "./pages/admin_dashboard_page";
+import {
   AdminInventoryPage,
 } from "./pages/admin_inventory_page";
 import {
+  AdminLoginPage,
+} from "./pages/admin_login_page";
+import {
   AdminOrdersPage,
 } from "./pages/admin_orders_page";
+import {
+  AdminProductsPage,
+} from "./pages/admin_products_page";
+
 function RequireAdmin() {
   const { status } = useAdminAuth();
 
@@ -97,6 +101,11 @@ function App() {
           />
 
           <Route
+            path="agent"
+            element={<AdminAgentPage />}
+          />
+
+          <Route
             path="products"
             element={<AdminProductsPage />}
           />
@@ -108,14 +117,13 @@ function App() {
 
           <Route
             path="orders"
-            element={
-              <AdminOrdersPage/>}
+            element={<AdminOrdersPage />}
           />
 
           <Route
-  path="inventory"
-  element={<AdminInventoryPage />}
-/>
+            path="inventory"
+            element={<AdminInventoryPage />}
+          />
         </Route>
       </Route>
 
