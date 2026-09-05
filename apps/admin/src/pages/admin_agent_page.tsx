@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useMemo,
   useState,
   type FormEvent,
@@ -47,14 +48,15 @@ interface ChatMessage {
 }
 
 const initialSuggestions = [
-  "给我后台总览",
-  "检查库存风险",
-  "查看待处理订单",
-  "检查付款异常",
-  "看看热销商品",
+  "Give me an overview",
+  "Check low-stock products",
+  "Show pending orders",
+  "Check payment issues",
+  "Show top-selling products",
 ];
 
-export function AdminAgentPage() {
+export function AdminAgentDrawer() {
+  const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -62,9 +64,20 @@ export function AdminAgentPage() {
       id: "welcome",
       role: "agent",
       text:
-        "我是商城后台运营 Agent。你可以直接问我订单、库存、付款和热销商品。当前版本只读取业务数据，不会自动修改订单或库存。",
+        "I’m your commerce operations agent. Ask me about orders, inventory, payments, or product performance. This version is read-only and will not change business data.",
     },
   ]);
+
+  useEffect(() => {
+    function handleEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, []);
 
   const latestSuggestions = useMemo(() => {
     const latestAgentMessage = [...messages]
@@ -81,6 +94,7 @@ export function AdminAgentPage() {
       return;
     }
 
+    setOpen(true);
     setInput("");
     setLoading(true);
 
@@ -117,7 +131,7 @@ export function AdminAgentPage() {
           id: createMessageId(),
           role: "agent",
           text:
-            "Agent 暂时无法读取后台数据，请稍后再试。",
+            "I couldn’t read the admin data right now. Please try again in a moment.",
         },
       ]);
     } finally {
@@ -144,137 +158,132 @@ export function AdminAgentPage() {
   }
 
   return (
-    <section className="agent-page">
-      <header className="page-header agent-page-header">
-        <div>
-          <p className="page-eyebrow">OPERATIONS AGENT</p>
-          <h1>后台运营 Agent</h1>
-          <p className="page-description">
-            用自然语言检查订单、库存、付款与销售数据。
-          </p>
-        </div>
+    <>
+      {open && (
+        <button
+          className="agent-drawer-backdrop"
+          type="button"
+          aria-label="Close operations agent"
+          onClick={() => setOpen(false)}
+        />
+      )}
 
-        <div className="agent-status-badge">
-          <span className="agent-status-dot" />
-          Read-only
-        </div>
-      </header>
-
-      <div className="agent-shell">
-        <aside className="agent-sidebar-panel">
-          <div>
-            <span className="agent-panel-label">快速任务</span>
-            <h2>让 Agent 帮你看后台</h2>
-            <p>
-              它会直接读取当前数据库，不需要你逐页查商品、订单和库存。
-            </p>
+      <aside
+        className={`agent-drawer ${open ? "open" : ""}`}
+        aria-hidden={!open}
+      >
+        <header className="agent-drawer-header">
+          <div className="agent-drawer-title-row">
+            <div className="agent-drawer-mark">✦</div>
+            <div>
+              <strong>Operations Agent</strong>
+              <span>Live commerce insights</span>
+            </div>
           </div>
 
-          <div className="agent-quick-list">
-            {initialSuggestions.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                className="agent-quick-button"
-                disabled={loading}
-                onClick={() => {
-                  void sendMessage(suggestion);
-                }}
-              >
-                <span>✦</span>
-                {suggestion}
-              </button>
-            ))}
-          </div>
-
-          <div className="agent-safety-note">
-            <strong>安全模式</strong>
-            <span>
-              目前 Agent 只分析数据，不会自动改库存、订单状态或商品资料。
-            </span>
-          </div>
-        </aside>
-
-        <div className="agent-chat-panel">
-          <div className="agent-chat-history">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`agent-message-row ${message.role}`}
-              >
-                <div className="agent-message-avatar">
-                  {message.role === "agent" ? "A" : "你"}
-                </div>
-
-                <div className="agent-message-content">
-                  <div className="agent-message-bubble">
-                    {message.text}
-                  </div>
-
-                  {message.result && (
-                    <AgentResult result={message.result} />
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {loading && (
-              <div className="agent-message-row agent">
-                <div className="agent-message-avatar">A</div>
-                <div className="agent-message-content">
-                  <div className="agent-message-bubble agent-thinking">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="agent-suggestion-row">
-            {latestSuggestions.slice(0, 4).map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                className="agent-suggestion-chip"
-                disabled={loading}
-                onClick={() => {
-                  void sendMessage(suggestion);
-                }}
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-
-          <form
-            className="agent-composer"
-            onSubmit={handleSubmit}
+          <button
+            className="agent-drawer-close"
+            type="button"
+            aria-label="Close operations agent"
+            onClick={() => setOpen(false)}
           >
-            <textarea
-              value={input}
-              maxLength={500}
-              rows={2}
-              placeholder="例如：哪些商品快没库存了？"
-              disabled={loading}
-              onChange={(event) => {
-                setInput(event.target.value);
-              }}
-              onKeyDown={handleKeyDown}
-            />
+            ×
+          </button>
+        </header>
 
-            <button
-              className="primary-button agent-send-button"
-              type="submit"
-              disabled={loading || input.trim().length === 0}
-            >
-              {loading ? "分析中..." : "发送"}
-            </button>
-          </form>
+        <div className="agent-drawer-status">
+          <span className="agent-status-dot" />
+          Read-only mode · connected to live admin data
         </div>
-      </div>
-    </section>
+
+        <div className="agent-chat-history">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`agent-message-row ${message.role}`}
+            >
+              <div className="agent-message-avatar">
+                {message.role === "agent" ? "A" : "You"}
+              </div>
+
+              <div className="agent-message-content">
+                <div className="agent-message-bubble">
+                  {message.text}
+                </div>
+
+                {message.result && (
+                  <AgentResult result={message.result} />
+                )}
+              </div>
+            </div>
+          ))}
+
+          {loading && (
+            <div className="agent-message-row agent">
+              <div className="agent-message-avatar">A</div>
+              <div className="agent-message-content">
+                <div className="agent-message-bubble agent-thinking">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="agent-suggestion-row">
+          {latestSuggestions.slice(0, 4).map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              className="agent-suggestion-chip"
+              disabled={loading}
+              onClick={() => {
+                void sendMessage(suggestion);
+              }}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+
+        <form
+          className="agent-composer"
+          onSubmit={handleSubmit}
+        >
+          <textarea
+            value={input}
+            maxLength={500}
+            rows={2}
+            placeholder="Ask about orders, stock, payments..."
+            disabled={loading}
+            onChange={(event) => {
+              setInput(event.target.value);
+            }}
+            onKeyDown={handleKeyDown}
+          />
+
+          <button
+            className="primary-button agent-send-button"
+            type="submit"
+            disabled={loading || input.trim().length === 0}
+          >
+            {loading ? "Analyzing..." : "Send"}
+          </button>
+        </form>
+      </aside>
+
+      <button
+        className={`agent-floating-button ${open ? "hidden" : ""}`}
+        type="button"
+        aria-label="Open operations agent"
+        onClick={() => setOpen(true)}
+      >
+        <span className="agent-floating-icon">✦</span>
+        <span>Agent</span>
+      </button>
+    </>
   );
 }
 
@@ -338,7 +347,7 @@ function AgentResult({
       )}
 
       <div className="agent-result-time">
-        数据时间：{formatGeneratedAt(result.generatedAt)}
+        Data time: {formatGeneratedAt(result.generatedAt)}
       </div>
     </div>
   );
@@ -359,7 +368,7 @@ function formatGeneratedAt(value: string): string {
     return value;
   }
 
-  return date.toLocaleString("zh-CN", {
+  return date.toLocaleString("en-MY", {
     timeZone: "Asia/Kuala_Lumpur",
     hour12: false,
   });
