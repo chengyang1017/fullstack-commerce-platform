@@ -38,10 +38,6 @@ export function ProductFormDialog({
     return null;
   }
 
-  /*
-   * 新增和不同商品之间切换时，
-   * 重新创建表单组件和内部状态。
-   */
   const formKey = product
     ? `edit-${product.id}`
     : "create";
@@ -137,14 +133,14 @@ function ProductFormContent({
 
     if (categoryId.length === 0) {
       setValidationMessage(
-        "请选择商品分类",
+        "Select a product category.",
       );
       return;
     }
 
     if (normalizedTitle.length === 0) {
       setValidationMessage(
-        "请输入商品名称",
+        "Enter a product name.",
       );
       return;
     }
@@ -153,7 +149,7 @@ function ProductFormContent({
       normalizedImageUrl.length === 0
     ) {
       setValidationMessage(
-        "请输入商品图片地址",
+        "Enter a product image URL.",
       );
       return;
     }
@@ -163,7 +159,7 @@ function ProductFormContent({
       parsedPrice < 0
     ) {
       setValidationMessage(
-        "请输入有效的商品价格",
+        "Enter a valid product price.",
       );
       return;
     }
@@ -173,7 +169,7 @@ function ProductFormContent({
       parsedStock < 0
     ) {
       setValidationMessage(
-        "库存必须是非负整数",
+        "Stock must be a non-negative integer.",
       );
       return;
     }
@@ -221,8 +217,8 @@ function ProductFormContent({
 
             <h2 id="product-dialog-title">
               {product
-                ? "编辑商品"
-                : "新增商品"}
+                ? "Edit product"
+                : "Add product"}
             </h2>
           </div>
 
@@ -231,7 +227,7 @@ function ProductFormContent({
             type="button"
             disabled={isSubmitting}
             onClick={onClose}
-            aria-label="关闭"
+            aria-label="Close"
           >
             ×
           </button>
@@ -243,7 +239,7 @@ function ProductFormContent({
         >
           <div className="form-grid">
             <label className="form-field">
-              <span>商品分类</span>
+              <span>Category</span>
 
               <select
                 value={categoryId}
@@ -268,12 +264,12 @@ function ProductFormContent({
             </label>
 
             <label className="form-field">
-              <span>商品名称</span>
+              <span>Product name</span>
 
               <input
                 value={title}
                 disabled={isSubmitting}
-                placeholder="例如：智能手机"
+                placeholder="e.g. Smartphone"
                 onChange={(event) => {
                   setTitle(
                     event.target.value,
@@ -283,7 +279,7 @@ function ProductFormContent({
             </label>
 
             <label className="form-field">
-              <span>价格（RM）</span>
+              <span>Price (RM)</span>
 
               <input
                 type="number"
@@ -301,7 +297,7 @@ function ProductFormContent({
             </label>
 
             <label className="form-field">
-              <span>库存</span>
+              <span>Stock</span>
 
               <input
                 type="number"
@@ -320,7 +316,7 @@ function ProductFormContent({
           </div>
 
           <label className="form-field">
-            <span>商品图片地址</span>
+            <span>Product image URL</span>
 
             <input
               type="url"
@@ -339,25 +335,25 @@ function ProductFormContent({
             <div className="product-image-preview">
               <img
                 src={imageUrl}
-                alt="商品预览"
+                alt="Product preview"
                 onError={(event) => {
                   event.currentTarget.src =
                     "https://placehold.co/160x160?text=No+Image";
                 }}
               />
 
-              <span>图片预览</span>
+              <span>Image preview</span>
             </div>
           )}
 
           <label className="form-field">
-            <span>商品描述</span>
+            <span>Description</span>
 
             <textarea
               rows={5}
               value={description}
               disabled={isSubmitting}
-              placeholder="输入商品介绍"
+              placeholder="Enter a product description"
               onChange={(event) => {
                 setDescription(
                   event.target.value,
@@ -384,7 +380,7 @@ function ProductFormContent({
               disabled={isSubmitting}
               onClick={onClose}
             >
-              取消
+              Cancel
             </button>
 
             <button
@@ -396,10 +392,10 @@ function ProductFormContent({
               }
             >
               {isSubmitting
-                ? "正在保存..."
+                ? "Saving..."
                 : product
-                  ? "保存修改"
-                  : "创建商品"}
+                  ? "Save changes"
+                  : "Create product"}
             </button>
           </footer>
         </form>
