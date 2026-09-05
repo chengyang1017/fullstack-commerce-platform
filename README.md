@@ -10,11 +10,7 @@ This project is built as a monorepo to demonstrate a complete commerce workflow 
 
 ## Screenshots
 
-> Screenshot placeholders are intentionally kept here. Add the images under `docs/screenshots/` and replace each placeholder when ready.
-
 ### Mobile Storefront
-
-### Mobile App
 
 <p align="center">
   <img src="docs/screenshots/home.jpeg" alt="Home" width="240">
