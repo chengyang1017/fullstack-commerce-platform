@@ -164,6 +164,7 @@ class ShoppingApp extends StatelessWidget {
           ),
 
           BlocProvider<CategoryCubit>(
+            lazy: false,
             create: (context) {
               return CategoryCubit(
                 repository:
@@ -173,6 +174,7 @@ class ShoppingApp extends StatelessWidget {
           ),
 
           BlocProvider<ProductCubit>(
+            lazy: false,
             create: (context) {
               return ProductCubit(
                 productRepository:
