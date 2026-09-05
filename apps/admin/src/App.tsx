@@ -14,9 +14,6 @@ import {
   AdminLayout,
 } from "./layouts/admin_layout";
 import {
-  AdminAgentPage,
-} from "./pages/admin_agent_page";
-import {
   AdminCategoriesPage,
 } from "./pages/admin_categories_page";
 import {
@@ -42,7 +39,7 @@ function RequireAdmin() {
     return (
       <main className="loading-page">
         <div className="loading-spinner" />
-        <p>正在恢复管理员会话...</p>
+        <p>Restoring admin session...</p>
       </main>
     );
   }
@@ -66,7 +63,7 @@ function GuestOnly() {
     return (
       <main className="loading-page">
         <div className="loading-spinner" />
-        <p>正在恢复管理员会话...</p>
+        <p>Restoring admin session...</p>
       </main>
     );
   }
@@ -98,11 +95,6 @@ function App() {
           <Route
             index
             element={<AdminDashboardPage />}
-          />
-
-          <Route
-            path="agent"
-            element={<AdminAgentPage />}
           />
 
           <Route
