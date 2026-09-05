@@ -17,6 +17,10 @@ import {
 } from "./middleware/require_admin.ts";
 
 import {
+  adminAgentRouter,
+} from "./routes/admin_agent_routes.ts";
+
+import {
   adminCategoryRouter,
 } from "./routes/admin_category_routes.ts";
 
@@ -178,6 +182,11 @@ app.use(
 app.use(
   "/api/admin",
   requireAdmin,
+);
+
+app.use(
+  "/api/admin/agent",
+  adminAgentRouter,
 );
 
 app.use(
