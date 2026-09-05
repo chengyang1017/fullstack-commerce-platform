@@ -102,7 +102,7 @@ export function AdminProductsPage() {
         setErrorMessage(
           readErrorMessage(
             error,
-            "加载商品资料失败",
+            "Failed to load product data.",
           ),
         );
       } finally {
@@ -223,8 +223,8 @@ export function AdminProductsPage() {
         readErrorMessage(
           error,
           editingProduct
-            ? "修改商品失败"
-            : "新增商品失败",
+            ? "Failed to update the product."
+            : "Failed to create the product.",
         ),
       );
     } finally {
@@ -242,7 +242,7 @@ export function AdminProductsPage() {
     if (
       product.isActive &&
       !window.confirm(
-        `确定下架“${product.title}”吗？`,
+        `Deactivate “${product.title}”?`,
       )
     ) {
       return;
@@ -297,8 +297,8 @@ export function AdminProductsPage() {
         readErrorMessage(
           error,
           product.isActive
-            ? "下架商品失败"
-            : "上架商品失败",
+            ? "Failed to deactivate the product."
+            : "Failed to activate the product.",
         ),
       );
     } finally {
@@ -320,10 +320,10 @@ export function AdminProductsPage() {
             PRODUCTS
           </p>
 
-          <h1>商品管理</h1>
+          <h1>Product management</h1>
 
           <p className="page-description">
-            管理商品资料、价格、库存和上下架状态
+            Manage product details, pricing, inventory, and availability.
           </p>
         </div>
 
@@ -336,23 +336,23 @@ export function AdminProductsPage() {
           }
           onClick={openCreateForm}
         >
-          新增商品
+          Add product
         </button>
       </header>
 
       <section className="product-summary-grid">
         <article className="summary-card">
-          <span>全部商品</span>
+          <span>All products</span>
           <strong>{products.length}</strong>
         </article>
 
         <article className="summary-card">
-          <span>已上架</span>
+          <span>Active</span>
           <strong>{activeCount}</strong>
         </article>
 
         <article className="summary-card">
-          <span>已下架</span>
+          <span>Inactive</span>
           <strong>{inactiveCount}</strong>
         </article>
       </section>
@@ -371,7 +371,7 @@ export function AdminProductsPage() {
                 setFilter("all");
               }}
             >
-              全部
+              All
             </button>
 
             <button
@@ -385,7 +385,7 @@ export function AdminProductsPage() {
                 setFilter("active");
               }}
             >
-              已上架
+              Active
             </button>
 
             <button
@@ -399,7 +399,7 @@ export function AdminProductsPage() {
                 setFilter("inactive");
               }}
             >
-              已下架
+              Inactive
             </button>
           </div>
 
@@ -410,8 +410,8 @@ export function AdminProductsPage() {
             onClick={refreshProducts}
           >
             {isLoading
-              ? "正在刷新..."
-              : "刷新"}
+              ? "Refreshing..."
+              : "Refresh"}
           </button>
         </div>
 
@@ -426,7 +426,7 @@ export function AdminProductsPage() {
               type="button"
               onClick={refreshProducts}
             >
-              重试
+              Retry
             </button>
           </div>
         )}
@@ -434,16 +434,16 @@ export function AdminProductsPage() {
         {isLoading ? (
           <div className="products-state">
             <div className="loading-spinner" />
-            <p>正在加载商品...</p>
+            <p>Loading products...</p>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="products-state">
             <strong>
-              没有符合条件的商品
+              No products match this filter
             </strong>
 
             <p>
-              可以切换筛选条件或新增商品。
+              Change the filter or add a new product.
             </p>
           </div>
         ) : (
@@ -451,13 +451,13 @@ export function AdminProductsPage() {
             <table className="product-table">
               <thead>
                 <tr>
-                  <th>商品</th>
-                  <th>分类</th>
-                  <th>价格</th>
-                  <th>库存</th>
-                  <th>已售</th>
-                  <th>状态</th>
-                  <th>操作</th>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Sold</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
 
@@ -489,7 +489,7 @@ export function AdminProductsPage() {
 
                               <span>
                                 {product.description ||
-                                  "暂无描述"}
+                                  "No description"}
                               </span>
 
                               <small>
@@ -538,8 +538,8 @@ export function AdminProductsPage() {
                             }
                           >
                             {product.isActive
-                              ? "已上架"
-                              : "已下架"}
+                              ? "Active"
+                              : "Inactive"}
                           </span>
                         </td>
 
@@ -558,7 +558,7 @@ export function AdminProductsPage() {
                                 );
                               }}
                             >
-                              编辑
+                              Edit
                             </button>
 
                             <button
@@ -576,10 +576,10 @@ export function AdminProductsPage() {
                               }}
                             >
                               {isBusy
-                                ? "处理中..."
+                                ? "Processing..."
                                 : product.isActive
-                                  ? "下架"
-                                  : "上架"}
+                                  ? "Deactivate"
+                                  : "Activate"}
                             </button>
                           </div>
                         </td>
@@ -630,10 +630,7 @@ function readErrorMessage(
       error,
     )
   ) {
-    return (
-      error.response?.data.message ??
-      fallback
-    );
+    return fallback;
   }
 
   return fallback;
