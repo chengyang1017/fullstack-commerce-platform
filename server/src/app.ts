@@ -49,6 +49,7 @@ import {
 } from "./services/order_expiration_service.ts";
 
 import {
+  customerAvatarAssetRouter,
   customerProfileRouter,
 } from "./routes/customer_profile_routes.ts";
 
@@ -63,7 +64,6 @@ app.use(
     credentials: true,
   }),
 );
-
 
 /*
  * Stripe 验证 webhook 签名时必须使用原始请求体。
@@ -82,7 +82,7 @@ app.use(cookieParser());
 
 app.use(
   "/uploads/avatars",
-  customerProfileRouter,
+  customerAvatarAssetRouter,
 );
 
 app.use(
@@ -222,10 +222,10 @@ app.post("/api/admin/products", async (request, response) => {
   const stock = Number(body.stock);
 
   if (
-  categoryId.length === 0 ||
-  title.length === 0 ||
-  imageUrl.length === 0
-) {
+    categoryId.length === 0 ||
+    title.length === 0 ||
+    imageUrl.length === 0
+  ) {
     response.status(400).json({
       success: false,
       message: "categoryId、title 和 imageUrl 不能为空",
@@ -315,35 +315,35 @@ app.patch(
     }
 
     const data: {
-  categoryId?: string;
-  title?: string;
-  description?: string;
-  imageUrl?: string;
-  priceMinor?: number;
-  isActive?: boolean;
-} = {};
+      categoryId?: string;
+      title?: string;
+      description?: string;
+      imageUrl?: string;
+      priceMinor?: number;
+      isActive?: boolean;
+    } = {};
 
     if (body.categoryId !== undefined) {
-  if (
-    typeof body.categoryId !== "string" ||
-    body.categoryId.trim().length === 0
-  ) {
-    throw new AppError(
-      400,
-      "categoryId 不能为空",
-      "CATEGORY_ID_REQUIRED",
-    );
-  }
+      if (
+        typeof body.categoryId !== "string" ||
+        body.categoryId.trim().length === 0
+      ) {
+        throw new AppError(
+          400,
+          "categoryId 不能为空",
+          "CATEGORY_ID_REQUIRED",
+        );
+      }
 
-  const categoryId =
-    body.categoryId.trim();
+      const categoryId =
+        body.categoryId.trim();
 
-  await ensureActiveCategory(
-    categoryId,
-  );
+      await ensureActiveCategory(
+        categoryId,
+      );
 
-  data.categoryId = categoryId;
-}
+      data.categoryId = categoryId;
+    }
 
     if (body.title !== undefined) {
       if (
@@ -403,28 +403,28 @@ app.patch(
     }
 
     if (body.isActive !== undefined) {
-  if (
-    typeof body.isActive !== "boolean"
-  ) {
-    throw new AppError(
-      400,
-      "isActive 必须是布尔值",
-      "INVALID_PRODUCT_STATUS",
-    );
-  }
+      if (
+        typeof body.isActive !== "boolean"
+      ) {
+        throw new AppError(
+          400,
+          "isActive 必须是布尔值",
+          "INVALID_PRODUCT_STATUS",
+        );
+      }
 
-  if (body.isActive) {
-    const nextCategoryId =
-      data.categoryId ??
-      existingProduct.categoryId;
+      if (body.isActive) {
+        const nextCategoryId =
+          data.categoryId ??
+          existingProduct.categoryId;
 
-    await ensureActiveCategory(
-      nextCategoryId,
-    );
-  }
+        await ensureActiveCategory(
+          nextCategoryId,
+        );
+      }
 
-  data.isActive = body.isActive;
-}
+      data.isActive = body.isActive;
+    }
 
     if (Object.keys(data).length === 0) {
       response.status(400).json({
@@ -451,13 +451,13 @@ app.patch(
         image: product.imageUrl,
         price: product.priceMinor / 100,
         stock: product.stock,
-      reservedStock:
-        product.reservedStock,
-      availableStock: Math.max(
-        0,
-        product.stock -
+        reservedStock:
           product.reservedStock,
-      ),
+        availableStock: Math.max(
+          0,
+          product.stock -
+            product.reservedStock,
+        ),
         sold: product.sold,
         isActive: product.isActive,
       },
@@ -528,13 +528,13 @@ app.get(
           image: product.imageUrl,
           price: product.priceMinor / 100,
           stock: product.stock,
-      reservedStock:
-        product.reservedStock,
-      availableStock: Math.max(
-        0,
-        product.stock -
-          product.reservedStock,
-      ),
+          reservedStock:
+            product.reservedStock,
+          availableStock: Math.max(
+            0,
+            product.stock -
+              product.reservedStock,
+          ),
           sold: product.sold,
           isActive: product.isActive,
           createdAt: product.createdAt,
@@ -590,12 +590,12 @@ const errorHandler: ErrorRequestHandler = (
 ) => {
   if (error instanceof AppError) {
     response
-        .status(error.statusCode)
-        .json({
-      success: false,
-      code: error.code,
-      message: error.message,
-    });
+      .status(error.statusCode)
+      .json({
+        success: false,
+        code: error.code,
+        message: error.message,
+      });
 
     return;
   }
