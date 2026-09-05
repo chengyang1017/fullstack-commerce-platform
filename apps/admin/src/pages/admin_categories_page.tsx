@@ -73,7 +73,7 @@ export function AdminCategoriesPage() {
         setErrorMessage(
           readErrorMessage(
             error,
-            "加载分类失败",
+            "Failed to load categories.",
           ),
         );
       } finally {
@@ -175,8 +175,8 @@ export function AdminCategoriesPage() {
         readErrorMessage(
           error,
           editingCategory
-            ? "修改分类失败"
-            : "新增分类失败",
+            ? "Failed to update the category."
+            : "Failed to create the category.",
         ),
       );
     } finally {
@@ -194,7 +194,7 @@ export function AdminCategoriesPage() {
     if (
       category.isActive &&
       !window.confirm(
-        `确定下架“${category.name}”分类吗？`,
+        `Deactivate the “${category.name}” category?`,
       )
     ) {
       return;
@@ -244,8 +244,8 @@ export function AdminCategoriesPage() {
         readErrorMessage(
           error,
           category.isActive
-            ? "下架分类失败"
-            : "上架分类失败",
+            ? "Failed to deactivate the category."
+            : "Failed to activate the category.",
         ),
       );
     } finally {
@@ -265,10 +265,10 @@ export function AdminCategoriesPage() {
             CATEGORIES
           </p>
 
-          <h1>分类管理</h1>
+          <h1>Category management</h1>
 
           <p className="page-description">
-            管理商品分类、排序和上下架状态
+            Manage product categories, display order, and availability.
           </p>
         </div>
 
@@ -277,23 +277,23 @@ export function AdminCategoriesPage() {
           type="button"
           onClick={openCreateForm}
         >
-          新增分类
+          Add category
         </button>
       </header>
 
       <section className="product-summary-grid">
         <article className="summary-card">
-          <span>全部分类</span>
+          <span>All categories</span>
           <strong>{categories.length}</strong>
         </article>
 
         <article className="summary-card">
-          <span>已上架</span>
+          <span>Active</span>
           <strong>{activeCount}</strong>
         </article>
 
         <article className="summary-card">
-          <span>已下架</span>
+          <span>Inactive</span>
           <strong>
             {categories.length - activeCount}
           </strong>
@@ -302,7 +302,7 @@ export function AdminCategoriesPage() {
 
       <section className="content-card products-card">
         <div className="products-toolbar">
-          <strong>分类列表</strong>
+          <strong>Category list</strong>
 
           <button
             className="secondary-button"
@@ -311,8 +311,8 @@ export function AdminCategoriesPage() {
             onClick={refreshCategories}
           >
             {isLoading
-              ? "正在刷新..."
-              : "刷新"}
+              ? "Refreshing..."
+              : "Refresh"}
           </button>
         </div>
 
@@ -329,7 +329,7 @@ export function AdminCategoriesPage() {
                 setErrorMessage(null);
               }}
             >
-              关闭
+              Close
             </button>
           </div>
         )}
@@ -337,24 +337,24 @@ export function AdminCategoriesPage() {
         {isLoading ? (
           <div className="products-state">
             <div className="loading-spinner" />
-            <p>正在加载分类...</p>
+            <p>Loading categories...</p>
           </div>
         ) : categories.length === 0 ? (
           <div className="products-state">
-            <strong>目前没有分类</strong>
-            <p>点击“新增分类”建立第一个分类。</p>
+            <strong>No categories yet</strong>
+            <p>Create your first product category.</p>
           </div>
         ) : (
           <div className="product-table-wrapper">
             <table className="product-table">
               <thead>
                 <tr>
-                  <th>分类名称</th>
-                  <th>分类 ID</th>
-                  <th>排序</th>
-                  <th>商品数量</th>
-                  <th>状态</th>
-                  <th>操作</th>
+                  <th>Category name</th>
+                  <th>Category ID</th>
+                  <th>Sort order</th>
+                  <th>Products</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
 
@@ -396,8 +396,8 @@ export function AdminCategoriesPage() {
                             }
                           >
                             {category.isActive
-                              ? "已上架"
-                              : "已下架"}
+                              ? "Active"
+                              : "Inactive"}
                           </span>
                         </td>
 
@@ -413,7 +413,7 @@ export function AdminCategoriesPage() {
                                 );
                               }}
                             >
-                              编辑
+                              Edit
                             </button>
 
                             <button
@@ -431,10 +431,10 @@ export function AdminCategoriesPage() {
                               }}
                             >
                               {isBusy
-                                ? "处理中..."
+                                ? "Processing..."
                                 : category.isActive
-                                  ? "下架"
-                                  : "上架"}
+                                  ? "Deactivate"
+                                  : "Activate"}
                             </button>
                           </div>
                         </td>
@@ -509,7 +509,7 @@ function CategoryFormDialog({
 
     if (normalizedName.length === 0) {
       setValidationMessage(
-        "请输入分类名称",
+        "Enter a category name.",
       );
       return;
     }
@@ -519,7 +519,7 @@ function CategoryFormDialog({
       parsedSortOrder < 0
     ) {
       setValidationMessage(
-        "排序必须是非负整数",
+        "Sort order must be a non-negative integer.",
       );
       return;
     }
@@ -562,8 +562,8 @@ function CategoryFormDialog({
 
             <h2 id="category-dialog-title">
               {category
-                ? "编辑分类"
-                : "新增分类"}
+                ? "Edit category"
+                : "Add category"}
             </h2>
           </div>
 
@@ -572,6 +572,7 @@ function CategoryFormDialog({
             type="button"
             disabled={isSubmitting}
             onClick={onClose}
+            aria-label="Close"
           >
             ×
           </button>
@@ -582,12 +583,12 @@ function CategoryFormDialog({
           onSubmit={handleSubmit}
         >
           <label className="form-field">
-            <span>分类名称</span>
+            <span>Category name</span>
 
             <input
               value={name}
               disabled={isSubmitting}
-              placeholder="例如：手机"
+              placeholder="e.g. Phones"
               onChange={(event) => {
                 setName(event.target.value);
               }}
@@ -595,7 +596,7 @@ function CategoryFormDialog({
           </label>
 
           <label className="form-field">
-            <span>显示顺序</span>
+            <span>Display order</span>
 
             <input
               type="number"
@@ -627,7 +628,7 @@ function CategoryFormDialog({
               disabled={isSubmitting}
               onClick={onClose}
             >
-              取消
+              Cancel
             </button>
 
             <button
@@ -636,10 +637,10 @@ function CategoryFormDialog({
               disabled={isSubmitting}
             >
               {isSubmitting
-                ? "正在保存..."
+                ? "Saving..."
                 : category
-                  ? "保存修改"
-                  : "创建分类"}
+                  ? "Save changes"
+                  : "Create category"}
             </button>
           </footer>
         </form>
@@ -676,10 +677,7 @@ function readErrorMessage(
       error,
     )
   ) {
-    return (
-      error.response?.data.message ??
-      fallback
-    );
+    return fallback;
   }
 
   return fallback;
