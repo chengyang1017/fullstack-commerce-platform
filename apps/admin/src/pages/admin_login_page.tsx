@@ -41,7 +41,7 @@ export function AdminLoginPage() {
       normalizedEmail.length === 0 ||
       password.length === 0
     ) {
-      setErrorMessage("请输入邮箱和密码");
+      setErrorMessage("Enter your email and password.");
       return;
     }
 
@@ -60,12 +60,11 @@ export function AdminLoginPage() {
         )
       ) {
         setErrorMessage(
-          error.response?.data.message ??
-            "登录失败，请检查账号和密码",
+          "Sign-in failed. Check your admin credentials.",
         );
       } else {
         setErrorMessage(
-          "登录失败，请稍后重试",
+          "Sign-in failed. Please try again shortly.",
         );
       }
     } finally {
@@ -86,10 +85,10 @@ export function AdminLoginPage() {
               SHOPPING MANAGEMENT
             </p>
 
-            <h1>管理员后台</h1>
+            <h1>Admin Console</h1>
 
             <p className="login-description">
-              管理商品、库存、订单和客户资料
+              Manage products, inventory, orders, and customer operations.
             </p>
           </div>
         </div>
@@ -99,7 +98,7 @@ export function AdminLoginPage() {
           onSubmit={handleSubmit}
         >
           <label className="form-field">
-            <span>管理员邮箱</span>
+            <span>Admin email</span>
 
             <input
               type="email"
@@ -114,7 +113,7 @@ export function AdminLoginPage() {
           </label>
 
           <label className="form-field">
-            <span>密码</span>
+            <span>Password</span>
 
             <input
               type="password"
@@ -125,7 +124,7 @@ export function AdminLoginPage() {
                 );
               }}
               autoComplete="current-password"
-              placeholder="请输入密码"
+              placeholder="Enter your password"
               disabled={isSubmitting}
             />
           </label>
@@ -145,8 +144,8 @@ export function AdminLoginPage() {
             disabled={isSubmitting}
           >
             {isSubmitting
-              ? "正在登录..."
-              : "登录后台"}
+              ? "Signing in..."
+              : "Sign in"}
           </button>
         </form>
       </section>
