@@ -78,22 +78,16 @@ export function AdminInventoryPage() {
   useEffect(() => {
     let isCancelled = false;
 
-    async function loadPageData():
-        Promise<void> {
+    async function loadPageData(): Promise<void> {
       setIsLoading(true);
       setErrorMessage(null);
 
       try {
-        const [
-          productResult,
-          movementResult,
-        ] = await Promise.all([
-          getAdminProducts(),
-          getInventoryMovements(
-            undefined,
-            200,
-          ),
-        ]);
+        const [productResult, movementResult] =
+          await Promise.all([
+            getAdminProducts(),
+            getInventoryMovements(undefined, 200),
+          ]);
 
         if (isCancelled) {
           return;
@@ -108,16 +102,13 @@ export function AdminInventoryPage() {
               currentProductId.length > 0 &&
               productResult.some(
                 (product) =>
-                  product.id ===
-                  currentProductId,
+                  product.id === currentProductId,
               )
             ) {
               return currentProductId;
             }
 
-            return (
-              productResult[0]?.id ?? ""
-            );
+            return productResult[0]?.id ?? "";
           },
         );
       } catch (error) {
@@ -128,7 +119,7 @@ export function AdminInventoryPage() {
         setErrorMessage(
           readErrorMessage(
             error,
-            "加载库存资料失败",
+            "Failed to load inventory data.",
           ),
         );
       } finally {
@@ -153,40 +144,28 @@ export function AdminInventoryPage() {
   }, [products, selectedProductId]);
 
   const filteredMovements = useMemo(() => {
-    if (
-      movementFilterProductId.length === 0
-    ) {
+    if (movementFilterProductId.length === 0) {
       return movements;
     }
 
     return movements.filter(
       (movement) =>
-        movement.productId ===
-        movementFilterProductId,
+        movement.productId === movementFilterProductId,
     );
-  }, [
-    movementFilterProductId,
-    movements,
-  ]);
+  }, [movementFilterProductId, movements]);
 
   const totalStock = products.reduce(
-    (total, product) =>
-      total + product.stock,
+    (total, product) => total + product.stock,
     0,
   );
 
-  const todayMovementCount =
-    movements.filter((movement) => {
-      return isToday(
-        new Date(movement.createdAt),
-      );
-    }).length;
+  const todayMovementCount = movements.filter(
+    (movement) =>
+      isToday(new Date(movement.createdAt)),
+  ).length;
 
   function refreshInventory(): void {
-    setReloadKey(
-      (currentValue) =>
-        currentValue + 1,
-    );
+    setReloadKey((currentValue) => currentValue + 1);
   }
 
   function changeOperationType(
@@ -210,7 +189,7 @@ export function AdminInventoryPage() {
 
     if (!selectedProduct) {
       setErrorMessage(
-        "请选择需要调整库存的商品",
+        "Select a product before changing inventory.",
       );
       return;
     }
@@ -221,35 +200,30 @@ export function AdminInventoryPage() {
       operationType === "STOCK_IN" ||
       operationType === "STOCK_OUT"
     ) {
-      const parsedQuantity =
-        Number(quantity);
+      const parsedQuantity = Number(quantity);
 
       if (
-        !Number.isInteger(
-          parsedQuantity,
-        ) ||
+        !Number.isInteger(parsedQuantity) ||
         parsedQuantity <= 0
       ) {
         setErrorMessage(
-          "库存数量必须是正整数",
+          "Quantity must be a positive integer.",
         );
         return;
       }
 
       if (
         operationType === "STOCK_OUT" &&
-        parsedQuantity >
-          selectedProduct.stock
+        parsedQuantity > selectedProduct.stock
       ) {
         setErrorMessage(
-          `库存不足，当前库存为 ${selectedProduct.stock}`,
+          `Not enough stock. Current stock is ${selectedProduct.stock}.`,
         );
         return;
       }
 
       input = {
-        productId:
-          selectedProduct.id,
+        productId: selectedProduct.id,
         type: operationType,
         quantity: parsedQuantity,
         note:
@@ -258,37 +232,29 @@ export function AdminInventoryPage() {
             : undefined,
       };
     } else {
-      const parsedTargetStock =
-        Number(targetStock);
+      const parsedTargetStock = Number(targetStock);
 
       if (
-        !Number.isInteger(
-          parsedTargetStock,
-        ) ||
+        !Number.isInteger(parsedTargetStock) ||
         parsedTargetStock < 0
       ) {
         setErrorMessage(
-          "盘点库存必须是非负整数",
+          "Counted stock must be a non-negative integer.",
         );
         return;
       }
 
-      if (
-        parsedTargetStock ===
-        selectedProduct.stock
-      ) {
+      if (parsedTargetStock === selectedProduct.stock) {
         setErrorMessage(
-          "盘点后的库存与当前库存相同",
+          "The counted stock is the same as the current stock.",
         );
         return;
       }
 
       input = {
-        productId:
-          selectedProduct.id,
+        productId: selectedProduct.id,
         type: "ADJUSTMENT",
-        targetStock:
-          parsedTargetStock,
+        targetStock: parsedTargetStock,
         note:
           note.trim().length > 0
             ? note.trim()
@@ -301,38 +267,29 @@ export function AdminInventoryPage() {
     setSuccessMessage(null);
 
     try {
-      const result =
-        await changeInventory(input);
+      const result = await changeInventory(input);
 
-      setProducts(
-        (currentProducts) =>
-          currentProducts.map(
-            (product) =>
-              product.id ===
-              result.product.id
-                ? result.product
-                : product,
-          ),
+      setProducts((currentProducts) =>
+        currentProducts.map((product) =>
+          product.id === result.product.id
+            ? result.product
+            : product,
+        ),
       );
 
-      const createdMovement:
-          AdminInventoryMovement = {
+      const createdMovement: AdminInventoryMovement = {
         ...result.movement,
         product: {
           id: result.product.id,
-          title:
-            result.product.title,
-          image:
-            result.product.image,
+          title: result.product.title,
+          image: result.product.image,
         },
       };
 
-      setMovements(
-        (currentMovements) => [
-          createdMovement,
-          ...currentMovements,
-        ],
-      );
+      setMovements((currentMovements) => [
+        createdMovement,
+        ...currentMovements,
+      ]);
 
       setQuantity("");
       setTargetStock("");
@@ -341,8 +298,7 @@ export function AdminInventoryPage() {
       setSuccessMessage(
         createSuccessMessage(
           operationType,
-          result.movement
-            .quantityDelta,
+          result.movement.quantityDelta,
           result.product.stock,
         ),
       );
@@ -350,7 +306,7 @@ export function AdminInventoryPage() {
       setErrorMessage(
         readErrorMessage(
           error,
-          "库存操作失败",
+          "Inventory operation failed.",
         ),
       );
     } finally {
@@ -362,14 +318,10 @@ export function AdminInventoryPage() {
     <>
       <header className="page-header page-header-row">
         <div>
-          <p className="page-eyebrow">
-            INVENTORY
-          </p>
-
-          <h1>库存管理</h1>
-
+          <p className="page-eyebrow">INVENTORY</p>
+          <h1>Inventory management</h1>
           <p className="page-description">
-            进行商品入库、出库、盘点调整并查看库存流水
+            Receive stock, remove stock, reconcile counts, and review inventory history.
           </p>
         </div>
 
@@ -379,28 +331,24 @@ export function AdminInventoryPage() {
           disabled={isLoading}
           onClick={refreshInventory}
         >
-          {isLoading
-            ? "正在刷新..."
-            : "刷新库存"}
+          {isLoading ? "Refreshing..." : "Refresh inventory"}
         </button>
       </header>
 
       <section className="product-summary-grid">
         <article className="summary-card">
-          <span>商品数量</span>
+          <span>Products</span>
           <strong>{products.length}</strong>
         </article>
 
         <article className="summary-card">
-          <span>当前总库存</span>
+          <span>Total stock</span>
           <strong>{totalStock}</strong>
         </article>
 
         <article className="summary-card">
-          <span>今日库存操作</span>
-          <strong>
-            {todayMovementCount}
-          </strong>
+          <span>Operations today</span>
+          <strong>{todayMovementCount}</strong>
         </article>
       </section>
 
@@ -408,25 +356,20 @@ export function AdminInventoryPage() {
         <article className="content-card inventory-operation-card">
           <div className="inventory-section-header">
             <div>
-              <h2>库存操作</h2>
-
-              <p>
-                每次操作都会产生不可覆盖的库存流水
-              </p>
+              <h2>Inventory operation</h2>
+              <p>Every change creates an immutable inventory movement record.</p>
             </div>
           </div>
 
           {isLoading ? (
             <div className="products-state inventory-form-state">
               <div className="loading-spinner" />
-              <p>正在加载商品...</p>
+              <p>Loading products...</p>
             </div>
           ) : products.length === 0 ? (
             <div className="products-state inventory-form-state">
-              <strong>目前没有商品</strong>
-              <p>
-                请先在商品管理中新增商品。
-              </p>
+              <strong>No products yet</strong>
+              <p>Add a product before managing inventory.</p>
             </div>
           ) : (
             <form
@@ -434,59 +377,41 @@ export function AdminInventoryPage() {
               onSubmit={handleSubmit}
             >
               <label className="form-field">
-                <span>选择商品</span>
+                <span>Select product</span>
 
                 <select
                   value={selectedProductId}
                   disabled={isSubmitting}
                   onChange={(event) => {
-                    setSelectedProductId(
-                      event.target.value,
-                    );
-
+                    setSelectedProductId(event.target.value);
                     setSuccessMessage(null);
                     setErrorMessage(null);
                   }}
                 >
-                  {products.map(
-                    (product) => (
-                      <option
-                        key={product.id}
-                        value={product.id}
-                      >
-                        {product.title}
-                        {" · "}
-                        当前库存：
-                        {product.stock}
-                      </option>
-                    ),
-                  )}
+                  {products.map((product) => (
+                    <option
+                      key={product.id}
+                      value={product.id}
+                    >
+                      {product.title}
+                      {" · Current stock: "}
+                      {product.stock}
+                    </option>
+                  ))}
                 </select>
               </label>
 
               {selectedProduct && (
                 <div className="selected-inventory-product">
                   <img
-                    src={
-                      selectedProduct.image
-                    }
-                    alt={
-                      selectedProduct.title
-                    }
+                    src={selectedProduct.image}
+                    alt={selectedProduct.title}
                   />
 
                   <div>
-                    <strong>
-                      {selectedProduct.title}
-                    </strong>
-
-                    <span>
-                      当前库存
-                    </span>
-
-                    <b>
-                      {selectedProduct.stock}
-                    </b>
+                    <strong>{selectedProduct.title}</strong>
+                    <span>Current stock</span>
+                    <b>{selectedProduct.stock}</b>
                   </div>
                 </div>
               )}
@@ -495,65 +420,46 @@ export function AdminInventoryPage() {
                 <button
                   type="button"
                   className={
-                    operationType ===
-                    "STOCK_IN"
+                    operationType === "STOCK_IN"
                       ? "inventory-operation-tab active"
                       : "inventory-operation-tab"
                   }
                   disabled={isSubmitting}
-                  onClick={() => {
-                    changeOperationType(
-                      "STOCK_IN",
-                    );
-                  }}
+                  onClick={() => changeOperationType("STOCK_IN")}
                 >
-                  商品入库
+                  Stock in
                 </button>
 
                 <button
                   type="button"
                   className={
-                    operationType ===
-                    "STOCK_OUT"
+                    operationType === "STOCK_OUT"
                       ? "inventory-operation-tab active"
                       : "inventory-operation-tab"
                   }
                   disabled={isSubmitting}
-                  onClick={() => {
-                    changeOperationType(
-                      "STOCK_OUT",
-                    );
-                  }}
+                  onClick={() => changeOperationType("STOCK_OUT")}
                 >
-                  商品出库
+                  Stock out
                 </button>
 
                 <button
                   type="button"
                   className={
-                    operationType ===
-                    "ADJUSTMENT"
+                    operationType === "ADJUSTMENT"
                       ? "inventory-operation-tab active"
                       : "inventory-operation-tab"
                   }
                   disabled={isSubmitting}
-                  onClick={() => {
-                    changeOperationType(
-                      "ADJUSTMENT",
-                    );
-                  }}
+                  onClick={() => changeOperationType("ADJUSTMENT")}
                 >
-                  盘点调整
+                  Reconcile
                 </button>
               </div>
 
-              {operationType ===
-              "ADJUSTMENT" ? (
+              {operationType === "ADJUSTMENT" ? (
                 <label className="form-field">
-                  <span>
-                    盘点后的实际库存
-                  </span>
-
+                  <span>Counted stock</span>
                   <input
                     type="number"
                     min="0"
@@ -562,23 +468,20 @@ export function AdminInventoryPage() {
                     disabled={isSubmitting}
                     placeholder={
                       selectedProduct
-                        ? `当前为 ${selectedProduct.stock}`
-                        : "输入实际库存"
+                        ? `Current: ${selectedProduct.stock}`
+                        : "Enter counted stock"
                     }
                     onChange={(event) => {
-                      setTargetStock(
-                        event.target.value,
-                      );
+                      setTargetStock(event.target.value);
                     }}
                   />
                 </label>
               ) : (
                 <label className="form-field">
                   <span>
-                    {operationType ===
-                    "STOCK_IN"
-                      ? "入库数量"
-                      : "出库数量"}
+                    {operationType === "STOCK_IN"
+                      ? "Quantity received"
+                      : "Quantity removed"}
                   </span>
 
                   <input
@@ -587,18 +490,16 @@ export function AdminInventoryPage() {
                     step="1"
                     value={quantity}
                     disabled={isSubmitting}
-                    placeholder="输入数量"
+                    placeholder="Enter quantity"
                     onChange={(event) => {
-                      setQuantity(
-                        event.target.value,
-                      );
+                      setQuantity(event.target.value);
                     }}
                   />
                 </label>
               )}
 
               <label className="form-field">
-                <span>操作备注</span>
+                <span>Note</span>
 
                 <textarea
                   rows={4}
@@ -606,36 +507,26 @@ export function AdminInventoryPage() {
                   value={note}
                   disabled={isSubmitting}
                   placeholder={
-                    operationType ===
-                    "STOCK_IN"
-                      ? "例如：供应商到货"
-                      : operationType ===
-                          "STOCK_OUT"
-                        ? "例如：仓库报损"
-                        : "例如：月末盘点"
+                    operationType === "STOCK_IN"
+                      ? "e.g. Supplier delivery"
+                      : operationType === "STOCK_OUT"
+                        ? "e.g. Damaged stock"
+                        : "e.g. Month-end stock count"
                   }
                   onChange={(event) => {
-                    setNote(
-                      event.target.value,
-                    );
+                    setNote(event.target.value);
                   }}
                 />
               </label>
 
               {errorMessage && (
-                <div
-                  className="login-error"
-                  role="alert"
-                >
+                <div className="login-error" role="alert">
                   {errorMessage}
                 </div>
               )}
 
               {successMessage && (
-                <div
-                  className="inventory-success"
-                  role="status"
-                >
+                <div className="inventory-success" role="status">
                   {successMessage}
                 </div>
               )}
@@ -643,16 +534,11 @@ export function AdminInventoryPage() {
               <button
                 className="primary-button inventory-submit-button"
                 type="submit"
-                disabled={
-                  isSubmitting ||
-                  !selectedProduct
-                }
+                disabled={isSubmitting || !selectedProduct}
               >
                 {isSubmitting
-                  ? "正在处理..."
-                  : readSubmitButtonText(
-                      operationType,
-                    )}
+                  ? "Processing..."
+                  : readSubmitButtonText(operationType)}
               </button>
             </form>
           )}
@@ -661,40 +547,27 @@ export function AdminInventoryPage() {
         <article className="content-card inventory-history-card">
           <div className="inventory-history-toolbar">
             <div>
-              <h2>库存流水</h2>
-
-              <p>
-                最近 200 条库存变更记录
-              </p>
+              <h2>Inventory history</h2>
+              <p>Latest 200 inventory movements</p>
             </div>
 
             <label className="inventory-filter">
-              <span>筛选商品</span>
-
+              <span>Filter by product</span>
               <select
-                value={
-                  movementFilterProductId
-                }
+                value={movementFilterProductId}
                 onChange={(event) => {
-                  setMovementFilterProductId(
-                    event.target.value,
-                  );
+                  setMovementFilterProductId(event.target.value);
                 }}
               >
-                <option value="">
-                  全部商品
-                </option>
-
-                {products.map(
-                  (product) => (
-                    <option
-                      key={product.id}
-                      value={product.id}
-                    >
-                      {product.title}
-                    </option>
-                  ),
-                )}
+                <option value="">All products</option>
+                {products.map((product) => (
+                  <option
+                    key={product.id}
+                    value={product.id}
+                  >
+                    {product.title}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
@@ -702,133 +575,74 @@ export function AdminInventoryPage() {
           {isLoading ? (
             <div className="products-state">
               <div className="loading-spinner" />
-              <p>正在加载库存流水...</p>
+              <p>Loading inventory history...</p>
             </div>
-          ) : filteredMovements.length ===
-            0 ? (
+          ) : filteredMovements.length === 0 ? (
             <div className="products-state">
-              <strong>
-                暂无库存流水
-              </strong>
-
-              <p>
-                完成一次入库、出库或盘点后会显示在这里。
-              </p>
+              <strong>No inventory movements</strong>
+              <p>Stock in, stock out, and reconciliation records will appear here.</p>
             </div>
           ) : (
             <div className="product-table-wrapper">
               <table className="product-table inventory-table">
                 <thead>
                   <tr>
-                    <th>商品</th>
-                    <th>类型</th>
-                    <th>变动</th>
-                    <th>库存变化</th>
-                    <th>备注</th>
-                    <th>操作人</th>
-                    <th>时间</th>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Change</th>
+                    <th>Stock change</th>
+                    <th>Note</th>
+                    <th>Operator</th>
+                    <th>Time</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredMovements.map(
-                    (movement) => (
-                      <tr key={movement.id}>
-                        <td>
-                          <div className="inventory-product-cell">
-                            <img
-                              src={
-                                movement.product
-                                  .image
-                              }
-                              alt={
-                                movement.product
-                                  .title
-                              }
-                            />
-
-                            <div>
-                              <strong>
-                                {
-                                  movement.product
-                                    .title
-                                }
-                              </strong>
-
-                              <small>
-                                {
-                                  movement.productId
-                                }
-                              </small>
-                            </div>
+                  {filteredMovements.map((movement) => (
+                    <tr key={movement.id}>
+                      <td>
+                        <div className="inventory-product-cell">
+                          <img
+                            src={movement.product.image}
+                            alt={movement.product.title}
+                          />
+                          <div>
+                            <strong>{movement.product.title}</strong>
+                            <small>{movement.productId}</small>
                           </div>
-                        </td>
+                        </div>
+                      </td>
 
-                        <td>
-                          <span
-                            className={
-                              readMovementBadgeClass(
-                                movement.type,
-                              )
-                            }
-                          >
-                            {readMovementTypeName(
-                              movement.type,
-                            )}
-                          </span>
-                        </td>
+                      <td>
+                        <span className={readMovementBadgeClass(movement.type)}>
+                          {readMovementTypeName(movement.type)}
+                        </span>
+                      </td>
 
-                        <td>
-                          <strong
-                            className={
-                              movement
-                                .quantityDelta >
-                              0
-                                ? "inventory-delta positive"
-                                : "inventory-delta negative"
-                            }
-                          >
-                            {movement
-                              .quantityDelta >
-                            0
-                              ? "+"
-                              : ""}
-                            {
-                              movement.quantityDelta
-                            }
-                          </strong>
-                        </td>
+                      <td>
+                        <strong
+                          className={
+                            movement.quantityDelta > 0
+                              ? "inventory-delta positive"
+                              : "inventory-delta negative"
+                          }
+                        >
+                          {movement.quantityDelta > 0 ? "+" : ""}
+                          {movement.quantityDelta}
+                        </strong>
+                      </td>
 
-                        <td>
-                          {movement.stockBefore}
-                          {" → "}
-                          <strong>
-                            {
-                              movement.stockAfter
-                            }
-                          </strong>
-                        </td>
+                      <td>
+                        {movement.stockBefore}
+                        {" → "}
+                        <strong>{movement.stockAfter}</strong>
+                      </td>
 
-                        <td>
-                          {movement.note ??
-                            "—"}
-                        </td>
-
-                        <td>
-                          {movement
-                            .createdByUser
-                            ?.name ??
-                            "系统"}
-                        </td>
-
-                        <td>
-                          {formatDateTime(
-                            movement.createdAt,
-                          )}
-                        </td>
-                      </tr>
-                    ),
-                  )}
+                      <td>{movement.note ?? "—"}</td>
+                      <td>{movement.createdByUser?.name ?? "System"}</td>
+                      <td>{formatDateTime(movement.createdAt)}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -844,13 +658,11 @@ function readSubmitButtonText(
 ): string {
   switch (type) {
     case "STOCK_IN":
-      return "确认入库";
-
+      return "Confirm stock in";
     case "STOCK_OUT":
-      return "确认出库";
-
+      return "Confirm stock out";
     case "ADJUSTMENT":
-      return "确认盘点调整";
+      return "Confirm reconciliation";
   }
 }
 
@@ -859,13 +671,11 @@ function readMovementTypeName(
 ): string {
   switch (type) {
     case "STOCK_IN":
-      return "入库";
-
+      return "Stock in";
     case "STOCK_OUT":
-      return "出库";
-
+      return "Stock out";
     case "ADJUSTMENT":
-      return "盘点";
+      return "Reconciliation";
   }
 }
 
@@ -875,10 +685,8 @@ function readMovementBadgeClass(
   switch (type) {
     case "STOCK_IN":
       return "inventory-type-badge stock-in";
-
     case "STOCK_OUT":
       return "inventory-type-badge stock-out";
-
     case "ADJUSTMENT":
       return "inventory-type-badge adjustment";
   }
@@ -891,21 +699,17 @@ function createSuccessMessage(
 ): string {
   const movementText =
     type === "STOCK_IN"
-      ? `成功入库 ${quantityDelta} 件`
+      ? `Received ${quantityDelta} units`
       : type === "STOCK_OUT"
-        ? `成功出库 ${Math.abs(
-            quantityDelta,
-          )} 件`
-        : `库存已调整 ${quantityDelta > 0 ? "+" : ""}${quantityDelta}`;
+        ? `Removed ${Math.abs(quantityDelta)} units`
+        : `Stock adjusted ${quantityDelta > 0 ? "+" : ""}${quantityDelta}`;
 
-  return `${movementText}，当前库存为 ${stockAfter}`;
+  return `${movementText}. Current stock: ${stockAfter}.`;
 }
 
-function formatDateTime(
-  value: string,
-): string {
+function formatDateTime(value: string): string {
   return new Intl.DateTimeFormat(
-    "zh-CN",
+    "en-MY",
     {
       year: "numeric",
       month: "2-digit",
@@ -920,12 +724,9 @@ function isToday(date: Date): boolean {
   const today = new Date();
 
   return (
-    date.getFullYear() ===
-      today.getFullYear() &&
-    date.getMonth() ===
-      today.getMonth() &&
-    date.getDate() ===
-      today.getDate()
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
   );
 }
 
@@ -933,15 +734,8 @@ function readErrorMessage(
   error: unknown,
   fallback: string,
 ): string {
-  if (
-    axios.isAxiosError<ErrorResponse>(
-      error,
-    )
-  ) {
-    return (
-      error.response?.data.message ??
-      fallback
-    );
+  if (axios.isAxiosError<ErrorResponse>(error)) {
+    return fallback;
   }
 
   return fallback;
