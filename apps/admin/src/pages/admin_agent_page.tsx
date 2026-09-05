@@ -271,7 +271,7 @@ export function AdminAgentDrawer() {
         >
           <textarea
             value={input}
-            maxLength={500}
+            maxLength={4000}
             rows={2}
             placeholder="Ask or edit: set stock, change price, deactivate a product..."
             disabled={loading}
