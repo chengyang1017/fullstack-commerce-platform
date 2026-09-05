@@ -6,26 +6,29 @@ export function AdminDashboardPage() {
           DASHBOARD
         </p>
 
-        <h1>后台总览</h1>
+        <h1>Admin overview</h1>
+        <p className="page-description">
+          Manage your commerce operations from one place. Use the floating Agent button for live operational insights.
+        </p>
       </header>
 
       <section className="dashboard-grid">
         <article className="dashboard-card">
-          <span>商品总数</span>
-          <strong>—</strong>
-          <p>下一步接入商品 API</p>
+          <span>Products</span>
+          <strong>Manage</strong>
+          <p>Review product listings, pricing, availability, and status.</p>
         </article>
 
         <article className="dashboard-card">
-          <span>待处理订单</span>
-          <strong>—</strong>
-          <p>订单模块尚未接入</p>
+          <span>Orders</span>
+          <strong>Review</strong>
+          <p>Inspect customer orders, payments, and fulfilment details.</p>
         </article>
 
         <article className="dashboard-card">
-          <span>库存预警</span>
-          <strong>—</strong>
-          <p>库存模块尚未接入</p>
+          <span>Inventory</span>
+          <strong>Monitor</strong>
+          <p>Track stock movements and identify low-stock products.</p>
         </article>
       </section>
     </>
