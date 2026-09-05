@@ -6,6 +6,9 @@ import {
 import {
   useAdminAuth,
 } from "../auth/admin_auth_context";
+import {
+  AdminAgentDrawer,
+} from "../pages/admin_agent_page";
 
 export function AdminLayout() {
   const {
@@ -23,7 +26,7 @@ export function AdminLayout() {
 
           <div>
             <strong>Shopping</strong>
-            <span>管理后台</span>
+            <span>Admin Console</span>
           </div>
         </div>
 
@@ -37,19 +40,7 @@ export function AdminLayout() {
                 : "navigation-item"
             }
           >
-            仪表盘
-          </NavLink>
-
-          <NavLink
-            to="/agent"
-            className={({ isActive }) =>
-              isActive
-                ? "navigation-item agent-navigation-item active"
-                : "navigation-item agent-navigation-item"
-            }
-          >
-            <span className="agent-navigation-sparkle">✦</span>
-            运营 Agent
+            Dashboard
           </NavLink>
 
           <NavLink
@@ -60,7 +51,7 @@ export function AdminLayout() {
                 : "navigation-item"
             }
           >
-            商品管理
+            Products
           </NavLink>
 
           <NavLink
@@ -71,7 +62,7 @@ export function AdminLayout() {
                 : "navigation-item"
             }
           >
-            分类管理
+            Categories
           </NavLink>
 
           <NavLink
@@ -82,7 +73,7 @@ export function AdminLayout() {
                 : "navigation-item"
             }
           >
-            订单管理
+            Orders
           </NavLink>
 
           <NavLink
@@ -93,7 +84,7 @@ export function AdminLayout() {
                 : "navigation-item"
             }
           >
-            库存管理
+            Inventory
           </NavLink>
         </nav>
       </aside>
@@ -118,13 +109,15 @@ export function AdminLayout() {
                 void logout();
               }}
             >
-              退出登录
+              Sign out
             </button>
           </div>
         </header>
 
         <Outlet />
       </main>
+
+      <AdminAgentDrawer />
     </div>
   );
 }
