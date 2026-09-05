@@ -31,60 +31,102 @@ class OrderDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget? _buildBottomBar(BuildContext context, OrderState state, Order order) {
-    if (order.status != OrderStatus.pendingPayment) {
-      return null;
-    }
-
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final l10n = AppLocalizations.of(context);
-
-    final isCancelling = state.isCancellingOrder(order.id);
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: isCancelling
-                    ? null
-                    : () {
-                        _confirmCancellation(context, order);
-                      },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colorScheme.error,
-                ),
-                child: isCancelling
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.cancelOrder),
-              ),
-            ),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              flex: 2,
-              child: FilledButton(
-                onPressed: isCancelling
-                    ? null
-                    : () {
-                        _openPayment(context, order);
-                      },
-                child: Text(l10n.goToPayment(order.total.toStringAsFixed(2))),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+Widget? _buildBottomBar(
+  BuildContext context,
+  OrderState state,
+  Order order,
+) {
+  if (order.status != OrderStatus.pendingPayment) {
+    return null;
   }
+
+  final colorScheme =
+      Theme.of(context).colorScheme;
+
+  final l10n =
+      AppLocalizations.of(context);
+
+  final isCancelling =
+      state.isCancellingOrder(order.id);
+
+  return SafeArea(
+    top: false,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        10,
+        16,
+        12,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton(
+              onPressed: isCancelling
+                  ? null
+                  : () {
+                      _openPayment(
+                        context,
+                        order,
+                      );
+                    },
+              child: Text(
+                l10n.goToPayment(
+                  order.total
+                      .toStringAsFixed(2),
+                ),
+                maxLines: 1,
+                overflow:
+                    TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: OutlinedButton(
+              onPressed: isCancelling
+                  ? null
+                  : () {
+                      _confirmCancellation(
+                        context,
+                        order,
+                      );
+                    },
+              style:
+                  OutlinedButton.styleFrom(
+                foregroundColor:
+                    colorScheme.error,
+                side: BorderSide(
+                  color: colorScheme.error,
+                ),
+              ),
+              child: isCancelling
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child:
+                          CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      l10n.cancelOrder,
+                      maxLines: 1,
+                    ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   Future<void> _confirmCancellation(BuildContext context, Order order) async {
     final l10n = AppLocalizations.of(context);
