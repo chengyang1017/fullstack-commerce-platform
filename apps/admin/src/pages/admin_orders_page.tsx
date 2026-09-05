@@ -121,7 +121,7 @@ export function AdminOrdersPage() {
         setErrorMessage(
           readErrorMessage(
             error,
-            "加载订单失败",
+            "Failed to load orders.",
           ),
         );
       } finally {
@@ -215,7 +215,7 @@ export function AdminOrdersPage() {
       setDetailErrorMessage(
         readErrorMessage(
           error,
-          "加载订单详情失败",
+          "Failed to load order details.",
         ),
       );
     } finally {
@@ -241,10 +241,10 @@ export function AdminOrdersPage() {
             ORDERS
           </p>
 
-          <h1>订单管理</h1>
+          <h1>Order management</h1>
 
           <p className="page-description">
-            查看客户订单、付款状态、商品明细和收货资料
+            Review customer orders, payments, line items, and shipping details.
           </p>
         </div>
 
@@ -255,33 +255,33 @@ export function AdminOrdersPage() {
           onClick={refreshOrders}
         >
           {isLoading
-            ? "正在刷新..."
-            : "刷新订单"}
+            ? "Refreshing..."
+            : "Refresh orders"}
         </button>
       </header>
 
       <section className="order-summary-grid">
         <article className="summary-card">
-          <span>当前结果</span>
+          <span>Current results</span>
           <strong>{orders.length}</strong>
         </article>
 
         <article className="summary-card">
-          <span>待付款</span>
+          <span>Pending payment</span>
           <strong>
             {pendingPaymentCount}
           </strong>
         </article>
 
         <article className="summary-card">
-          <span>待处理</span>
+          <span>Pending fulfilment</span>
           <strong>
             {processingCount}
           </strong>
         </article>
 
         <article className="summary-card">
-          <span>已付款金额</span>
+          <span>Paid amount</span>
           <strong className="order-revenue">
             {formatMoney(
               totalRevenueMinor,
@@ -299,7 +299,7 @@ export function AdminOrdersPage() {
           >
             <input
               value={keywordInput}
-              placeholder="搜索订单号、客户、电话或邮箱"
+              placeholder="Search order number, customer, phone, or email"
               onChange={(event) => {
                 setKeywordInput(
                   event.target.value,
@@ -312,7 +312,7 @@ export function AdminOrdersPage() {
               type="submit"
               disabled={isLoading}
             >
-              搜索
+              Search
             </button>
 
             {(keyword.length > 0 ||
@@ -322,14 +322,14 @@ export function AdminOrdersPage() {
                 type="button"
                 onClick={clearSearch}
               >
-                清除
+                Clear
               </button>
             )}
           </form>
 
           <div className="order-filter-group">
             <label>
-              <span>订单状态</span>
+              <span>Order status</span>
 
               <select
                 value={status}
@@ -343,41 +343,41 @@ export function AdminOrdersPage() {
                 }}
               >
                 <option value="">
-                  全部订单状态
+                  All order statuses
                 </option>
 
                 <option value="PENDING_PAYMENT">
-                  待付款
+                  Pending payment
                 </option>
 
                 <option value="PAID">
-                  已付款
+                  Paid
                 </option>
 
                 <option value="PROCESSING">
-                  处理中
+                  Processing
                 </option>
 
                 <option value="SHIPPED">
-                  已发货
+                  Shipped
                 </option>
 
                 <option value="DELIVERED">
-                  已送达
+                  Delivered
                 </option>
 
                 <option value="CANCELLED">
-                  已取消
+                  Cancelled
                 </option>
 
                 <option value="REFUNDED">
-                  已退款
+                  Refunded
                 </option>
               </select>
             </label>
 
             <label>
-              <span>付款状态</span>
+              <span>Payment status</span>
 
               <select
                 value={paymentStatus}
@@ -391,31 +391,31 @@ export function AdminOrdersPage() {
                 }}
               >
                 <option value="">
-                  全部付款状态
+                  All payment statuses
                 </option>
 
                 <option value="UNPAID">
-                  未付款
+                  Unpaid
                 </option>
 
                 <option value="PROCESSING">
-                  付款处理中
+                  Processing
                 </option>
 
                 <option value="PAID">
-                  已付款
+                  Paid
                 </option>
 
                 <option value="FAILED">
-                  付款失败
+                  Failed
                 </option>
 
                 <option value="REFUNDED">
-                  已退款
+                  Refunded
                 </option>
 
                 <option value="PARTIALLY_REFUNDED">
-                  部分退款
+                  Partially refunded
                 </option>
               </select>
             </label>
@@ -433,7 +433,7 @@ export function AdminOrdersPage() {
               type="button"
               onClick={refreshOrders}
             >
-              重试
+              Retry
             </button>
           </div>
         )}
@@ -441,16 +441,16 @@ export function AdminOrdersPage() {
         {isLoading ? (
           <div className="products-state">
             <div className="loading-spinner" />
-            <p>正在加载订单...</p>
+            <p>Loading orders...</p>
           </div>
         ) : orders.length === 0 ? (
           <div className="products-state">
             <strong>
-              没有符合条件的订单
+              No orders match your filters
             </strong>
 
             <p>
-              可以修改筛选条件或清除搜索内容。
+              Adjust the filters or clear the search.
             </p>
           </div>
         ) : (
@@ -458,15 +458,15 @@ export function AdminOrdersPage() {
             <table className="product-table orders-table">
               <thead>
                 <tr>
-                  <th>订单</th>
-                  <th>客户</th>
-                  <th>收货人</th>
-                  <th>商品</th>
-                  <th>金额</th>
-                  <th>订单状态</th>
-                  <th>付款状态</th>
-                  <th>创建时间</th>
-                  <th>操作</th>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Recipient</th>
+                  <th>Items</th>
+                  <th>Amount</th>
+                  <th>Order status</th>
+                  <th>Payment status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
 
@@ -511,9 +511,9 @@ export function AdminOrdersPage() {
 
                     <td>
                       {order.itemCount}
-                      {" 种 / "}
+                      {" products / "}
                       {order.totalQuantity}
-                      {" 件"}
+                      {" units"}
                     </td>
 
                     <td>
@@ -569,7 +569,7 @@ export function AdminOrdersPage() {
                           );
                         }}
                       >
-                        查看详情
+                        View details
                       </button>
                     </td>
                   </tr>
@@ -635,7 +635,7 @@ function OrderDetailDialog({
 
             <h2 id="order-detail-title">
               {order?.orderNumber ??
-                "订单详情"}
+                "Order details"}
             </h2>
           </div>
 
@@ -644,7 +644,7 @@ function OrderDetailDialog({
             type="button"
             disabled={isLoading}
             onClick={onClose}
-            aria-label="关闭"
+            aria-label="Close"
           >
             ×
           </button>
@@ -653,7 +653,7 @@ function OrderDetailDialog({
         {isLoading ? (
           <div className="products-state">
             <div className="loading-spinner" />
-            <p>正在加载订单详情...</p>
+            <p>Loading order details...</p>
           </div>
         ) : errorMessage ? (
           <div className="order-detail-error">
@@ -689,20 +689,20 @@ function OrderDetailDialog({
 
             <section className="order-detail-grid">
               <article className="order-detail-section">
-                <h3>客户资料</h3>
+                <h3>Customer</h3>
 
                 <dl>
-                  <dt>客户名称</dt>
+                  <dt>Name</dt>
                   <dd>
                     {order.customer.name}
                   </dd>
 
-                  <dt>客户邮箱</dt>
+                  <dt>Email</dt>
                   <dd>
                     {order.customer.email}
                   </dd>
 
-                  <dt>下单时间</dt>
+                  <dt>Ordered at</dt>
                   <dd>
                     {formatDateTime(
                       order.createdAt,
@@ -712,20 +712,20 @@ function OrderDetailDialog({
               </article>
 
               <article className="order-detail-section">
-                <h3>收货资料</h3>
+                <h3>Shipping</h3>
 
                 <dl>
-                  <dt>收货人</dt>
+                  <dt>Recipient</dt>
                   <dd>
                     {order.recipientName}
                   </dd>
 
-                  <dt>联系电话</dt>
+                  <dt>Phone</dt>
                   <dd>
                     {order.recipientPhone}
                   </dd>
 
-                  <dt>地址</dt>
+                  <dt>Address</dt>
                   <dd>
                     {formatAddress(order)}
                   </dd>
@@ -734,7 +734,7 @@ function OrderDetailDialog({
             </section>
 
             <section className="order-detail-section">
-              <h3>商品明细</h3>
+              <h3>Line items</h3>
 
               <div className="order-items-list">
                 {order.items.map(
@@ -785,19 +785,19 @@ function OrderDetailDialog({
 
             <section className="order-detail-grid">
               <article className="order-detail-section">
-                <h3>客户备注</h3>
+                <h3>Customer note</h3>
 
                 <p>
                   {order.customerNote ??
-                    "没有备注"}
+                    "No note"}
                 </p>
               </article>
 
               <article className="order-detail-section order-total-section">
-                <h3>金额</h3>
+                <h3>Amount</h3>
 
                 <dl>
-                  <dt>商品小计</dt>
+                  <dt>Subtotal</dt>
                   <dd>
                     {formatMoney(
                       order.subtotalMinor,
@@ -805,7 +805,7 @@ function OrderDetailDialog({
                     )}
                   </dd>
 
-                  <dt>运费</dt>
+                  <dt>Shipping</dt>
                   <dd>
                     {formatMoney(
                       order.shippingMinor,
@@ -813,7 +813,7 @@ function OrderDetailDialog({
                     )}
                   </dd>
 
-                  <dt>优惠</dt>
+                  <dt>Discount</dt>
                   <dd>
                     -
                     {formatMoney(
@@ -823,7 +823,7 @@ function OrderDetailDialog({
                   </dd>
 
                   <dt className="order-total-label">
-                    订单总额
+                    Order total
                   </dt>
 
                   <dd className="order-total-value">
@@ -847,7 +847,7 @@ function formatMoney(
   currency: string,
 ): string {
   return new Intl.NumberFormat(
-    "ms-MY",
+    "en-MY",
     {
       style: "currency",
       currency,
@@ -859,7 +859,7 @@ function formatDateTime(
   value: string,
 ): string {
   return new Intl.DateTimeFormat(
-    "zh-CN",
+    "en-MY",
     {
       year: "numeric",
       month: "2-digit",
@@ -894,19 +894,19 @@ function readOrderStatusName(
 ): string {
   switch (status) {
     case "PENDING_PAYMENT":
-      return "待付款";
+      return "Pending payment";
     case "PAID":
-      return "已付款";
+      return "Paid";
     case "PROCESSING":
-      return "处理中";
+      return "Processing";
     case "SHIPPED":
-      return "已发货";
+      return "Shipped";
     case "DELIVERED":
-      return "已送达";
+      return "Delivered";
     case "CANCELLED":
-      return "已取消";
+      return "Cancelled";
     case "REFUNDED":
-      return "已退款";
+      return "Refunded";
   }
 }
 
@@ -921,17 +921,17 @@ function readPaymentStatusName(
 ): string {
   switch (status) {
     case "UNPAID":
-      return "未付款";
+      return "Unpaid";
     case "PROCESSING":
-      return "付款处理中";
+      return "Processing";
     case "PAID":
-      return "已付款";
+      return "Paid";
     case "FAILED":
-      return "付款失败";
+      return "Failed";
     case "REFUNDED":
-      return "已退款";
+      return "Refunded";
     case "PARTIALLY_REFUNDED":
-      return "部分退款";
+      return "Partially refunded";
   }
 }
 
@@ -950,10 +950,7 @@ function readErrorMessage(
       error,
     )
   ) {
-    return (
-      error.response?.data.message ??
-      fallback
-    );
+    return fallback;
   }
 
   return fallback;
