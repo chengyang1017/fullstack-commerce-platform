@@ -41,6 +41,18 @@ export function AdminLayout() {
           </NavLink>
 
           <NavLink
+            to="/agent"
+            className={({ isActive }) =>
+              isActive
+                ? "navigation-item agent-navigation-item active"
+                : "navigation-item agent-navigation-item"
+            }
+          >
+            <span className="agent-navigation-sparkle">✦</span>
+            运营 Agent
+          </NavLink>
+
+          <NavLink
             to="/products"
             className={({ isActive }) =>
               isActive
@@ -54,13 +66,13 @@ export function AdminLayout() {
           <NavLink
             to="/categories"
             className={({ isActive }) =>
-                isActive
+              isActive
                 ? "navigation-item active"
                 : "navigation-item"
             }
           >
             分类管理
-        </NavLink>
+          </NavLink>
 
           <NavLink
             to="/orders"
@@ -83,8 +95,6 @@ export function AdminLayout() {
           >
             库存管理
           </NavLink>
-
-          
         </nav>
       </aside>
 
