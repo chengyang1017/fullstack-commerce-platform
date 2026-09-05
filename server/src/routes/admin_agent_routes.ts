@@ -9,8 +9,8 @@ import {
 } from "../lib/app_error.ts";
 
 import {
-  runAdminAgent,
-} from "../services/admin_agent_service.ts";
+  runOpenAIAdminAgent,
+} from "../services/openai_admin_agent_service.ts";
 
 export const adminAgentRouter = Router();
 
@@ -25,6 +25,12 @@ adminAgentRouter.post(
       typeof body.message === "string"
         ? body.message.trim()
         : "";
+
+    const previousResponseId =
+      typeof body.previousResponseId === "string" &&
+      body.previousResponseId.trim().length > 0
+        ? body.previousResponseId.trim()
+        : undefined;
 
     if (message.length === 0) {
       throw new AppError(
@@ -42,7 +48,24 @@ adminAgentRouter.post(
       );
     }
 
-    const result = await runAdminAgent(message);
+    const adminId =
+      typeof response.locals.admin?.id === "string"
+        ? response.locals.admin.id
+        : "";
+
+    if (adminId.length === 0) {
+      throw new AppError(
+        401,
+        "The current administrator could not be identified.",
+        "ADMIN_ID_MISSING",
+      );
+    }
+
+    const result = await runOpenAIAdminAgent({
+      message,
+      adminId,
+      previousResponseId,
+    });
 
     response.json({
       success: true,
