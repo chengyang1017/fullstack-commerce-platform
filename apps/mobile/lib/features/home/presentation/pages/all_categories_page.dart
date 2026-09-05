@@ -5,6 +5,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../category/domain/models/product_category.dart';
 import '../../../category/presentation/cubit/category_cubit.dart';
 import '../../../category/presentation/cubit/category_state.dart';
+import '../../../category/presentation/widgets/category_icon_badge.dart';
 
 class AllCategoriesPage extends StatelessWidget {
   const AllCategoriesPage({
@@ -78,8 +79,7 @@ class AllCategoriesPage extends StatelessWidget {
                 childAspectRatio: 1.45,
               ),
               itemBuilder: (context, index) {
-                final category =
-                    categories[index];
+                final category = categories[index];
 
                 return _CategoryCard(
                   category: category,
@@ -110,8 +110,7 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme =
-        Theme.of(context).colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Material(
       color: colorScheme.surfaceContainerLow,
@@ -122,8 +121,7 @@ class _CategoryCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 category.name,
@@ -134,27 +132,12 @@ class _CategoryCard extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-
               const Spacer(),
-
               Align(
                 alignment: Alignment.bottomRight,
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color:
-                        colorScheme.primaryContainer,
-                    borderRadius:
-                        BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    Icons.category_rounded,
-                    size: 25,
-                    color:
-                        colorScheme.onPrimaryContainer,
-                  ),
+                child: CategoryIconBadge(
+                  category: category,
+                  iconSize: 25,
                 ),
               ),
             ],
