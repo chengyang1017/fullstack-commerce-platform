@@ -19,13 +19,15 @@ This project is built as a monorepo to demonstrate a complete commerce workflow 
 <p align="center">
   <img src="docs/screenshots/home.jpeg" alt="Home" width="240">
   <img src="docs/screenshots/product-detail.jpeg" alt="Product Detail" width="240">
+  <img src="docs/screenshots/checkout.jpeg" alt="Checkout" width="240">
 </p>
 
 ### Orders
 
 <p align="center">
-  <img src="docs/screenshots/orders.jpeg" alt="Orders" width="240">
   <img src="docs/screenshots/payment.jpeg" alt="Orders" width="240">
+  <img src="docs/screenshots/orders.jpeg" alt="Orders" width="240">
+  <img src="docs/screenshots/profile.jpeg" alt="Orders" width="240">
 </p>
 
 ### Admin Dashboard
