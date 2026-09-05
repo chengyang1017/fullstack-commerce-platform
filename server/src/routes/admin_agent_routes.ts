@@ -29,7 +29,7 @@ adminAgentRouter.post(
     if (message.length === 0) {
       throw new AppError(
         400,
-        "请输入要让 Agent 检查的内容",
+        "Enter a message for the operations agent.",
         "ADMIN_AGENT_MESSAGE_REQUIRED",
       );
     }
@@ -37,7 +37,7 @@ adminAgentRouter.post(
     if (message.length > 500) {
       throw new AppError(
         400,
-        "Agent 指令不能超过 500 个字符",
+        "Agent messages cannot exceed 500 characters.",
         "ADMIN_AGENT_MESSAGE_TOO_LONG",
       );
     }
