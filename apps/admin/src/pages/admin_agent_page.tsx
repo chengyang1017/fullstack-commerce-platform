@@ -7,6 +7,7 @@ import {
 import { Link } from "react-router";
 
 import { httpClient } from "../api/http_client";
+import "./admin_agent_page.css";
 
 interface AgentCard {
   label: string;
