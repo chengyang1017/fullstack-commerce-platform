@@ -407,7 +407,7 @@ abstract class AppLocalizations {
   /// No description provided for @categoryPhone.
   ///
   /// In en, this message translates to:
-  /// **'Phones'**
+  /// **'Phone'**
   String get categoryPhone;
 
   /// No description provided for @categoryComputer.
@@ -1393,6 +1393,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Gaming gear, audio and accessories in one place'**
   String get heroGamingSubtitle;
+
+  /// No description provided for @categoryLaptop.
+  ///
+  /// In en, this message translates to:
+  /// **'Laptop'**
+  String get categoryLaptop;
+
+  /// No description provided for @categoryClothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Clothing'**
+  String get categoryClothing;
 }
 
 class _AppLocalizationsDelegate

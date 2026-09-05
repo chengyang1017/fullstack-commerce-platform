@@ -689,4 +689,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get heroGamingSubtitle => '游戏设备、音频与配件一次找齐';
+
+  @override
+  String get categoryLaptop => '电脑';
+
+  @override
+  String get categoryClothing => '服装';
 }

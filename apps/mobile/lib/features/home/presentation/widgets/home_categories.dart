@@ -93,11 +93,10 @@ class HomeCategories extends StatelessWidget {
               );
             }
 
-            final categories =
-                (state as CategoryReady)
-                    .categories
-                    .take(3)
-                    .toList(growable: false);
+            final categories = (state as CategoryReady)
+                .categories
+                .take(3)
+                .toList(growable: false);
 
             if (categories.isEmpty) {
               return const SizedBox.shrink();
@@ -119,9 +118,9 @@ class HomeCategories extends StatelessWidget {
                         category: categories[index],
                         onTap: () {
                           onCategorySelected(
-                            categories[index].id,
-                            categories[index].name,
-                          );
+                          categories[index].id,
+                          localizedCategoryName(l10n, categories[index]),
+                        );
                         },
                       ),
                     ),
@@ -150,7 +149,7 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
+    final l10n = AppLocalizations.of(context);
     return Material(
       color: colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(18),
@@ -160,23 +159,14 @@ class _CategoryCard extends StatelessWidget {
         child: SizedBox(
           height: 118,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+            padding: const EdgeInsets.fromLTRB(
+              10,
+              8,
+              10,
+              10,
+            ),
             child: Column(
               children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    category.name,
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
                 Expanded(
                   child: Center(
                     child: CategoryIconBadge(
@@ -186,11 +176,40 @@ class _CategoryCard extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 6),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    localizedCategoryName(l10n, category),
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+String localizedCategoryName(
+  AppLocalizations l10n,
+  ProductCategory category,
+) {
+  switch (category.id) {
+    case 'phone':
+      return l10n.categoryPhone;
+
+    default:
+      return category.name;
   }
 }

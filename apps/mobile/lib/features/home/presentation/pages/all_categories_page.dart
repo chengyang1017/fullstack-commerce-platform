@@ -86,7 +86,7 @@ class AllCategoriesPage extends StatelessWidget {
                   onTap: () {
                     onCategorySelected(
                       category.id,
-                      category.name,
+                      localizedCategoryName(l10n, category),
                     );
                   },
                 );
@@ -111,7 +111,7 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
+    final l10n = AppLocalizations.of(context);
     return Material(
       color: colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(20),
@@ -125,7 +125,7 @@ class _CategoryCard extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: Text(
-                  category.name,
+                  localizedCategoryName(l10n, category),
                   maxLines: 1,
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
@@ -150,5 +150,22 @@ class _CategoryCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+String localizedCategoryName(
+  AppLocalizations l10n,
+  ProductCategory category,
+) {
+  switch (category.id) {
+    case 'phone':
+      return l10n.categoryPhone;
+
+    // 你有其他分类就继续加
+    // case 'laptop':
+    //   return l10n.categoryLaptop;
+
+    default:
+      return category.name;
   }
 }

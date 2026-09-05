@@ -14,31 +14,32 @@ This project is built as a monorepo to demonstrate a complete commerce workflow 
 
 ### Mobile Storefront
 
-📸 **Screenshot placeholder:** `docs/screenshots/home.png`
+### Mobile App
 
-### Product Detail
-
-📸 **Screenshot placeholder:** `docs/screenshots/product-detail.png`
-
-### Cart & Checkout
-
-📸 **Screenshot placeholder:** `docs/screenshots/checkout.png`
+<p align="center">
+  <img src="docs/screenshots/home.jpeg" alt="Home" width="240">
+  <img src="docs/screenshots/product-detail.jpeg" alt="Product Detail" width="240">
+  <img src="docs/screenshots/checkout.jpeg" alt="Checkout" width="240">
+</p>
 
 ### Orders
 
-📸 **Screenshot placeholder:** `docs/screenshots/orders.png`
+<p align="center">
+  <img src="docs/screenshots/orders.jpeg" alt="Orders" width="240">
+  <img src="docs/screenshots/payment.jpeg" alt="Orders" width="240">
+</p>
 
 ### Admin Dashboard
 
-📸 **Screenshot placeholder:** `docs/screenshots/admin-dashboard.png`
+<p align="center">
+  <img src="docs/screenshots/admin-dashboard.png" alt="Admin Dashboard" width="800">
+</p>
 
 ### Inventory Management
 
-📸 **Screenshot placeholder:** `docs/screenshots/inventory.png`
-
-### Dark Mode
-
-📸 **Screenshot placeholder:** `docs/screenshots/dark-mode.png`
+<p align="center">
+  <img src="docs/screenshots/inventory.png" alt="Inventory Management" width="800">
+</p>
 
 ---
 

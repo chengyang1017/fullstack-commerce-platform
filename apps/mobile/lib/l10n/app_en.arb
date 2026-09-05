@@ -394,5 +394,8 @@
   "heroMobileSubtitle": "Explore the latest smartphones and everyday essentials",
   "heroGamingKicker": "LEVEL UP",
   "heroGamingTitle": "Built for your next game",
-  "heroGamingSubtitle": "Gaming gear, audio and accessories in one place"
+  "heroGamingSubtitle": "Gaming gear, audio and accessories in one place",
+  "categoryPhone": "Phone",
+  "categoryLaptop": "Laptop",
+  "categoryClothing": "Clothing"
 }

@@ -167,7 +167,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchProductsBrands => 'Search products and brands';
 
   @override
-  String get categoryPhone => 'Phones';
+  String get categoryPhone => 'Phone';
 
   @override
   String get categoryComputer => 'Computers';
@@ -715,4 +715,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get heroGamingSubtitle =>
       'Gaming gear, audio and accessories in one place';
+
+  @override
+  String get categoryLaptop => 'Laptop';
+
+  @override
+  String get categoryClothing => 'Clothing';
 }

@@ -117,7 +117,10 @@ class _CartPageState extends State<CartPage> {
           const SizedBox(height: 16),
           Text(
             l10n.cartEmpty,
-            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 18),
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontSize: 18,
+            ),
           ),
         ],
       ),
@@ -135,7 +138,11 @@ class _CartPageState extends State<CartPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 64, color: colorScheme.error),
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: colorScheme.error,
+            ),
             const SizedBox(height: 16),
             Text(
               _cartErrorMessage(
@@ -160,10 +167,10 @@ class _CartPageState extends State<CartPage> {
 
   Widget _buildCheckoutBar(CartState state) {
     final colorScheme = Theme.of(context).colorScheme;
-
     final l10n = AppLocalizations.of(context);
 
     return SafeArea(
+      top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
         decoration: BoxDecoration(
@@ -177,30 +184,61 @@ class _CartPageState extends State<CartPage> {
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
+              flex: 5,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     l10n.total,
-                    style: TextStyle(color: colorScheme.onSurfaceVariant),
-                  ),
-                  Text(
-                    'RM ${state.totalPrice.toStringAsFixed(2)}',
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: colorScheme.primary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'RM ${state.totalPrice.toStringAsFixed(2)}',
+                        maxLines: 1,
+                        softWrap: false,
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            FilledButton(
-              onPressed: _checkout,
-              child: Text(l10n.checkoutCount(state.totalQuantity)),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 4,
+              child: SizedBox(
+                height: 48,
+                child: FilledButton(
+                  onPressed: _checkout,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      l10n.checkoutCount(state.totalQuantity),
+                      maxLines: 1,
+                      softWrap: false,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -308,11 +346,8 @@ class _CartPageState extends State<CartPage> {
   }) {
     return switch (type) {
       CartErrorType.loadFailed => l10n.cartLoadFailed,
-
       CartErrorType.clearFailed => l10n.clearCartFailed,
-
       CartErrorType.updateFailed => l10n.cartUpdateFailed,
-
       null => fallback,
     };
   }

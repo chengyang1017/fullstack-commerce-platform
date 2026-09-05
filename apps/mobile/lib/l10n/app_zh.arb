@@ -392,5 +392,8 @@
   "heroMobileSubtitle": "探索最新智能手机与日常科技产品",
   "heroGamingKicker": "游戏升级",
   "heroGamingTitle": "为下一场游戏而生",
-  "heroGamingSubtitle": "游戏设备、音频与配件一次找齐"
+  "heroGamingSubtitle": "游戏设备、音频与配件一次找齐",
+  "categoryPhone": "手机",
+  "categoryLaptop": "电脑",
+  "categoryClothing": "服装"
 }
